@@ -1,0 +1,4 @@
+recursive-include alpharaw *
+include LICENSE.txt
+include README.md
+recursive-exclude alpharaw/logs *
