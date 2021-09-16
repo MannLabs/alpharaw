@@ -2,7 +2,7 @@
 ![GUI and PyPi releases](https://github.com/MannLabs/alpharaw/workflows/Publish%20on%20PyPi%20and%20release%20on%20GitHub/badge.svg)
 
 # AlphaRaw
-An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at the Max Planck Institute of Biochemistry](https://www.biochem.mpg.de/mann). To enable all hyperlinks in this document, please view it at [GitHub](https://github.com/MannLabs/alpharaw).
+An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at the Max Planck Institute of Biochemistry](https://www.biochem.mpg.de/mann) to unify raw MS data accession and storage. To enable all hyperlinks in this document, please view it at [GitHub](https://github.com/MannLabs/alpharaw).
 
 * [**About**](#about)
 * [**License**](#license)
@@ -22,7 +22,7 @@ An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at 
 ---
 ## About
 
-An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at the Max Planck Institute of Biochemistry](https://www.biochem.mpg.de/mann).
+An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at the Max Planck Institute of Biochemistry](https://www.biochem.mpg.de/mann) to unify raw MS data accession and storage.
 
 ---
 ## License
