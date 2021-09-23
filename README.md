@@ -1,5 +1,8 @@
 ![Pip installation](https://github.com/MannLabs/alpharaw/workflows/Default%20installation%20and%20tests/badge.svg)
 ![GUI and PyPi releases](https://github.com/MannLabs/alpharaw/workflows/Publish%20on%20PyPi%20and%20release%20on%20GitHub/badge.svg)
+[![Downloads](https://pepy.tech/badge/alpharaw)](https://pepy.tech/project/alpharaw)
+[![Downloads](https://pepy.tech/badge/alpharaw/month)](https://pepy.tech/project/alpharaw)
+[![Downloads](https://pepy.tech/badge/alpharaw/week)](https://pepy.tech/project/alpharaw)
 
 # AlphaRaw
 An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at the Max Planck Institute of Biochemistry](https://www.biochem.mpg.de/mann) to unify raw MS data accession and storage. To enable all hyperlinks in this document, please view it at [GitHub](https://github.com/MannLabs/alpharaw).
