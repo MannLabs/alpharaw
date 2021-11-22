@@ -1,4 +1,4 @@
-"""A module to perfortm centroiding of AlphaTims data."""
+"""A module to perform centroiding of AlphaTims data."""
 
 import alphatims.utils
 import numpy as np
