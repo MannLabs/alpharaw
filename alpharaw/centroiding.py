@@ -234,11 +234,10 @@ def blur_scans(
                     new_tof = tof + tof_offset
                     if not (0 <= new_tof < tof_max_index):
                         continue
-                    intensity = intensity * tof_blur[index]
                     if intensity_buffer[new_tof] == 0:
                         tofs.append(new_tof)
                     noisy_buffer[new_tof] += noisy
-                    intensity_buffer[new_tof] += intensity
+                    intensity_buffer[new_tof] += intensity * tof_blur[index]
         tof_maxima = []
         tof_maxima_intensities = []
         for tof in tofs:
@@ -1091,3 +1090,129 @@ def load_connections(
     cycle_indptr[0] = 0
     cycle_indptr[1:] = np.cumsum(sizes)
     return potential_peaks, cycle_indptr
+
+
+def plot(
+    indptr,
+    tof_indices,
+    intensity_values,
+    dia_data,
+    cycle_frame=0,
+    assignments=None,
+    pre_selection=None,
+    post_selection=None,
+    cmap="tab20",
+    datashade=True,
+    aggregator='sum',
+    width=240,
+    height=240,
+):
+    import pandas as pd
+    import colorcet
+    df = pd.DataFrame(
+        {
+            "intensity": intensity_values,
+            "tof": tof_indices,
+            "scan": np.repeat(
+                np.arange(len(indptr) - 1) % dia_data.scan_max_index,
+                np.diff(indptr)
+            ),
+            "precursor": np.repeat(
+                dia_data.dia_mz_cycle[:, 0] == -1,
+                np.diff(indptr)
+            ),
+            "low_mz": np.repeat(
+                dia_data.dia_mz_cycle[:, 0],
+                np.diff(indptr)
+            ),
+            "high_mz": np.repeat(
+                dia_data.dia_mz_cycle[:, 1],
+                np.diff(indptr)
+            ),
+            "cycle_push": np.repeat(
+                np.arange(len(indptr) - 1),
+                np.diff(indptr)
+            ),
+        }
+    )
+    df["mz"] = dia_data.mz_values[df.tof]
+    df["im"] = dia_data.mobility_values[df.scan]
+    if pre_selection is not None:
+        df = df[pre_selection]
+    if assignments is not None:
+        df["assignment"] = assignments % 21
+        plot_kwargs = {
+            "c": "assignment",
+            "aggregator": aggregator,
+            "datashade": datashade,
+            "dynspread": 1,
+            "cmap": cmap,
+        }
+    else:
+        plot_kwargs = {
+            "c": "intensity",
+            "aggregator": aggregator,
+            "datashade": datashade,
+            "dynspread": 1,
+            "cmap": colorcet.fire,
+        }
+    if post_selection is not None:
+        df = df[post_selection]
+    scatter = df[
+        (
+            df.cycle_push > (dia_data.scan_max_index * cycle_frame)
+        ) & (
+            df.cycle_push < (dia_data.scan_max_index * (cycle_frame + 1))
+        )
+    ].hvplot.scatter(
+        x="mz",
+        y="im",
+        rasterize=True,
+        width=width,
+        height=height,
+        **plot_kwargs
+    ).opts(
+        bgcolor="black",
+        tools=['zoom_in', 'zoom_out'],
+    )
+    return scatter
+
+
+def plot_quad(
+    cycle_frame,
+    dia_data,
+    dia_mz_cycle,
+    alpha=0.25,
+    color="white",
+):
+    import holoviews as hv
+    im_width = dia_data.mobility_values[0] - dia_data.mobility_values[1]
+    rect = []
+    for index in range(dia_data.scan_max_index):
+        im_center = dia_data.mobility_values[index]
+        lower_mz, upper_mz = dia_mz_cycle[
+            index + dia_data.scan_max_index * cycle_frame
+        ]
+        mz_width = upper_mz - lower_mz
+        mz_center = (upper_mz + lower_mz) / 2
+        rect.append(
+            [mz_center, im_center, mz_width, im_width]
+        )
+    polys = hv.Polygons(
+        [
+            hv.Box(
+                rectangle[0],
+                rectangle[1],
+                (
+                    rectangle[2],
+                    rectangle[3]
+                )
+            ) for rectangle in rect
+        ]
+    ).opts(
+        color=color,
+        line_width=0,
+        alpha=alpha,
+    )
+
+    return polys
