@@ -1,4 +1,4 @@
-"""A module to perfortm centroiding of AlphaTims data."""
+"""A module to perform centroiding of AlphaTims data."""
 
 import alphatims.utils
 import numpy as np
@@ -383,14 +383,15 @@ def deconvolute_frame(
     scan_blur,
     tof_tolerance,
     intensity_cutoff,
-    noise_level,
+    neighbor_type,
 ):
     (
         rt_blurred_indptr,
         rt_blurred_tof_indices,
-        rt_blurred_occurance_counts,
+        rt_neighbor_values,
         rt_blurred_intensity_values,
-    ) = alpharaw.centroiding.blur_cycle_in_rt_dimension(
+    ) = blur_cycle_in_rt_dimension(
+    # ) = alpharaw.centroiding.blur_cycle_in_rt_dimension(
         cycle_index=cycle_index,
         cycle_length=len(dia_data.dia_mz_cycle),
         scan_max_index=dia_data.scan_max_index,
@@ -402,15 +403,22 @@ def deconvolute_frame(
         accumulation_time=1,
         tof_max_index=dia_data.tof_max_index,
     )
+    # return (
+    #     rt_blurred_indptr,
+    #     rt_blurred_tof_indices,
+    #     rt_neighbor_values,
+    #     rt_blurred_intensity_values,
+    # )
     (
         mz_centroided_indptr,
         mz_centroided_tof_indices,
         mz_centroided_noisy_values,
         mz_centroided_intensity_values,
-    ) = alpharaw.centroiding.blur_scans(
+    # ) = alpharaw.centroiding.blur_scans(
+    ) = blur_scans(
         rt_blurred_indptr,
         rt_blurred_tof_indices,
-        rt_blurred_occurance_counts,
+        rt_neighbor_values,
         rt_blurred_intensity_values,
         connection_counts,
         connections,
@@ -418,7 +426,7 @@ def deconvolute_frame(
         dia_data.tof_max_index,
         tof_tolerance,
         intensity_cutoff,
-        noise_level,
+        neighbor_type,
     )
     return (
         mz_centroided_indptr,
@@ -495,7 +503,7 @@ def match_within_cycle(
     # assignments = np.full(len(indptr) - 1, -1, dtype=np.int64)
     connections = np.arange(indptr[-1])
 
-    for self_push_index, self_start in enumerate(indptr[:-1]):
+    for self_push_index, self_start in enumerate(indptr[:-scan_max_index]):
         is_precursor = (dia_mz_cycle[self_push_index, 0] == -1)
         if is_precursor:
             if not include_precursors:
@@ -541,7 +549,7 @@ def match_within_cycle(
                         connections[other_index] = self_connection
                 if self_tof < other_tof:
                     self_index += 1
-                else:
+                else:  # what if equal?
                     other_index += 1
     return connections
 
@@ -667,7 +675,7 @@ def calculate_stats(
         }
     )
     df["mobility_values"] = mobility_values[df["scan_indices"]]
-    consistent = calculate_consistency(
+    consistent = calculate_consistency_of_df(
         frame_intensity_values,
         df["scan_indices"].values,
         dia_mz_cycle,
@@ -717,7 +725,7 @@ def group_assignments(
     return np.array(assignment_indptr), np.array(assignment_indices)
 
 
-# @alphatims.utils.njit(nogil=True)
+@alphatims.utils.njit(nogil=True)
 def expand_indptr(indptr):
     return np.repeat(
         np.arange(len(indptr) - 1),
@@ -755,7 +763,7 @@ def make_dense_group(
 
 
 @alphatims.utils.njit(nogil=True)
-def calculate_consistency(
+def calculate_consistency_of_df(
     frame_intensity_values,
     scans,
     dia_mz_cycle,
@@ -806,3 +814,239 @@ def calculate_consistency(
         #     print(border_indptr)
         #     return consistent
     return consistent
+
+
+
+@alphatims.utils.njit(nogil=True)
+def blur_cycle_in_rt_dimension(
+    cycle_index: int,
+    cycle_length: int,
+    scan_max_index: int,
+    zeroth_frame: bool,
+    push_indptr: np.ndarray,
+    tof_indices: np.ndarray,
+    intensity_values: np.ndarray,
+    cycle_tolerance: int,
+    accumulation_time: np.ndarray,  # TODO
+    tof_max_index: int,
+    min_intensity: float = 0,
+) -> tuple:
+    cycle_blur = np.exp(
+        -(np.arange(-cycle_tolerance, cycle_tolerance + 1))**2 / 2
+    )
+    cycle_blur /= np.sum(cycle_blur)
+    push_max_index = len(push_indptr) - 1
+    intensity_buffer = np.zeros(tof_max_index, np.float32)
+    neighbor_buffer = np.zeros(tof_max_index, dtype=np.uint8)
+    indptr_ = [0]
+    tof_indices_ = []
+    intensity_values_ = []
+    neighbor_values = []
+    for self_push_index in range(
+        zeroth_frame * scan_max_index + cycle_index * cycle_length,
+        zeroth_frame * scan_max_index + (cycle_index + 1) * cycle_length
+    ):
+        tofs = []
+        for i, cycle_offset in enumerate(
+            range(-cycle_tolerance, cycle_tolerance + 1)
+        ):
+            other_push_index = self_push_index + cycle_offset * cycle_length
+            if not (0 <= other_push_index < push_max_index):
+                continue
+            intensity_multiplier = cycle_blur[i]
+            intensity_multiplier /= accumulation_time  # TODO
+            if other_push_index < self_push_index:
+                neighbor = 2
+            elif other_push_index > self_push_index:
+                neighbor = 4
+            else:
+                neighbor = 1
+            for index in range(
+                push_indptr[other_push_index],
+                push_indptr[other_push_index + 1],
+            ):
+                tof = tof_indices[index]
+                new_intensity = intensity_values[index]
+                if new_intensity < min_intensity:
+                    continue
+                if intensity_buffer[tof] == 0:
+                    tofs.append(tof)
+                new_intensity *= intensity_multiplier
+                intensity_buffer[tof] += new_intensity
+                neighbor_buffer[tof] |= neighbor
+        for tof in tofs:
+            tof_indices_.append(tof)
+            neighbor_values.append(neighbor_buffer[tof])
+            intensity_values_.append(intensity_buffer[tof])
+            intensity_buffer[tof] = 0
+            neighbor_buffer[tof] = 0
+        indptr_.append(len(tof_indices_))
+    return (
+        np.array(indptr_, dtype=np.int64),
+        np.array(tof_indices_, dtype=np.uint32),
+        np.array(neighbor_values, dtype=np.uint8),
+        np.array(intensity_values_, dtype=np.float32),
+    )
+
+
+
+@alphatims.utils.njit(nogil=True)
+def blur_scans(
+    indptr,
+    tof_indices,
+    neighbor_values,
+    intensity_values,
+    connection_counts,
+    connections,
+    scan_blur,
+    tof_max_index,
+    tof_tolerance,
+    intensity_cutoff,
+    neighbor_type,
+):
+    tof_blur = np.exp(
+        -(np.arange(-tof_tolerance, tof_tolerance + 1))**2 / 2
+    )
+    indptr_ = [0]
+    tof_indices_ = []
+    neighbor_values_ = []
+    intensity_values_ = []
+    intensity_buffer = np.zeros(tof_max_index)
+    neighbor_buffer = np.zeros(tof_max_index, dtype=np.uint8)
+    for self_push_index, start in enumerate(connection_counts[:-1]):
+        tofs = []
+        end = connection_counts[self_push_index + 1]
+        for other_push_index, blur in zip(
+            connections[start: end],
+            scan_blur[start: end]
+        ):
+            if other_push_index < self_push_index:
+                neighbor = 8
+                internal_im = False
+            elif other_push_index > self_push_index:
+                neighbor = 16
+                internal_im = False
+            else:
+                neighbor = 0
+                internal_im = True
+            for index in range(
+                indptr[other_push_index],
+                indptr[other_push_index + 1],
+            ):
+                tof = tof_indices[index]
+                intensity = intensity_values[index] * blur
+                neighbor |= neighbor_values[index]
+                internal_rt = (neighbor & 1)
+                if internal_rt:
+                    neighbor -= 1
+                for index, tof_offset in enumerate(
+                    range(-tof_tolerance, tof_tolerance + 1)
+                ):
+                    new_tof = tof + tof_offset
+                    if not (0 <= new_tof < tof_max_index):
+                        continue
+                    if intensity_buffer[new_tof] == 0:
+                        tofs.append(new_tof)
+                    neighbor_buffer[new_tof] |= neighbor
+                    intensity_buffer[new_tof] += intensity * tof_blur[index]
+                    if tof_offset < 0:
+                        neighbor_buffer[new_tof] |= 32
+                    elif tof_offset > 0:
+                        neighbor_buffer[new_tof] |= 64
+                    elif (internal_rt and internal_im):
+                        neighbor_buffer[new_tof] |= 1
+        tof_maxima = []
+        tof_maxima_intensities = []
+        for tof in tofs:
+            if (neighbor_buffer[tof] & neighbor_type) != neighbor_type:
+                continue
+            peak_intensity = intensity_buffer[tof]
+            summed_intensity = 0.
+            for other_tof in range(tof - tof_tolerance, tof + tof_tolerance + 1):
+                if not (0 <= other_tof < tof_max_index):
+                    continue
+                other_intensity = intensity_buffer[other_tof]
+                if other_intensity > peak_intensity:
+                    summed_intensity = -np.inf
+                    break
+                summed_intensity += other_intensity
+            if summed_intensity >= intensity_cutoff:
+            # if True:
+            #     summed_intensity = intensity_buffer[tof]
+                # TODO expand summed intensity beyond tof_tolerance?
+                tof_maxima.append(tof)
+                tof_maxima_intensities.append(summed_intensity)
+        for index in np.argsort(np.array(tof_maxima)):
+            tof = tof_maxima[index]
+            summed_intensity = tof_maxima_intensities[index]
+            tof_indices_.append(tof)
+            neighbor_values_.append(neighbor_buffer[tof])
+            intensity_values_.append(summed_intensity)
+
+        for tof in tofs:
+            intensity_buffer[tof] = 0
+            neighbor_buffer[tof] = 0
+        indptr_.append(len(tof_indices_))
+    return (
+        np.array(indptr_),
+        np.array(tof_indices_, dtype=np.uint32),
+        np.array(neighbor_values_, dtype=np.uint8),
+        np.array(intensity_values_, dtype=np.float32),
+    )
+
+
+@alphatims.utils.njit(nogil=True)
+def calculate_consistency_matrix(
+    dia_mz_cycle,
+    scan_max_index,
+    precision=1,
+):
+    consistency_matrix = np.full(
+        (scan_max_index, 2**16),
+        -1,
+        # dtype=np.uint8
+    )
+    new_borders = []
+    for scan_index in range(scan_max_index):
+        border_indptr = []
+        for lower, upper in dia_mz_cycle[scan_index::scan_max_index]:
+            if lower > -1:
+                border_indptr.append(lower)
+                border_indptr.append(upper)
+        border_indptr.append(np.inf)
+        border_indptr = np.unique(np.array(border_indptr))
+        selection = np.diff(border_indptr) > precision  # TODO, what if multiple close?
+        border_indptr = border_indptr[:-1][selection]
+        # print(len(border_indptr))#, np.diff(border_indptr))
+        for border_index, border_lower in enumerate(border_indptr[:-1]):
+            border_upper = border_indptr[border_index + 1]
+            bit_reference = 0
+            new_borders.append((border_lower, border_upper))
+            for index, (scan_lower, scan_upper) in enumerate(
+                dia_mz_cycle[scan_index::scan_max_index]
+            ):
+                if (scan_lower <= border_lower < scan_upper):
+                    bit_reference += 2**(index + 1)
+            consistency_matrix[scan_index, bit_reference] = len(new_borders) - 1
+    return consistency_matrix, np.array(new_borders)
+
+
+
+
+@alphatims.utils.njit(nogil=True)
+def calculate_consistency(
+    loop_indices,
+    indptr,
+    consistency_matrix,
+    scan_max_index,
+):
+    push_indices = expand_indptr(indptr)
+    border_indices = np.full_like(loop_indices, -1)
+    for index, loop_index in enumerate(loop_indices):
+        bit_number = 2**((push_indices[loop_index] // scan_max_index) + 1)
+        while index != loop_index:
+            loop_index = loop_indices[loop_index]
+            bit_number |= 2**((push_indices[loop_index] // scan_max_index) + 1)
+        scan_index = push_indices[loop_index] % scan_max_index
+        border_indices[index] = consistency_matrix[scan_index, bit_number]
+    return border_indices
