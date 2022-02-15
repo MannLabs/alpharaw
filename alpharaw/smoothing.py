@@ -8,7 +8,7 @@ import numpy as np
 
 def smooth(
     dia_data,
-    hdf_file,
+    # hdf_file,
     scan_tolerance=6,
     scan_sigma=2,
     multiple_frames_per_cycle=False,
@@ -20,7 +20,10 @@ def smooth(
     noise_level=4,
     thread_count=None,
 ):
-
+    import multiprocessing.pool
+    import h5py
+    import tempfile
+    import os
     cycle_count = len(dia_data.push_indptr) // len(dia_data.dia_mz_cycle)
     cycle_length = len(dia_data.dia_mz_cycle)
     connection_counts, connections = get_connections_within_cycle(
@@ -58,68 +61,158 @@ def smooth(
             thread_count,
             set_global=False
         )
-    import multiprocessing.pool
-    iterable = range(cycle_count + 1)
-    # iterable = range(300, 310)
-    indptr = hdf_file.create_dataset(
-        "indptr",
-        ((cycle_count + 1) * cycle_length + 1,),
-        dtype=np.int64,
-    )
-    intensities_ = hdf_file.create_dataset(
-        "intensities_",
-        (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
-        dtype=np.float32,
-    )
-    mz_values_ = hdf_file.create_dataset(
-        "mz_values_",
-        (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
-        dtype=np.float32,
-    )
-    neighbor_type_ = hdf_file.create_dataset(
-        "neighbor_type_",
-        (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
-        np.uint8
-    )
-    start = 0
-    indptr_offset = 0
-    indptr_start = 0
-    with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
-        for (
-            mz_centroided_indptr,
-            mz_centroided_tof_indices,
-            mz_centroided_noisy_values,
-            mz_centroided_intensity_values,
-        ) in alphatims.utils.progress_callback(
-            pool.imap(starfunc, iterable),
-            total=len(iterable),
-            include_progress_callback=True
-        ):
-            end = start + len(mz_centroided_intensity_values)
-            indptr_end = indptr_start + len(mz_centroided_indptr)
-            mz_values_[start: end] = mz_centroided_tof_indices
-            neighbor_type_[start: end] = mz_centroided_noisy_values
-            intensities_[start: end] = mz_centroided_intensity_values
-            mz_centroided_indptr += indptr_offset
-            indptr[indptr_start: indptr_end] = mz_centroided_indptr
-            indptr_start = indptr_end - 1
-            indptr_offset = mz_centroided_indptr[-1]
-            start = end
-    hdf_file.create_dataset(
-        "intensities",
-        data=hdf_file["intensities_"][:end]
-    )
-    del hdf_file["intensities_"]
-    hdf_file.create_dataset(
-        "mz_values",
-        data=hdf_file["mz_values_"][:end]
-    )
-    del hdf_file["mz_values_"]
-    hdf_file.create_dataset(
-        "neighbor_type",
-        data=hdf_file["neighbor_type_"][:end]
-    )
-    del hdf_file["neighbor_type_"]
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        temp_file_name = f"{dia_data.sample_name}_temp_smooth.hdf"
+        # temp_file_name = os.path.join(
+        #     temp_dir_name,
+        #     f"{dia_data.sample_name}_temp_smooth.hdf"
+        # )
+        intensities = []
+        tof_indices = []
+        neighbor_types = []
+        offsets = [0]
+        indptr = np.empty(
+            ((cycle_count + 1) * cycle_length + 1,),
+            dtype=np.int64,
+        )
+        iterable = range(cycle_count + 1)
+        with h5py.File(temp_file_name, 'w') as temp_hdf_file:
+            start = 0
+            indptr_offset = 0
+            indptr_start = 0
+            with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
+                for cycle_index, (
+                    mz_centroided_indptr,
+                    mz_centroided_tof_indices,
+                    mz_centroided_noisy_values,
+                    mz_centroided_intensity_values,
+                ) in alphatims.utils.progress_callback(
+                    enumerate(pool.imap(starfunc, iterable)),
+                    total=len(iterable),
+                    include_progress_callback=True
+                ):
+                    end = start + len(mz_centroided_intensity_values)
+                    indptr_end = indptr_start + len(mz_centroided_indptr)
+                    tof_indices_ = temp_hdf_file.create_dataset(
+                        f"mz_centroided_tof_indices_{cycle_index}",
+                        data=mz_centroided_tof_indices
+                    )
+                    neighbor_types_ = temp_hdf_file.create_dataset(
+                        f"mz_centroided_noisy_values_{cycle_index}",
+                        data=mz_centroided_noisy_values
+                    )
+                    intensities_ = temp_hdf_file.create_dataset(
+                        f"mz_centroided_intensity_values_{cycle_index}",
+                        data=mz_centroided_intensity_values
+                    )
+                    tof_indices.append(tof_indices_)
+                    neighbor_types.append(neighbor_types_)
+                    intensities.append(intensities_)
+                    mz_centroided_indptr += indptr_offset
+                    indptr[indptr_start: indptr_end] = mz_centroided_indptr
+                    indptr_start = indptr_end - 1
+                    indptr_offset = mz_centroided_indptr[-1]
+                    start = end
+                    offsets.append(end)
+            dia_data2 = alphatims.bruker.TimsTOF(
+                os.path.join(
+                    dia_data.directory,
+                    f"{dia_data.sample_name}.hdf",
+                ),
+                mmap_detector_events=True,
+            )
+            dia_data2._push_indptr[
+                dia_data.scan_max_index: len(dia_data.push_indptr)
+            ] = indptr[:len(dia_data.push_indptr) - dia_data.scan_max_index]
+            dia_data2._quad_indptr = dia_data2.push_indptr[dia_data2.raw_quad_indptr]
+            del dia_data2._tof_indices
+            del dia_data2._intensity_values
+            hdf_file_name = dia_data2.save_as_hdf(
+                directory="/Users/swillems/Documents/software/alphadia/nbs",
+                file_name=f"{dia_data2.sample_name}_smoothed.hdf",
+                overwrite=True,
+            )
+            with h5py.File(hdf_file_name, 'a') as hdf_file:
+                intensities_ = hdf_file.create_dataset(
+                    "raw/_intensity_values",
+                    (end,),
+                    dtype=np.uint16
+                )
+                tof_indices_ = hdf_file.create_dataset(
+                    "raw/_tof_indices",
+                    (end,),
+                    dtype=np.uint32
+                )
+                for index, start in alphatims.utils.progress_callback(
+                    enumerate(offsets[:-1]),
+                    total=len(offsets) - 1,
+                    include_progress_callback=True
+                ):
+                    end = offsets[index + 1]
+                    intensities_[start:end] = intensities[index][...]
+                    tof_indices_[start:end] = tof_indices[index][...]
+
+    # iterable = range(cycle_count + 1)
+    # # iterable = range(300, 310)
+    # indptr = hdf_file.create_dataset(
+    #     "indptr",
+    #     ((cycle_count + 1) * cycle_length + 1,),
+    #     dtype=np.int64,
+    # )
+    # intensities_ = hdf_file.create_dataset(
+    #     "intensities_",
+    #     (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
+    #     dtype=np.float32,
+    # )
+    # mz_values_ = hdf_file.create_dataset(
+    #     "mz_values_",
+    #     (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
+    #     dtype=np.float32,
+    # )
+    # neighbor_type_ = hdf_file.create_dataset(
+    #     "neighbor_type_",
+    #     (len(dia_data) * (1 + scan_tolerance) * (1 + cycle_tolerance),),
+    #     np.uint8
+    # )
+    # start = 0
+    # indptr_offset = 0
+    # indptr_start = 0
+    # with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
+    #     for (
+    #         mz_centroided_indptr,
+    #         mz_centroided_tof_indices,
+    #         mz_centroided_noisy_values,
+    #         mz_centroided_intensity_values,
+    #     ) in alphatims.utils.progress_callback(
+    #         pool.imap(starfunc, iterable),
+    #         total=len(iterable),
+    #         include_progress_callback=True
+    #     ):
+    #         end = start + len(mz_centroided_intensity_values)
+    #         indptr_end = indptr_start + len(mz_centroided_indptr)
+    #         mz_values_[start: end] = mz_centroided_tof_indices
+    #         neighbor_type_[start: end] = mz_centroided_noisy_values
+    #         intensities_[start: end] = mz_centroided_intensity_values
+    #         mz_centroided_indptr += indptr_offset
+    #         indptr[indptr_start: indptr_end] = mz_centroided_indptr
+    #         indptr_start = indptr_end - 1
+    #         indptr_offset = mz_centroided_indptr[-1]
+    #         start = end
+    # hdf_file.create_dataset(
+    #     "intensities",
+    #     data=hdf_file["intensities_"][:end]
+    # )
+    # del hdf_file["intensities_"]
+    # hdf_file.create_dataset(
+    #     "mz_values",
+    #     data=hdf_file["mz_values_"][:end]
+    # )
+    # del hdf_file["mz_values_"]
+    # hdf_file.create_dataset(
+    #     "neighbor_type",
+    #     data=hdf_file["neighbor_type_"][:end]
+    # )
+    # del hdf_file["neighbor_type_"]
 
 
 @alphatims.utils.njit(nogil=True)
