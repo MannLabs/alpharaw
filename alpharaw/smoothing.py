@@ -62,11 +62,11 @@ def smooth(
             set_global=False
         )
     with tempfile.TemporaryDirectory() as temp_dir_name:
-        temp_file_name = f"{dia_data.sample_name}_temp_smooth.hdf"
-        # temp_file_name = os.path.join(
-        #     temp_dir_name,
-        #     f"{dia_data.sample_name}_temp_smooth.hdf"
-        # )
+        # temp_file_name = f"{dia_data.sample_name}_temp_smooth.hdf"
+        temp_file_name = os.path.join(
+            temp_dir_name,
+            f"{dia_data.sample_name}_temp_smooth.hdf"
+        )
         intensities = []
         tof_indices = []
         neighbor_types = []
@@ -129,14 +129,16 @@ def smooth(
             del dia_data2._intensity_values
             hdf_file_name = dia_data2.save_as_hdf(
                 directory="/Users/swillems/Documents/software/alphadia/nbs",
-                file_name=f"{dia_data2.sample_name}_smoothed.hdf",
+                file_name=f"{dia_data2.sample_name}_smoothed2.hdf",
                 overwrite=True,
             )
             with h5py.File(hdf_file_name, 'a') as hdf_file:
                 intensities_ = hdf_file.create_dataset(
                     "raw/_intensity_values",
                     (end,),
-                    dtype=np.uint16
+                    # dtype=np.uint16
+                    # TODO, these are not uint16, but float32
+                    dtype=np.float32
                 )
                 tof_indices_ = hdf_file.create_dataset(
                     "raw/_tof_indices",
@@ -570,4 +572,349 @@ def blur_scans(
         np.array(tof_indices_, dtype=np.uint32),
         np.array(neighbor_values_, dtype=np.uint8),
         np.array(intensity_values_, dtype=np.float32),
+    )
+
+
+# @alphatims.utils.pjit
+# def find_local_maxima(
+#     cycle_index,
+#     indptr,
+#     tof_indices,
+#     intensity_values,
+#     dia_mz_cycle,
+#     tof_tolerance,
+#     scan_max_index,
+#     zeroth_frame,
+#     potential_peaks,
+# ):
+#     push_offset = len(dia_mz_cycle) * cycle_index + zeroth_frame * scan_max_index
+#     for index_offset, (self_lower_mz, self_upper_mz) in enumerate(dia_mz_cycle):
+#         self_push_index = push_offset + index_offset
+#         if self_push_index > len(indptr):
+#             break
+#         self_start = indptr[self_push_index]
+#         self_end = indptr[self_push_index + 1]
+#         if self_start == self_end:
+#             continue
+#         for other_push_index in (
+#             self_push_index + 1,
+#             self_push_index + len(dia_mz_cycle),
+#         ):
+#             if (other_push_index) % scan_max_index == 0:
+#                 continue
+#                 # Check mz
+#             if other_push_index >= len(indptr):
+#                 continue
+#             other_start = indptr[other_push_index]
+#             other_end = indptr[other_push_index + 1]
+#             if other_start == other_end:
+#                 continue
+#             self_index = self_start
+#             other_index = other_start
+#             while (self_index < self_end) and (other_index < other_end):
+#                 self_tof = tof_indices[self_index]
+#                 other_tof = tof_indices[other_index]
+#                 if (self_tof - tof_tolerance) <= other_tof <= (self_tof + tof_tolerance):
+#                     self_intensity = intensity_values[self_index]
+#                     other_intensity = intensity_values[other_index]
+#                     if self_intensity > other_intensity:
+#                         potential_peaks[other_index] = False
+#                     elif self_intensity < other_intensity:
+#                         potential_peaks[self_index] = False
+#                     else:
+#                         potential_peaks[other_index] = False
+#                         # Lowest peak is maintained
+#                 if self_tof < other_tof:
+#                     self_index += 1
+#                 else:
+#                     other_index += 1
+
+
+@alphatims.utils.pjit
+def find_local_maxima(
+    cycle_index,
+    indptr,
+    tof_indices,
+    intensity_values,
+    dia_mz_cycle,
+    tof_tolerance,
+    scan_max_index,
+    zeroth_frame,
+    connection_counts,
+    connections,
+    cycle_tolerance,
+    is_signal,
+    potential_peaks,
+):
+    push_offset = len(dia_mz_cycle) * cycle_index + zeroth_frame * scan_max_index
+    for index_offset, (self_lower_mz, self_upper_mz) in enumerate(dia_mz_cycle):
+        self_push_index = push_offset + index_offset
+        if self_push_index > len(indptr):
+            break
+        self_start = indptr[self_push_index]
+        self_end = indptr[self_push_index + 1]
+        if self_start == self_end:
+            continue
+        connection_start = connection_counts[index_offset]
+        connection_end = connection_counts[index_offset + 1]
+        for connection_index in connections[connection_start: connection_end]:
+            for cycle_offset in range(cycle_tolerance + 1):
+                other_push_index = push_offset + connection_index + len(dia_mz_cycle) * cycle_offset
+                if other_push_index <= self_push_index:
+                    continue
+                    # Check mz
+                if other_push_index >= len(indptr):
+                    continue
+                other_start = indptr[other_push_index]
+                other_end = indptr[other_push_index + 1]
+                if other_start == other_end:
+                    continue
+                self_index = self_start
+                other_index = other_start
+                while (self_index < self_end) and (other_index < other_end):
+                    self_tof = tof_indices[self_index]
+                    other_tof = tof_indices[other_index]
+                    if (self_tof - tof_tolerance) <= other_tof <= (self_tof + tof_tolerance):
+                        is_signal[self_index] = True
+                        is_signal[other_index] = True
+                        self_intensity = intensity_values[self_index]
+                        other_intensity = intensity_values[other_index]
+                        if self_intensity > other_intensity:
+                            potential_peaks[other_index] = False
+                        elif self_intensity < other_intensity:
+                            potential_peaks[self_index] = False
+                        else:
+                            potential_peaks[other_index] = False
+                            # Lowest peak is maintained
+                    if self_tof < other_tof:
+                        self_index += 1
+                    else:
+                        other_index += 1
+
+
+@alphatims.utils.pjit
+def merge_pushes(
+    cycle_index,
+    indptr,
+    tof_indices,
+    intensity_values,
+    dia_mz_cycle,
+    tof_tolerance,
+    scan_max_index,
+    tof_max_index,
+    zeroth_frame,
+    connection_counts,
+    connections,
+    cycle_tolerance,
+    is_signal,
+):
+    intensity_buffer = np.zeros(tof_max_index, dtype=np.float32)
+    push_offset = len(dia_mz_cycle) * cycle_index + zeroth_frame * scan_max_index
+    new_indptr = [0]
+    new_tof_indices = []
+    new_intensity_values = []
+    for index_offset, (self_lower_mz, self_upper_mz) in enumerate(dia_mz_cycle):
+        current_tof_indices = []
+        self_push_index = push_offset + index_offset
+        if self_push_index >= len(indptr):
+            break
+        connection_start = connection_counts[index_offset]
+        connection_end = connection_counts[index_offset + 1]
+        for connection_index in connections[connection_start: connection_end]:
+            for cycle_offset in range(-cycle_tolerance, cycle_tolerance + 1):
+                other_push_index = push_offset + connection_index + len(dia_mz_cycle) * cycle_offset
+                if other_push_index < 0:
+                    continue
+                    # Check mz
+                if other_push_index >= len(indptr):
+                    continue
+                for index in range(
+                    indptr[other_push_index],
+                    indptr[other_push_index + 1]
+                ):
+                    if not is_signal[index]:
+                        continue
+                    tof_index = tof_indices[index]
+                    if intensity_buffer[tof_index] == 0:
+                        current_tof_indices.append(tof_index)
+                    intensity_buffer[tof_index] += intensity_values[index]
+        if len(tof_indices) == 0:
+            continue
+        current_tof_indices = sorted(current_tof_indices)
+        last_tof_index = tof_indices[0]
+        last_tof_index = -(1 + tof_tolerance)
+        summed_intensity = intensity_buffer[last_tof_index]
+        summed_tof = last_tof_index
+        count = 1
+        intensity_buffer[last_tof_index] = 0
+        for tof_index in current_tof_indices[1:]:
+            intensity = intensity_buffer[tof_index]
+            if (tof_index - last_tof_index) >= tof_tolerance:
+                if last_tof_index >= 0:
+                    new_tof_indices.append(summed_tof // count)
+                    new_intensity_values.append(summed_intensity)
+                summed_intensity = intensity
+                summed_tof = tof_index
+                count = 1
+            else:
+                summed_intensity += intensity
+                summed_tof += last_tof_index
+                count += 1
+            intensity_buffer[tof_index] = 0
+            last_tof_index = tof_index
+        new_indptr.append(len(new_tof_indices))
+    return (
+        np.array(new_indptr),
+        np.array(new_tof_indices),
+        np.array(new_intensity_values),
+    )
+
+
+# @alphatims.utils.pjit
+@alphatims.utils.njit
+def merge_pushes2(
+    self_push_index,
+    indptr,
+    tof_indices,
+    intensity_values,
+    dia_mz_cycle,
+    tof_tolerance,
+    scan_max_index,
+    tof_max_index,
+    zeroth_frame,
+    connection_counts,
+    connections,
+    cycle_tolerance,
+    is_signal,
+    # mz_values,
+):
+    intensity_buffer = np.zeros(tof_max_index, dtype=np.float32)
+    new_tof_indices = []
+    new_intensity_values = []
+    index_offset = (self_push_index - zeroth_frame * scan_max_index) % len(dia_mz_cycle)
+    cycle_index = (self_push_index - zeroth_frame * scan_max_index) // len(dia_mz_cycle)
+    push_offset = len(dia_mz_cycle) * cycle_index + zeroth_frame * scan_max_index
+    current_tof_indices = []
+    connection_start = connection_counts[index_offset]
+    connection_end = connection_counts[index_offset + 1]
+    for connection_index in connections[connection_start: connection_end]:
+        for cycle_offset in range(-cycle_tolerance, cycle_tolerance + 1):
+            other_push_index = push_offset + connection_index + len(dia_mz_cycle) * cycle_offset
+            if other_push_index < 0:
+                continue
+                # Check mz
+            if other_push_index >= len(indptr):
+                continue
+            for index in range(
+                indptr[other_push_index],
+                indptr[other_push_index + 1]
+            ):
+                if not is_signal[index]:
+                    continue
+                tof_index = tof_indices[index]
+                if intensity_buffer[tof_index] == 0:
+                    current_tof_indices.append(tof_index)
+                intensity_buffer[tof_index] += intensity_values[index]
+    if len(tof_indices) == 0:
+        return
+    current_tof_indices = sorted(current_tof_indices)
+    last_tof_index = tof_indices[0]
+    last_tof_index = -(1 + tof_tolerance)
+    summed_intensity = intensity_buffer[last_tof_index]
+    summed_tof = last_tof_index
+    count = 1
+    intensity_buffer[last_tof_index] = 0
+    for tof_index in current_tof_indices[1:]:
+        intensity = intensity_buffer[tof_index]
+        if (tof_index - last_tof_index) >= tof_tolerance:
+            if last_tof_index >= 0:
+                new_tof_indices.append(summed_tof // count)
+                new_intensity_values.append(summed_intensity)
+            summed_intensity = intensity
+            summed_tof = tof_index
+            count = 1
+        else:
+            summed_intensity += intensity
+            summed_tof += last_tof_index
+            count += 1
+        intensity_buffer[tof_index] = 0
+        last_tof_index = tof_index
+    return (
+        np.array(new_tof_indices),
+        np.array(new_intensity_values),
+    )
+
+
+
+# @alphatims.utils.pjit
+# @alphatims.utils.njit
+def merge_pushes3(
+    self_push_index,
+    indptr,
+    tof_indices,
+    intensity_values,
+    dia_mz_cycle,
+    tof_tolerance,
+    scan_max_index,
+    tof_max_index,
+    zeroth_frame,
+    connection_counts,
+    connections,
+    cycle_tolerance,
+    is_signal,
+    # mz_values,
+):
+    intensities = []
+    tofs = []
+    new_tof_indices = []
+    new_intensity_values = []
+    index_offset = (self_push_index - zeroth_frame * scan_max_index) % len(dia_mz_cycle)
+    cycle_index = (self_push_index - zeroth_frame * scan_max_index) // len(dia_mz_cycle)
+    push_offset = len(dia_mz_cycle) * cycle_index + zeroth_frame * scan_max_index
+    connection_start = connection_counts[index_offset]
+    connection_end = connection_counts[index_offset + 1]
+    for connection_index in connections[connection_start: connection_end]:
+        for cycle_offset in range(-cycle_tolerance, cycle_tolerance + 1):
+            other_push_index = push_offset + connection_index + len(dia_mz_cycle) * cycle_offset
+            if other_push_index < 0:
+                continue
+                # Check mz
+            if other_push_index >= len(indptr):
+                continue
+            for index in range(
+                indptr[other_push_index],
+                indptr[other_push_index + 1]
+            ):
+                if not is_signal[index]:
+                    continue
+                intensities.append(intensity_values[index])
+                tofs.append(tof_indices[index])
+    if len(tof_indices) == 0:
+        return
+    intensities = np.array(intensities, dtype=np.float32)
+    tofs = np.array(tofs)
+    order = np.argsort(tofs)
+    intensities = intensities[order]
+    tofs = tofs[order]
+    last_tof_index = tofs[0]
+    last_tof_index = -(1 + tof_tolerance)
+    summed_intensity = intensities[0]
+    summed_tof = last_tof_index
+    count = 1
+    for tof_index, intensity in zip(tofs[1:], intensities[1:]):
+        if (tof_index - last_tof_index) >= tof_tolerance:
+            if last_tof_index >= 0:
+                new_tof_indices.append(summed_tof // count)
+                new_intensity_values.append(summed_intensity)
+            summed_intensity = intensity
+            summed_tof = tof_index
+            count = 1
+        else:
+            summed_intensity += intensity
+            summed_tof += last_tof_index
+            count += 1
+        last_tof_index = tof_index
+    return (
+        np.array(new_tof_indices),
+        np.array(new_intensity_values),
     )
