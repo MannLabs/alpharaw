@@ -3,3 +3,5 @@ h5py
 numba
 pandas
 numpy
+
+alphabase

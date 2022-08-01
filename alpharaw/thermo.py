@@ -13,6 +13,8 @@ class ThermoRawData(MSData_Base):
         raw_file_path: str,
     ) -> dict:
         rawfile = pyrawfilereader.RawFileReader(raw_file_path)
+
+        self.creation_time = rawfile.GetCreationDate()
         _peak_indices = []
         mz_values = []
         intensity_values = []
@@ -65,7 +67,7 @@ class ThermoRawData(MSData_Base):
             'precursor_charge': np.array(precursor_charges, dtype=np.int8),
             'precursor_mz_lower': np.array(precursor_mz_lowers),
             'precursor_mz_upper': np.array(precursor_mz_uppers),
-            'ms_level': np.array(ms_order_list, dtype=np.int8)
+            'ms_level': np.array(ms_order_list, dtype=np.int8),
         }
 
     def _set_dataframes(self, raw_data:dict):
@@ -94,6 +96,7 @@ class ThermoRawData(MSData_Base):
             raw_data['precursor_mz_lower'],
             raw_data['precursor_mz_upper'],
         )
+        
 
 # import alphatims
 # class RawFile_Legacy(alphatims.bruker.TimsTOF):

@@ -9,3 +9,5 @@ pipdeptree
 ipykernel
 tqdm
 psutil
+
+alphabase

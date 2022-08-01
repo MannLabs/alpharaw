@@ -7,6 +7,10 @@ from alpharaw.ms_data_base import MSData_Base
 class SciexWiffData(MSData_Base):
     def __init__(self, centroided:bool=True):
         super().__init__(centroided)
+        self.centroid_mz_tol = 0.06
+        self.ignore_empty_scans = True
+        self.keep_k_peaks_per_spec = 2000
+        self.sample_id = 0
 
     def _import(self,
         _wiff_file_path:str
@@ -14,7 +18,13 @@ class SciexWiffData(MSData_Base):
         wiff_reader = pysciexwifffilereader.WillFileReader(
             _wiff_file_path
         )
-        data_dict = wiff_reader.load_sample(0)
+        data_dict = wiff_reader.load_sample(self.sample_id,
+            centroid = self.centroided,
+            centroid_mz_tol = self.centroid_mz_tol,
+            ignore_empty_scans=self.ignore_empty_scans,
+            keep_k_peaks=self.keep_k_peaks_per_spec,
+        )
+        self.creation_time = wiff_reader.wiffSample.Details.AcquisitionDateTime.ToString("O")
         wiff_reader.close()
         return data_dict
     
@@ -26,6 +36,8 @@ class SciexWiffData(MSData_Base):
             raw_data['peak_indices'][:-1],
             raw_data['peak_indices'][1:],
         )
+        self.peak_df['peak_start_mz'] = raw_data['peak_start_mz']
+        self.peak_df['peak_end_mz'] = raw_data['peak_end_mz']
         self.add_column_in_spec_df(
             'rt', raw_data['rt']
         )

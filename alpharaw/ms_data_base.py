@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from alphabase.io.hdf import HDF_File
 
 class MSData_Base:
     def __init__(self, centroided:bool=True):
@@ -9,6 +10,7 @@ class MSData_Base:
         self.peak_df:pd.DataFrame = pd.DataFrame()
         self._raw_file_path = ''
         self.centroided = centroided
+        self.creation_time = ''
 
     @property
     def raw_file_path(self)->str:
@@ -27,6 +29,30 @@ class MSData_Base:
     def load_raw(self, _path:str):
         self.import_raw(_path)
 
+    def save_hdf(self, _path:str):
+        hdf = HDF_File(
+            _path, read_only=False,
+            truncate=True, delete_existing=True
+        )
+
+        hdf.ms_data = {
+            'spectrum_df': self.spectrum_df,
+            'peak_df': self.peak_df
+        }
+
+        hdf.ms_data.creation_time = self.creation_time
+
+    def load_hdf(self, _path:str):
+        hdf = HDF_File(
+            _path, read_only=True,
+            truncate=False, delete_existing=False
+        )
+
+        self.spectrum_df = hdf.ms_data.spectrum_df.values
+        self.peak_df = hdf.ms_data.peak_df.values
+
+        self.creation_time = hdf.ms_data.creation_time
+
     def reset_spec_idxes(self):
         self.spectrum_df.reset_index(drop=True, inplace=True)
         self.spectrum_df['spec_idx'] = self.spectrum_df.index.values
@@ -40,6 +66,9 @@ class MSData_Base:
         raise NotImplementedError(
             f"{self.__class__} must implement `_import()`"
         )
+
+    def _read_creation_time(self, raw_data):
+        pass
 
     def _check_df(self):
         self._check_rt()
