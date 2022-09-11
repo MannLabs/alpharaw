@@ -40,9 +40,9 @@ class ThermoRawData(MSData_Base):
             ms_order = rawfile.GetMSOrderForScanNum(i)
             ms_order_list.append(ms_order)
             if ms_order == 1:
-                precursor_mz_values.append(-1)
-                precursor_mz_lowers.append(-1)
-                precursor_mz_uppers.append(-1)
+                precursor_mz_values.append(-1.0)
+                precursor_mz_lowers.append(-1.0)
+                precursor_mz_uppers.append(-1.0)
                 precursor_charges.append(0)
             else:
                 isolation_center = rawfile.GetPrecursorMassForScanNum(i)

@@ -64,7 +64,7 @@ class MSData_Base:
     
     def _set_dataframes(self, raw_data):
         raise NotImplementedError(
-            f"{self.__class__} must implement `_import()`"
+            f"{self.__class__} must implement `_set_dataframes()`"
         )
 
     def _read_creation_time(self, raw_data):
@@ -85,10 +85,10 @@ class MSData_Base:
 
     def _check_precursor_mz(self):
         if 'isolation_lower_mz' not in self.spectrum_df.columns:
-            self.spectrum_df['isolation_lower_mz'] = -1
-            self.spectrum_df['isolation_upper_mz'] = -1
+            self.spectrum_df['isolation_lower_mz'] = -1.0
+            self.spectrum_df['isolation_upper_mz'] = -1.0
         if 'precursor_mz' not in self.spectrum_df.columns:
-            self.spectrum_df['precursor_mz'] = -1
+            self.spectrum_df['precursor_mz'] = -1.0
 
 
     def create_spectrum_df(self,

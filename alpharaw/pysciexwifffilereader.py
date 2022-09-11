@@ -137,7 +137,7 @@ class WillFileReader:
                     precursor_upper_mz_list.append(center_mz+isolation_window/2)
                 else:
                     precursor_mz_list.append(-1.0)
-                    precursor_charge_list.append(-1.0)
+                    precursor_charge_list.append(-1)
                     ce_list.append(-1.0)
                     precursor_lower_mz_list.append(-1.0)
                     precursor_upper_mz_list.append(-1.0)
