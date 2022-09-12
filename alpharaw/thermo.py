@@ -8,6 +8,7 @@ from alpharaw.ms_data_base import MSData_Base
 class ThermoRawData(MSData_Base):
     def __init__(self, centroided:bool=True):
         super().__init__(centroided)
+        self.file_type = 'Thermo'
 
     def _import(self,
         raw_file_path: str,

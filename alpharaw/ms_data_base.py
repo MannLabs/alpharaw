@@ -11,6 +11,7 @@ class MSData_Base:
         self._raw_file_path = ''
         self.centroided = centroided
         self.creation_time = ''
+        self.file_type = ''
 
     @property
     def raw_file_path(self)->str:
