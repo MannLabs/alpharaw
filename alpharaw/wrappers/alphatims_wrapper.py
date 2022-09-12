@@ -1,11 +1,12 @@
-
-import alphatims.bruker
 import numpy as np
 import pandas as pd
 
+import alphatims
+from alphatims.bruker import TimsTOF
+
 from alpharaw.ms_data_base import MSData_Base
 
-class AlphaTimsWrapper(alphatims.bruker.TimsTOF):
+class AlphaTimsWrapper(TimsTOF):
     def __init__(
         self,
         msdata: MSData_Base,
