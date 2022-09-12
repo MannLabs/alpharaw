@@ -56,12 +56,9 @@ def create_pip_wheel():
         classifiers=package2install.__classifiers__,
         packages=[package2install.__project__],
         include_package_data=True,
-        entry_points={
-            "console_scripts": package2install.__console_scripts__,
-        },
         install_requires=requirements + [
             # TODO Remove hardcoded requirement?
-            "pywin32==225; sys_platform=='win32'"
+            "pywin32; sys_platform=='win32'"
         ],
         extras_require=extra_requirements,
         python_requires=package2install.__python_version__,

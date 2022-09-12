@@ -5,7 +5,7 @@ __project__ = "alpharaw"
 __version__ = "0.0.1"
 __license__ = "Apache"
 __description__ = "An open-source Python package to unify raw MS data accession and storage."
-__author__ = "Mann Labs, Sander Willems"
+__author__ = "Mann Labs"
 __author_email__ = "opensource@alphapept.com"
 __github__ = "https://github.com/MannLabs/alpharaw"
 __keywords__ = [
@@ -31,9 +31,6 @@ __classifiers__ = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
-]
-__console_scripts__ = [
-    "alpharaw=alpharaw.cli:run",
 ]
 __urls__ = {
     "Mann Labs at MPIB": "https://www.biochem.mpg.de/mann",
