@@ -1,9 +1,7 @@
 
 import alphatims.bruker
-import logging
 import numpy as np
 import pandas as pd
-import os
 
 from alpharaw.ms_data_base import MSData_Base
 
@@ -15,15 +13,17 @@ class AlphaTimsWrapper(alphatims.bruker.TimsTOF):
         slice_as_dataframe: bool = True
     ):
         """Create a AlphaTims object that contains all data in-memory.
-​
+
         Parameters
         ----------
         msdata : MSData_Base
             The AlphaRaw data object.
+
         dda : bool
             If DDA, precursor indices will be equal to scan numbers.
             If not DDA (i.e. DIA), precursor indices will be equal to the
             scan number within a DIA cycle.
+            
         slice_as_dataframe : bool
             If True, slicing returns a pd.DataFrame by default.
             If False, slicing provides a np.int64[:] with raw indices.
@@ -44,31 +44,44 @@ class AlphaTimsWrapper(alphatims.bruker.TimsTOF):
         dda: bool,
     ):
         self._version = alphatims.__version__
-        mz_values = msdata.peak_df['peak_mz'].values
-        self._intensity_values = msdata.peak_df['peak_intensity'].values
-        self._push_indptr = np.array(
+        mz_values = msdata.peak_df['mz'].values
+        self._intensity_values = msdata.peak_df['intensity'].values
+        self._push_indptr = np.zeros(
             len(msdata.spectrum_df)+1, dtype=np.int64
         )
-        self._push_indptr[1:] = msdata.peak_df.peak_end_idx.values
+        self._push_indptr[1:] = msdata.spectrum_df.peak_end_idx.values
         self._rt_values = msdata.spectrum_df['rt_sec'].values
         self._quad_mz_values = msdata.spectrum_df[
-            ['precursor_mz_lower','precursor_mz_upper']
+            ['isolation_lower_mz','isolation_upper_mz']
         ].values
         if dda:
             self._precursor_indices = np.zeros_like(
                 self._rt_values, dtype=np.int64
             )
-            self._precursor_indices[
-                msdata.spectrum_df.ms_level.values==2
-            ] = np.cumsum(
-                msdata.spectrum_df.ms_level.values==2, 
-                dtype=np.int64
-            )
+            ms2s = msdata.spectrum_df.ms_level.values==2
+            self._precursor_indices[ms2s] = np.cumsum(
+                ms2s, dtype=np.int64
+            )[ms2s]
         else:
-            self._precursor_indices = np.arange(
-                len(self._rt_values), dtype=np.int64
+            precursor_indices = []
+            prev_mz = -1
+            prev_idx = 0
+            for mz, ms_level in msdata.spectrum_df[
+                ['precursor_mz','ms_level']
+            ].values:
+                if ms_level == 1:
+                    precursor_indices.append(0)
+                elif prev_mz >= mz: # TODO if DIA mz windows are not in order
+                    prev_mz = mz
+                    prev_idx = 1
+                    precursor_indices.append(prev_idx)
+                else:
+                    prev_idx += 1
+                    prev_mz = mz
+                    precursor_indices.append(prev_idx)
+            self._precursor_indices = np.array(
+                precursor_indices, dtype=np.int64
             )
-            self._precursor_indices -= np.cumsum()
 
         scan_count = len(self._precursor_indices)
         self._frame_max_index = scan_count

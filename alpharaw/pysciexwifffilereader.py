@@ -94,6 +94,9 @@ class WillFileReader:
                     ) = centroid_peaks(
                         mz_array, int_array, centroid_mz_tol
                     )
+                else:
+                    mz_starts = mz_array
+                    mz_ends = mz_array
                 if len(mz_array) > keep_k_peaks:
                     idxes = np.argsort(int_array)[-keep_k_peaks:]
                     idxes = np.sort(idxes)
