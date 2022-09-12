@@ -1,1 +1,7 @@
-click==8.0.1
+click
+h5py
+numba
+pandas
+numpy
+
+alphabase
