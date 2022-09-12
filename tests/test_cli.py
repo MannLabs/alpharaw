@@ -5,7 +5,7 @@
 import unittest
 
 # local
-import alpharaw.cli
+import alpharaw
 
 if __name__ == "__main__":
     unittest.main()

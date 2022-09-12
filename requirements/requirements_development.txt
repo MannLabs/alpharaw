@@ -1,6 +1,5 @@
 jupyter
 jupyter_contrib_nbextensions
-pyinstaller
 autodocsumm
 sphinx-rtd-theme
 twine

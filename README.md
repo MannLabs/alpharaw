@@ -1,5 +1,5 @@
 ![Pip installation](https://github.com/MannLabs/alpharaw/workflows/Default%20installation%20and%20tests/badge.svg)
-![GUI and PyPi releases](https://github.com/MannLabs/alpharaw/workflows/Publish%20on%20PyPi%20and%20release%20on%20GitHub/badge.svg)
+![PyPi releases](https://github.com/MannLabs/alpharaw/workflows/Publish%20on%20PyPi%20and%20release%20on%20GitHub/badge.svg)
 [![Downloads](https://pepy.tech/badge/alpharaw)](https://pepy.tech/project/alpharaw)
 [![Downloads](https://pepy.tech/badge/alpharaw/month)](https://pepy.tech/project/alpharaw)
 [![Downloads](https://pepy.tech/badge/alpharaw/week)](https://pepy.tech/project/alpharaw)
@@ -10,12 +10,9 @@ An open-source Python package of the AlphaPept ecosystem from the [Mann Labs at 
 * [**About**](#about)
 * [**License**](#license)
 * [**Installation**](#installation)
-  * [**One-click GUI**](#one-click-gui)
   * [**Pip installer**](#pip)
   * [**Developer installer**](#developer)
 * [**Usage**](#usage)
-  * [**GUI**](#gui)
-  * [**CLI**](#cli)
   * [**Python and jupyter notebooks**](#python-and-jupyter-notebooks)
 * [**Troubleshooting**](#troubleshooting)
 * [**Citations**](#citations)
@@ -38,19 +35,8 @@ AlphaRaw was developed by the [Mann Labs at the Max Planck Institute of Biochemi
 AlphaRaw can be installed and used on all major operating systems (Windows, macOS and Linux).
 There are three different types of installation possible:
 
-* [**One-click GUI installer:**](#one-click-gui) Choose this installation if you only want the GUI and/or keep things as simple as possible.
-* [**Pip installer:**](#pip) Choose this installation if you want to use AlphaRaw as a Python package in an existing Python 3.8 environment (e.g. a Jupyter notebook). If needed, the GUI and CLI can be installed with pip as well.
+* [**Pip installer:**](#pip) Choose this installation if you want to use AlphaRaw as a Python package in an existing Python 3.8 environment (e.g. a Jupyter notebook).
 * [**Developer installer:**](#developer) Choose this installation if you are familiar with CLI tools, [conda](https://docs.conda.io/en/latest/) and Python. This installation allows access to all available features of AlphaRaw and even allows to modify its source code directly. Generally, the developer version of AlphaRaw outperforms the precompiled versions which makes this the installation of choice for high-throughput experiments.
-
-### One-click GUI
-
-The GUI of AlphaRaw is a completely stand-alone tool that requires no knowledge of Python or CLI tools. Click on one of the links below to download the latest release for:
-
-* [**Windows**](https://github.com/MannLabs/alpharaw/releases/latest/download/alpharaw_gui_installer_windows.exe)
-* [**macOS**](https://github.com/MannLabs/alpharaw/releases/latest/download/alpharaw_gui_installer_macos.pkg)
-* [**Linux**](https://github.com/MannLabs/alpharaw/releases/latest/download/alpharaw_gui_installer_linux.deb)
-
-Older releases remain available on the [release page](https://github.com/MannLabs/alpharaw/releases), but no backwards compatibility is guaranteed.
 
 ### Pip
 
@@ -111,33 +97,9 @@ By default this installs loose dependancies (no explicit versioning), although i
 ---
 ## Usage
 
-There are three ways to use AlphaRaw:
-
-* [**GUI**](#gui)
-* [**CLI**](#cli)
 * [**Python**](#python-and-jupyter-notebooks)
 
 NOTE: The first time you use a fresh installation of AlphaRaw, it is often quite slow because some functions might still need compilation on your local operating system and architecture. Subsequent use should be a lot faster.
-
-### GUI
-
-If the GUI was not installed through a one-click GUI installer, it can be activate with the following `bash` command:
-
-```bash
-alpharaw gui
-```
-
-Note that this needs to be prepended with a `!` when you want to run this from within a Jupyter notebook. When the command is run directly from the command-line, make sure you use the right environment (activate it with e.g. `conda activate alpharaw` or set an alias to the binary executable (can be obtained with `where alpharaw` or `which alpharaw`)).
-
-### CLI
-
-The CLI can be run with the following command (after activating the `conda` environment with `conda activate alpharaw` or if an alias was set to the alpharaw executable):
-
-```bash
-alpharaw -h
-```
-
-It is possible to get help about each function and their (required) parameters by using the `-h` flag.
 
 ### Python and Jupyter notebooks
 
