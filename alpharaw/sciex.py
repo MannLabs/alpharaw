@@ -11,6 +11,7 @@ class SciexWiffData(MSData_Base):
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
         self.sample_id = 0
+        self.file_type = 'Sciex'
 
     def _import(self,
         _wiff_file_path:str

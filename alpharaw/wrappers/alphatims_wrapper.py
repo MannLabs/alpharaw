@@ -44,13 +44,13 @@ class AlphaTimsWrapper(alphatims.bruker.TimsTOF):
         dda: bool,
     ):
         self._version = alphatims.__version__
-        mz_values = msdata.peak_df['mz'].values
-        self._intensity_values = msdata.peak_df['intensity'].values
+        mz_values = msdata.peak_df.mz.values
+        self._intensity_values = msdata.peak_df.intensity.values
         self._push_indptr = np.zeros(
             len(msdata.spectrum_df)+1, dtype=np.int64
         )
         self._push_indptr[1:] = msdata.spectrum_df.peak_end_idx.values
-        self._rt_values = msdata.spectrum_df['rt_sec'].values
+        self._rt_values = msdata.spectrum_df.rt_sec.values
         self._quad_mz_values = msdata.spectrum_df[
             ['isolation_lower_mz','isolation_upper_mz']
         ].values
@@ -101,7 +101,9 @@ class AlphaTimsWrapper(alphatims.bruker.TimsTOF):
         )
         self._quad_max_mz_value = float(np.max(self._quad_mz_values))
         self._precursor_max_index = int(np.max(self._precursor_indices)) + 1
-        self._acquisition_mode = "Thermo " + ("DDA" if dda else "DIA") # TODO
+        self._acquisition_mode = msdata.file_type + ' ' + (
+            "DDA" if dda else "DIA"
+        ) # TODO
         self._mz_min_value = int(np.min(mz_values))
         self._mz_max_value = int(np.max(mz_values)) + 1
         self._decimals = 4
