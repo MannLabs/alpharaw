@@ -32,9 +32,6 @@ __classifiers__ = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-__console_scripts__ = [
-    "alpharaw=alpharaw.cli:run",
-]
 __urls__ = {
     "Mann Labs at MPIB": "https://www.biochem.mpg.de/mann",
     "GitHub": __github__,
