@@ -8,5 +8,10 @@ pipdeptree
 ipykernel
 tqdm
 psutil
+h5py
+numba
+pandas
+numpy
+pythonnet
 
 alphabase
