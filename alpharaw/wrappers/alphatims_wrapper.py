@@ -87,9 +87,9 @@ class AlphaTimsWrapper(TimsTOF):
         scan_count = len(self._precursor_indices)
         self._frame_max_index = scan_count
         self._scan_max_index = 1
-        self._mobility_max_value = 0
-        self._mobility_min_value = 0
-        self._mobility_values = np.array([0])
+        self._mobility_max_value = 0.0
+        self._mobility_min_value = 0.0
+        self._mobility_values = np.array([0.0])
         self._quad_indptr = self._push_indptr
         self._raw_quad_indptr = np.arange(scan_count + 1)
         self._intensity_min_value = float(np.min(self._intensity_values))
