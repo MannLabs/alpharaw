@@ -12,6 +12,6 @@ h5py
 numba
 pandas
 numpy
-pythonnet
+#pythonnet
 
 alphabase
