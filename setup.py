@@ -58,7 +58,8 @@ def create_pip_wheel():
         include_package_data=True,
         install_requires=requirements + [
             # TODO Remove hardcoded requirement?
-            "pywin32; sys_platform=='win32'"
+            "pywin32; sys_platform=='win32'",
+            "pythonnet; sys_platform=='win32'",
         ],
         extras_require=extra_requirements,
         python_requires=package2install.__python_version__,
