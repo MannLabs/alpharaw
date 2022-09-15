@@ -37,7 +37,7 @@ Pythonnet must be installed to access Thermo or Sciex raw data.
 
 #### For Windows
 
-Install pythonnet with `pip install pythonnet`.
+Pythonnet will be automatically installed via pip.
 
 #### For Linux
 

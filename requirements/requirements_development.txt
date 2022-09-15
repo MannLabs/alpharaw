@@ -12,6 +12,6 @@ h5py
 numba
 pandas
 numpy
-#pythonnet
+pythonnet; sys_platform=='win32'
 
 alphabase
