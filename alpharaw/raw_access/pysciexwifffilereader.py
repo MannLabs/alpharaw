@@ -3,7 +3,6 @@ import sys
 import numpy as np
 import time
 
-from alpharaw.pythermorawfilereader import DotNetArrayToNPArray
 from alpharaw.utils.centroiding import centroid_peaks
 
 # require pythonnet, pip install pythonnet on Windows
@@ -13,16 +12,18 @@ import System
 from System.Threading import Thread
 from System.Globalization import CultureInfo
 
+from .clr_utils import DotNetArrayToNPArray, ext_dir
+
 de_fr = CultureInfo('fr-FR')
 other = CultureInfo('en-US')
 
 Thread.CurrentThread.CurrentCulture = other
 Thread.CurrentThread.CurrentUICulture = other
 
-dir = os.path.dirname(os.path.abspath(__file__))
-clr.AddReference(os.path.join(dir, "ext/sciex/Clearcore2.Data.AnalystDataProvider.dll"))
-clr.AddReference(os.path.join(dir, "ext/sciex/ClearCore2.Data.dll"))
-clr.AddReference(os.path.join(dir, "ext/sciex/WiffOps4Python.dll"))
+clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
+clr.AddReference(os.path.join(ext_dir, "sciex/ClearCore2.Data.dll"))
+clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+
 import Clearcore2
 import WiffOps4Python
 from WiffOps4Python import WiffOps as DotNetWiffOps

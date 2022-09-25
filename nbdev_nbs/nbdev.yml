@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "alpharaw"
+  site-url: "https://MannLabs.github.io/alpharaw"
+  description: "Raw data accessing for mass spec"
+  repo-branch: main
+  repo-url: "https://github.com/MannLabs/alpharaw"
