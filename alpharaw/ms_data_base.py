@@ -46,6 +46,18 @@ class MSData_Base:
     def load_raw(self, _path:str):
         self.import_raw(_path)
 
+    def _save_meta_to_hdf(self, hdf:HDF_File):
+        hdf.ms_data.creation_time = self.creation_time
+        hdf.ms_data.raw_file_path = self.raw_file_path
+        hdf.ms_data.file_type = self.file_type
+        hdf.ms_data.centroided = self.centroided
+
+    def _load_meta_from_hdf(self, hdf:HDF_File):
+        self.creation_time = hdf.ms_data.creation_time
+        self.raw_file_path = hdf.ms_data.raw_file_path
+        self.file_type = hdf.ms_data.file_type
+        self.centroided = hdf.ms_data.centroided
+
     def save_hdf(self, _path:str):
         hdf = HDF_File(
             _path, read_only=False,
@@ -57,7 +69,8 @@ class MSData_Base:
             'peak_df': self.peak_df
         }
 
-        hdf.ms_data.creation_time = self.creation_time
+        self._save_meta_to_hdf(hdf)
+        
 
     def load_hdf(self, _path:str):
         hdf = HDF_File(
@@ -68,7 +81,7 @@ class MSData_Base:
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
 
-        self.creation_time = hdf.ms_data.creation_time
+        self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
         self.spectrum_df.reset_index(drop=True, inplace=True)
@@ -251,5 +264,5 @@ class MSReaderProvider:
         )
 
 ms_reader_provider = MSReaderProvider()
-ms_reader_provider.register_reader('hdf', MSData_HDF)
+ms_reader_provider.register_reader('alpharaw', MSData_HDF)
 ms_reader_provider.register_reader('alpharaw_hdf', MSData_HDF)

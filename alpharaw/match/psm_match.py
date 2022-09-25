@@ -8,6 +8,7 @@ import numpy as np
 import numba
 import pandas as pd
 import tqdm
+from typing import Union, Tuple
 
 from alphabase.peptide.fragment import (
     create_fragment_mz_dataframe, 
@@ -19,8 +20,9 @@ from alpharaw.ms_data_base import (
 )
 
 from alpharaw.match.match_utils import (
-    match_centroid_mz, match_profile_mz
+    match_centroid_mz, match_profile_mz, 
 )
+from ..utils.ms_path_utils import parse_ms_files_to_dict
 
 # %% ../../nbdev_nbs/match/psm_match.ipynb 4
 @numba.njit
@@ -83,15 +85,39 @@ def match_one_raw_with_numba(
 
 # %% ../../nbdev_nbs/match/psm_match.ipynb 5
 class PepSpecMatch:
-    """Extract fragment ions from MS2 data"""
+    """
+    Extract fragment ions from MS2 data.
+
+    Parameters
+    ----------
+    charged_frag_types : list, optional
+        fragment types with charge states, 
+        e.g. ['b_z1', 'y_z2', 'b_modloss_z1', 'y_H2O_z2'].
+        By default `get_charged_frag_types(['b','y','b_modloss','y_modloss'], 2)`
+
+    centroid_mode : bool, optional
+        if True, match the closest peak for a m/z;
+        if False, matched the higest peak for a m/z in the tolerance range.
+        By default True
+
+    use_ppm : bool, optional
+        If use ppm, by default True
+        
+    tol_value : float, optional
+        tolerance value, by default 20.0
+    """
     def __init__(self,
         charged_frag_types:list = get_charged_frag_types(
             ['b','y','b_modloss','y_modloss'], 2
         ), 
-        centroid_mode:bool=True
+        centroid_mode:bool=True,
+        use_ppm:bool = True,
+        tol_value:float = 20.0
     ):
         self.charged_frag_types = charged_frag_types
         self.centroid_mode = centroid_mode
+        self.use_ppm = use_ppm
+        self.tol = tol_value
 
     def _preprocess_psms(self, psm_df):
         pass
@@ -168,14 +194,13 @@ class PepSpecMatch:
         matched_intensity_df:pd.DataFrame,
         matched_mz_err_df:pd.DataFrame,
         frag_start_idx:int, frag_end_idx:int,
-        use_ppm:bool, tol:float,
     ):
         if len(spec_mzs)==0: return
 
-        if use_ppm:
-            mz_tols = spec_mzs*tol*1e-6
+        if self.use_ppm:
+            mz_tols = spec_mzs*self.tol*1e-6
         else:
-            mz_tols = np.full_like(spec_mzs, tol)
+            mz_tols = np.full_like(spec_mzs, self.tol)
 
         frag_mzs = fragment_mz_df.values[
             frag_start_idx:frag_end_idx,:
@@ -211,8 +236,6 @@ class PepSpecMatch:
         psm_df_one_raw: pd.DataFrame,
         ms_file:str,
         ms_file_type:str='hdf',
-        use_ppm:bool=True, 
-        tol:float=20.0,
     )->tuple:
         """Matching psm_df_one_raw against ms_file
 
@@ -229,12 +252,6 @@ class PepSpecMatch:
             ms2 file type, could be 
             ["thermo","sciex","alphapept","mgf","hdf"].
             Default to 'hdf'
-
-        use_ppm : bool, optional
-            if use ppm tolerance. Defaults to True.
-
-        tol : float, optional
-            tolerance value. Defaults to 20.0.
 
         Returns
         -------
@@ -286,7 +303,6 @@ class PepSpecMatch:
                 matched_intensity_df,
                 matched_mz_err_df,
                 frag_start_idx, frag_end_idx,
-                use_ppm, tol,
             )
 
         return (
@@ -325,11 +341,10 @@ class PepSpecMatch:
     
     def match_ms2_multi_raw(self,
         psm_df: pd.DataFrame,
-        ms_file_dict: dict, #raw_name: ms_file_path or ms_reader object
-        ms_file_type:str = 'alphapept', # or 'mgf', or 'thermo'
-        ppm=True, tol=20.0,
+        ms_files: Union[dict,list],
+        ms_file_type:str = 'alpharaw_hdf',
     ):
-        """Matching PSM dataframe against the ms2 files in ms_file_dict
+        """Matching PSM dataframe against the ms2 files in ms_files
         This method will store matched values as attributes:
         - self.psm_df
         - self.fragment_mz_df
@@ -341,38 +356,41 @@ class PepSpecMatch:
         psm_df : pd.DataFrame
             PSM dataframe
 
-        ms_file_dict : dict
-            {raw_name: ms2 path}
+        ms_files : dict | list
+            if dict: {raw_name: ms2 path}
+            if list: [ms2 path1, ms2 path2]
 
         ms_file_type : str, optional
-            Could be 'alphapept', 'mgf' or 'thermo'. 
+            Could be 'alpharaw_hdf', 'mgf' or 'thermo', 'sciex', 'alphapept_hdf'. 
             Defaults to 'alphapept'.
-
-        ppm : bool, optional
-            Defaults to True.
-
-        tol : float, optional
-            PPM units, defaults to 20.0.
             
+        Returns
+        -------
+        tuple:
+            pd.DataFrame: psm dataframe with fragment index information.
+            
+            pd.DataFrame: fragment mz dataframe.
+            
+            pd.DataFrame: matched intensity dataframe.
+            
+            pd.DataFrame: matched mass error dataframe. 
+            np.inf if a fragment is not matched.
+
         """
         self._preprocess_psms(psm_df)
         self.psm_df = psm_df
-
-        if 'frag_start_idx' in self.psm_df.columns:
-            del self.psm_df['frag_start_idx']
-            del self.psm_df['frag_end_idx']
-            
-
+        
         (
             self.fragment_mz_df, 
             self.matched_intensity_df,
             self.matched_mz_err_df,
         ) = self._prepare_matching_dfs(psm_df)
         
-        self._ms_file_dict = ms_file_dict
+        if isinstance(ms_files, dict):
+            self._ms_file_dict = ms_files
+        else:
+            self._ms_file_dict = parse_ms_files_to_dict(ms_files)
         self._ms_file_type = ms_file_type
-        self.use_ppm = ppm
-        self.tol = tol
 
         for raw_name, df_group in tqdm.tqdm(
             self.psm_df.groupby('raw_name')
