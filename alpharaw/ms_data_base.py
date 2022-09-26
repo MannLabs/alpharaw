@@ -107,7 +107,7 @@ class MSData_Base:
     
     def _check_rt(self):
         assert 'rt' in self.spectrum_df.columns
-        self.spectrum_df['rt_sec'] = self.spectrum_df.rt*60
+        # self.spectrum_df['rt_sec'] = self.spectrum_df.rt*60
 
     def _check_mobility(self):
         if 'mobility' not in self.spectrum_df.columns:

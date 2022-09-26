@@ -65,7 +65,7 @@ class AlphaTimsWrapper(TimsTOF):
             len(spectrum_df)+1, dtype=np.int64
         )
         self._push_indptr[1:] = spectrum_df.peak_end_idx.values
-        self._rt_values = spectrum_df.rt_sec.values
+        self._rt_values = spectrum_df.rt.values*60
         self._quad_mz_values = spectrum_df[
             ['isolation_lower_mz','isolation_upper_mz']
         ].values
