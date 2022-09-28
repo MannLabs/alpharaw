@@ -3,6 +3,9 @@
 try:
     from .sciex import SciexWiffData
     from .thermo import ThermoRawData
+    from .legacy_msdata import mgf
+    from .legacy_msdata import mzml
+    from .wrappers import alphapept_wrapper
     from .ms_data_base import ms_reader_provider
 except ImportError:
     pass

@@ -7,6 +7,7 @@ __all__ = ['SciexWiffData']
 import numpy as np
 import pandas as pd
 import os
+import warnings
 import alpharaw.raw_access.pysciexwifffilereader as pysciexwifffilereader
 from .ms_data_base import MSData_Base
 from .ms_data_base import ms_reader_provider
@@ -24,6 +25,9 @@ class SciexWiffData(MSData_Base):
     """
     def __init__(self, centroided:bool=True):
         super().__init__(centroided)
+        if self.centroided:
+            self.centroided = False
+            warnings.warn('Centroiding for Sciex data is not well implemented yet')
         self.centroid_mz_tol = 0.06
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
