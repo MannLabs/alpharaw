@@ -61,17 +61,17 @@ def load_ms_data_tims(
         return None, TimsTOF(ms_file)
     else:
         if isinstance(ms_file, MSData_Base):
-            ms_reader = ms_file
+            raw_data = ms_file
         else:
-            ms_reader = ms_reader_provider.get_reader(
+            raw_data = ms_reader_provider.get_reader(
                 ms_file_type
             )
-            ms_reader.import_raw(ms_file)
+            raw_data.import_raw(ms_file)
 
         tims_data = AlphaTimsWrapper(
-            ms_reader, dda=dda
+            raw_data, dda=dda
         )
-        return ms_reader, tims_data
+        return raw_data, tims_data
 
 
 # %% ../../nbdev_nbs/match/psm_match_alphatims.ipynb 3
@@ -107,7 +107,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         )
 
     def load_ms_data(self, ms_file, ms_file_type, dda=False):
-        self.ms_reader, self.tims_data = load_ms_data_tims(
+        self.raw_data, self.tims_data = load_ms_data_tims(
             ms_file, ms_file_type, dda
         )
 
@@ -116,7 +116,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     )->tuple:
         """
         Matching psm_df_one_raw against 
-        self.tims_data and self.ms_reader
+        self.tims_data and self.raw_data
         after `self.load_ms_data()`
 
         Parameters

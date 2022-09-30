@@ -103,11 +103,11 @@ def load_ms_data(
     if isinstance(ms_file, MSData_Base):
         return ms_file
     else:
-        ms_reader = ms_reader_provider.get_reader(
+        raw_data = ms_reader_provider.get_reader(
             ms_file_type
         )
-        ms_reader.import_raw(ms_file)
-        return ms_reader
+        raw_data.import_raw(ms_file)
+        return raw_data
 
 # %% ../../nbdev_nbs/match/psm_match.ipynb 6
 class PepSpecMatch:
@@ -154,24 +154,24 @@ class PepSpecMatch:
         )
 
     def _add_missing_columns_to_psm_df(self,
-        psm_df:pd.DataFrame, ms_reader=None
+        psm_df:pd.DataFrame, raw_data=None
     ):
-        if ms_reader is None:
-            ms_reader = self.ms_reader
+        if raw_data is None:
+            raw_data = self.raw_data
         add_spec_info_list = []
         if 'rt' not in psm_df.columns:
             add_spec_info_list.append('rt')
 
         if (
             'mobility' not in psm_df.columns and 
-            'mobility' in ms_reader.spectrum_df.columns
+            'mobility' in raw_data.spectrum_df.columns
         ):
             add_spec_info_list.append('mobility')
 
         if len(add_spec_info_list) > 0:
             # pfind does not report RT in the result file
             psm_df = psm_df.reset_index().merge(
-                ms_reader.spectrum_df[
+                raw_data.spectrum_df[
                     ['spec_idx']+add_spec_info_list
                 ],
                 how='left',
@@ -180,7 +180,7 @@ class PepSpecMatch:
 
             if 'rt' in add_spec_info_list:
                 psm_df['rt_norm'] = (
-                    psm_df.rt/ms_reader.spectrum_df.rt.max()
+                    psm_df.rt/raw_data.spectrum_df.rt.max()
                 )
         # if 'rt_sec' not in psm_df.columns:
         #     psm_df['rt_sec'] = psm_df.rt*60
@@ -225,13 +225,13 @@ class PepSpecMatch:
             ["alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"].
             Default to 'alpharaw_hdf'
         """
-        self.ms_reader = load_ms_data(ms_file, ms_file_type)
+        self.raw_data = load_ms_data(ms_file, ms_file_type)
 
     def get_peaks(self,
         spec_idx:int,
         **kwargs
     ):
-        return self.ms_reader.get_peaks(spec_idx)
+        return self.raw_data.get_peaks(spec_idx)
 
     def _match_one_psm(self,
         spec_mzs:np.ndarray, spec_intens:np.ndarray,
@@ -281,7 +281,7 @@ class PepSpecMatch:
         psm_df_one_raw: pd.DataFrame,
     )->tuple:
         """
-        Matching psm_df_one_raw against self.ms_reader 
+        Matching psm_df_one_raw against self.raw_data 
         after `self.load_ms_data()`
 
         Parameters
@@ -340,12 +340,12 @@ class PepSpecMatch:
 
     def _match_ms2_one_raw_numba(self, raw_name, df_group):
         if raw_name in self._ms_file_dict:
-            ms_reader = load_ms_data(
+            raw_data = load_ms_data(
                 self._ms_file_dict[raw_name], self._ms_file_type
             )
 
             df_group = self._add_missing_columns_to_psm_df(
-                df_group, ms_reader
+                df_group, raw_data
             )
 
             match_one_raw_with_numba(
@@ -353,10 +353,10 @@ class PepSpecMatch:
                 df_group.frag_start_idx.values,
                 df_group.frag_end_idx.values,
                 self.fragment_mz_df.values,
-                ms_reader.peak_df.mz.values, 
-                ms_reader.peak_df.intensity.values,
-                ms_reader.spectrum_df.peak_start_idx.values,
-                ms_reader.spectrum_df.peak_end_idx.values,
+                raw_data.peak_df.mz.values, 
+                raw_data.peak_df.intensity.values,
+                raw_data.spectrum_df.peak_start_idx.values,
+                raw_data.spectrum_df.peak_end_idx.values,
                 self.matched_intensity_df.values,
                 self.matched_mz_err_df.values,
                 self.use_ppm, self.tol, 
