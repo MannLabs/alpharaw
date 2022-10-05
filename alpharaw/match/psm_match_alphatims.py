@@ -7,7 +7,7 @@ __all__ = ['load_ms_data_tims', 'PepSpecMatch_AlphaTims']
 import pandas as pd
 import numpy as np
 import tqdm
-from typing import Union
+from typing import Union, Tuple
 
 from alphatims.bruker import TimsTOF
 
@@ -31,7 +31,7 @@ def load_ms_data_tims(
     ms_file:Union[str, MSData_Base, TimsTOF],
     ms_file_type:str='alpharaw_hdf',
     dda:bool=False,
-)->tuple:
+)->Tuple[MSData_Base, TimsTOF]:
     """Load ms data as TimsTOF object
 
     Parameters
@@ -56,7 +56,7 @@ def load_ms_data_tims(
     if isinstance(ms_file, TimsTOF):
         return None, ms_file
     elif ms_file_type.lower() in [
-        'alphatims', 'alphatims_hdf'
+        'alphatims', 'alphatims_hdf', 'timstof_raw'
     ]:
         return None, TimsTOF(ms_file)
     else:
