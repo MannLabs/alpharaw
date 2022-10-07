@@ -143,7 +143,10 @@ class AlphaTimsWrapper(TimsTOF):
         max_intensities = [
             np.max(self._intensity_values[
                 self._push_indptr[i]:self._push_indptr[i+1]
-            ]) if self._push_indptr[i+1]!=-1 and self._push_indptr[i]!=-1 else 0
+            ]) if self._push_indptr[i+1]!=-1 and 
+                  self._push_indptr[i]!=-1 and 
+                  self._push_indptr[i]!=self._push_indptr[i+1] 
+              else 0
             for i in range(len(self._rt_values))
         ]
         self._frames = pd.DataFrame(
