@@ -21,7 +21,7 @@ Thread.CurrentThread.CurrentCulture = other
 Thread.CurrentThread.CurrentUICulture = other
 
 clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/ClearCore2.Data.dll"))
+clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
 clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
 
 import Clearcore2
