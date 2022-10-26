@@ -20,7 +20,7 @@ from alpharaw.ms_data_base import (
 )
 
 from alpharaw.match.match_utils import (
-    match_centroid_mz, match_profile_mz, 
+    match_closest_peaks, match_highest_peaks, 
 )
 from ..utils.ms_path_utils import parse_ms_files_to_dict
 
@@ -46,22 +46,23 @@ def match_one_raw_with_numba(
         if peak_end == peak_start: continue
         spec_mzs = all_spec_mzs[peak_start:peak_end]
         spec_intens = all_spec_intensities[peak_start:peak_end]
-        
-        if use_ppm:
-            spec_mz_tols = spec_mzs*tol*1e-6
-        else:
-            spec_mz_tols = np.full_like(spec_mzs, tol)
 
         frag_mzs = all_frag_mzs[frag_start:frag_end,:].copy()
         
+        if use_ppm:
+            frag_mz_tols = frag_mzs*tol*1e-6
+        else:
+            frag_mz_tols = np.full_like(frag_mzs, tol)
+        
         if centroid_mode:
-            matched_idxes = match_centroid_mz(
-                spec_mzs, frag_mzs, spec_mz_tols
+            matched_idxes = match_closest_peaks(
+                spec_mzs, spec_intens, 
+                frag_mzs, frag_mz_tols
             ).reshape(-1)
         else:
-            matched_idxes = match_profile_mz(
-                spec_mzs, frag_mzs, spec_mz_tols,
-                spec_intens
+            matched_idxes = match_highest_peaks(
+                spec_mzs, spec_intens, 
+                frag_mzs, frag_mz_tols
             ).reshape(-1)
 
         matched_intens = spec_intens[matched_idxes]
@@ -242,23 +243,22 @@ class PepSpecMatch:
     ):
         if len(spec_mzs)==0: return
 
-        if self.use_ppm:
-            mz_tols = spec_mzs*self.tol*1e-6
-        else:
-            mz_tols = np.full_like(spec_mzs, self.tol)
-
         frag_mzs = fragment_mz_df.values[
             frag_start_idx:frag_end_idx,:
         ]
 
+        if self.use_ppm:
+            mz_tols = frag_mzs*self.tol*1e-6
+        else:
+            mz_tols = np.full_like(frag_mzs, self.tol)
+
         if self.centroid_mode:
-            matched_idxes = match_centroid_mz(
-                spec_mzs, frag_mzs, mz_tols
+            matched_idxes = match_closest_peaks(
+                spec_mzs, spec_intens, frag_mzs, mz_tols
             )
         else:
-            matched_idxes = match_centroid_mz(
-                spec_mzs, frag_mzs, mz_tols,
-                spec_intens 
+            matched_idxes = match_highest_peaks(
+                spec_mzs, spec_intens, frag_mzs, mz_tols,
             )
         
         matched_intens = spec_intens[matched_idxes]

@@ -16,7 +16,7 @@ from alpharaw.ms_data_base import (
 )
 
 from alpharaw.match.match_utils import (
-    match_centroid_mz, match_profile_mz
+    match_closest_peaks, match_highest_peaks
 )
 
 from alpharaw.wrappers.alphatims_wrapper import (

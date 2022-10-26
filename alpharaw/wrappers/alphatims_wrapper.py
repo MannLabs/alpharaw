@@ -162,15 +162,15 @@ class AlphaTimsWrapper(TimsTOF):
         isolation_widths = self._quad_mz_values[:,1]+self._quad_mz_values[:,0]
         isolation_centers = self._quad_mz_values[:,1]-self._quad_mz_values[:,0]
         self._fragment_frames = pd.DataFrame(
-                {
-                    "Frame": frame_numbers[msmstype==1],
-                    "ScanNumBegin": 0,
-                    "ScanNumEnd": 0,
-                    "IsolationWidth": isolation_widths[msmstype==1],
-                    "IsolationMz": isolation_centers[msmstype==1],
-                    "Precursor": self._precursor_indices[msmstype==1],
-                }
-            )
+            {
+                "Frame": frame_numbers[msmstype==1],
+                "ScanNumBegin": 0,
+                "ScanNumEnd": 0,
+                "IsolationWidth": isolation_widths[msmstype==1],
+                "IsolationMz": isolation_centers[msmstype==1],
+                "Precursor": self._precursor_indices[msmstype==1],
+            }
+        )
         self._zeroth_frame = False
         offset = int(self.zeroth_frame)
         cycle_index = np.searchsorted(
