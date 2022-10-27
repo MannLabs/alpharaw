@@ -117,6 +117,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             self.set_precursor_mz_windows(
                 precursor_mzs-2, precursor_mzs+2
             )
+        self.spectrum_df = self.spectrum_df.sort_values('rt').reset_index(drop=True)
 
 ms_reader_provider.register_reader('alphapept', AlphaPept_HDF_MS2_Reader)
 ms_reader_provider.register_reader('alphapept_hdf', AlphaPept_HDF_MS2_Reader)
