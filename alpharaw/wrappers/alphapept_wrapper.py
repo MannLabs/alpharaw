@@ -128,6 +128,11 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
         )
         self.spectrum_df['ms_level'] = 2
 
+        if hasattr(hdf.Raw.MS2_scans, 'mobility2'):
+            self.add_column_in_spec_df(
+                'mobility', hdf.Raw.MS2_scans.mobility2.values
+            )
+
         if hasattr(hdf.Raw.MS2_scans, 'mono_mzs2'):
             precursor_mzs = np.zeros(spec_num)
             precursor_mzs[spec_idxes] = hdf.Raw.MS2_scans.mono_mzs2.values
