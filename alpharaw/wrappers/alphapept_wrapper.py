@@ -73,6 +73,26 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
     """MS2 from AlphaPept HDF"""
     def _import(self, _path):
         return _path
+
+    def _reset_peaks(self):
+        if 'mobility' in self.spectrum_df.columns:
+            self.spectrum_df.sort_values(['rt','mobility'],key=lambda x: (x[0],-x[1]),inplace=True)
+        else:
+            self.spectrum_df.sort_values('rt',inplace=True)
+        mzs_list = []
+        intens_list = []
+        idx_list = []
+        for start,end in self.spectrum_df[['peak_start_idx','peak_end_idx']].values:
+            mzs_list.append(self.peak_df.mz.values[start:end])
+            intens_list.append(self.peak_df.intensity.values[start:end])
+            idx_list.append(end-start)
+        peak_indices = np.empty(len(idx_list)+1,dtype=np.int64)
+        peak_indices[0] = 0
+        peak_indices[1:] = np.cumsum(idx_list)
+        self.peak_df.mz.values[:] = np.concatenate(mzs_list)
+        self.peak_df.intensity.values[:] = np.concatenate(intens_list)
+        self.spectrum_df['peak_start_idx'] = peak_indices[:-1]
+        self.spectrum_df['peak_end_idx'] = peak_indices[1:]
     
     def _set_dataframes(self, _path):
         hdf = HDF_File(_path)
@@ -117,7 +137,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             self.set_precursor_mz_windows(
                 precursor_mzs-2, precursor_mzs+2
             )
-        self.spectrum_df = self.spectrum_df.sort_values('rt').reset_index(drop=True)
+        self._reset_peaks()
 
 ms_reader_provider.register_reader('alphapept', AlphaPept_HDF_MS2_Reader)
 ms_reader_provider.register_reader('alphapept_hdf', AlphaPept_HDF_MS2_Reader)
