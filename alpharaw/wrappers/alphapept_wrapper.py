@@ -76,7 +76,9 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
 
     def _reset_peaks(self):
         if 'mobility' in self.spectrum_df.columns:
-            self.spectrum_df.sort_values(['rt','mobility'],key=lambda x: (x[0],-x[1]),inplace=True)
+            self.spectrum_df['_mobility'] = -self.spectrum_df.mobility
+            self.spectrum_df.sort_values(['rt','mobility_'],inplace=True)
+            self.spectrum_df.drop(columns=['_mobility'],inplace=True)
         else:
             self.spectrum_df.sort_values('rt',inplace=True)
         mzs_list = []
