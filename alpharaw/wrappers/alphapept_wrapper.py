@@ -57,7 +57,7 @@ def extract_ms2(raw_data:MSData_Base, query_data:dict):
     query_data["mass_list_ms2"] = mass_list_ms2
     query_data["int_list_ms2"] = int_list_ms2
     query_data["ms_list_ms2"] = ms_levels
-    query_data["prec_mass_list2"] = mass_list_ms2
+    query_data["prec_mass_list2"] = mono_mzs2
     query_data["mono_mzs2"] = mono_mzs2
     query_data["charge2"] = charges
 

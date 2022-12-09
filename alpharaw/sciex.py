@@ -89,4 +89,4 @@ class SciexWiffData(MSData_Base):
 
 ms_reader_provider.register_reader('sciex', SciexWiffData)
 ms_reader_provider.register_reader('sciex_wiff', SciexWiffData)
-ms_reader_provider.register_reader('sciex-wiff', SciexWiffData)
+ms_reader_provider.register_reader('sciex_raw', SciexWiffData)
