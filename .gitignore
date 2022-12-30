@@ -134,7 +134,7 @@ AlphaRaw/logs
 *sandbox*
 
 # nbdev2
-*_docs*
+_docs*
 # *_quarto.yml
 # *sidebar.yml
 *_proc

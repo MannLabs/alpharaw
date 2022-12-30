@@ -155,7 +155,7 @@ class WillFileReader:
             "peak_mz": np.concatenate(peak_mz_array_list),
             "peak_intensity": np.concatenate(peak_intensity_array_list),
             "peak_start_mz": np.concatenate(peak_mz_starts_list),
-            "peak_end_mz": np.concatenate(peak_mz_ends_list),
+            "peak_stop_mz": np.concatenate(peak_mz_ends_list),
             "experiment_id": np.array(experiment_id_list, dtype=np.int64), 
             "cycle_id": np.array(cycle_id_list, dtype=np.int64), 
             "rt": np.array(rt_list, dtype=np.float64), 
