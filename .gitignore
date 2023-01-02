@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # User defined:
-AlphaRaw/logs
+alpharaw/logs
 *.DS_Store
 *sandbox*
 
