@@ -1,14 +1,24 @@
-
 import numpy as np
 import pandas as pd
 import os
-import alpharaw.pythermorawfilereader as pyrawfilereader
-from alpharaw.ms_data_base import MSData_Base
+import alpharaw.raw_access.pythermorawfilereader as pyrawfilereader
+from .ms_data_base import MSData_Base
+from .ms_data_base import ms_reader_provider
 
 class ThermoRawData(MSData_Base):
+    """
+    Loading Thermo Raw data as MSData_Base data structure.
+    """
     def __init__(self, centroided:bool=True):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            if peaks will be centroided after loading, 
+            by default True
+        """
         super().__init__(centroided)
-        self.file_type = 'Thermo'
+        self.file_type = 'thermo'
 
     def _import(self,
         raw_file_path: str,
@@ -97,3 +107,7 @@ class ThermoRawData(MSData_Base):
             raw_data['precursor_mz_lower'],
             raw_data['precursor_mz_upper'],
         )
+
+ms_reader_provider.register_reader('thermo', ThermoRawData)
+ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
+ms_reader_provider.register_reader('thermo-raw', ThermoRawData)

@@ -1,7 +1,7 @@
+pywin32; sys_platform=='win32'
+pythonnet; sys_platform=='win32'
+
 jupyter
-jupyter_contrib_nbextensions
-autodocsumm
-sphinx-rtd-theme
 twine
 bumpversion
 pipdeptree
@@ -12,5 +12,14 @@ h5py
 numba
 pandas
 numpy
+
+# sphinx
+autodocsumm
+myst_parser
+sphinx
+nbsphinx
+jinja2
+contextfilter
+furo
 
 alphabase

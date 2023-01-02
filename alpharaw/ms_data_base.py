@@ -3,7 +3,17 @@ import numpy as np
 from alphabase.io.hdf import HDF_File
 
 class MSData_Base:
+    """
+    The base data structure for MS Data, other MSData loader inherit
+    """
     def __init__(self, centroided:bool=True):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            if peaks will be centroided after loading, 
+            by default True
+        """
         # A spectrum contains peaks
         self.spectrum_df:pd.DataFrame = pd.DataFrame()
         # A peak contains mz, intensity, and ...
@@ -30,6 +40,18 @@ class MSData_Base:
     def load_raw(self, _path:str):
         self.import_raw(_path)
 
+    def _save_meta_to_hdf(self, hdf:HDF_File):
+        hdf.ms_data.creation_time = self.creation_time
+        hdf.ms_data.raw_file_path = self.raw_file_path
+        hdf.ms_data.file_type = self.file_type
+        hdf.ms_data.centroided = self.centroided
+
+    def _load_meta_from_hdf(self, hdf:HDF_File):
+        self.creation_time = hdf.ms_data.creation_time
+        self.raw_file_path = hdf.ms_data.raw_file_path
+        self.file_type = hdf.ms_data.file_type
+        self.centroided = hdf.ms_data.centroided
+
     def save_hdf(self, _path:str):
         hdf = HDF_File(
             _path, read_only=False,
@@ -41,7 +63,8 @@ class MSData_Base:
             'peak_df': self.peak_df
         }
 
-        hdf.ms_data.creation_time = self.creation_time
+        self._save_meta_to_hdf(hdf)
+        
 
     def load_hdf(self, _path:str):
         hdf = HDF_File(
@@ -52,7 +75,7 @@ class MSData_Base:
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
 
-        self.creation_time = hdf.ms_data.creation_time
+        self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
         self.spectrum_df.reset_index(drop=True, inplace=True)
@@ -78,7 +101,7 @@ class MSData_Base:
     
     def _check_rt(self):
         assert 'rt' in self.spectrum_df.columns
-        self.spectrum_df['rt_sec'] = self.spectrum_df.rt*60
+        # self.spectrum_df['rt_sec'] = self.spectrum_df.rt*60
 
     def _check_mobility(self):
         if 'mobility' not in self.spectrum_df.columns:
@@ -90,7 +113,6 @@ class MSData_Base:
             self.spectrum_df['isolation_upper_mz'] = -1.0
         if 'precursor_mz' not in self.spectrum_df.columns:
             self.spectrum_df['precursor_mz'] = -1.0
-
 
     def create_spectrum_df(self,
         spectrum_num:int,
@@ -104,14 +126,14 @@ class MSData_Base:
         mz_array:np.ndarray, 
         intensity_array:np.ndarray,
         peak_start_indices:np.ndarray,
-        peak_end_indices:np.ndarray,
+        peak_stop_indices:np.ndarray,
     ):
         self.peak_df = pd.DataFrame({
             'mz': mz_array,
             'intensity': intensity_array
         })
         self.spectrum_df['peak_start_idx'] = peak_start_indices
-        self.spectrum_df['peak_end_idx'] = peak_end_indices
+        self.spectrum_df['peak_stop_idx'] = peak_stop_indices
 
     def set_peaks_by_array_list(self,
         mz_array_list:list,
@@ -158,6 +180,15 @@ class MSData_Base:
             dtype, na_value
         )
 
+    def get_peaks(self, spec_idx):
+        start, end = self.spectrum_df[[
+            'peak_start_idx','peak_stop_idx'
+        ]].values[spec_idx,:]
+        return (
+            self.peak_df.mz.values[start:end],
+            self.peak_df.intensity.values[start:end],
+        )
+
     def set_precursor_mz(self, 
         precursor_mz_values:np.ndarray,
         spec_idxes:np.ndarray=None, 
@@ -198,5 +229,33 @@ def index_ragged_list(ragged_list: list)  -> np.ndarray:
     indices = np.cumsum(indices, dtype=np.int64)
 
     return indices
-    
 
+
+class MSData_HDF(MSData_Base):
+    def import_raw(self, _path:str):
+        self.raw_file_path = _path
+        self.load_hdf(_path)
+
+class MSReaderProvider:
+    """Factory class to register and get MS Readers"""
+    def __init__(self):
+        self.ms_reader_dict = {}
+
+    def register_reader(self, ms2_type:str, reader_class):
+        self.ms_reader_dict[ms2_type.lower()] = reader_class
+
+    def get_reader(
+        self, file_type:str, 
+        *, 
+        centroided:bool=True,
+        **kwargs
+    )->MSData_Base:
+        file_type = file_type.lower()
+        if file_type not in self.ms_reader_dict: return None
+        else: return self.ms_reader_dict[file_type](
+            centroided=centroided, **kwargs
+        )
+
+ms_reader_provider = MSReaderProvider()
+ms_reader_provider.register_reader('alpharaw', MSData_HDF)
+ms_reader_provider.register_reader('alpharaw_hdf', MSData_HDF)

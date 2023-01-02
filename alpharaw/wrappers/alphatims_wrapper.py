@@ -4,33 +4,34 @@ import pandas as pd
 import alphatims
 from alphatims.bruker import TimsTOF
 
-from alpharaw.ms_data_base import MSData_Base
+from ..ms_data_base import MSData_Base
 
 class AlphaTimsWrapper(TimsTOF):
+    """Create a AlphaTims object that contains 
+    all data in-memory (or memory mapping).
+
+    Parameters
+    ----------
+    msdata : MSData_Base
+        The AlphaRaw data object.
+
+    dda : bool
+        If DDA, precursor indices will be equal to scan numbers.
+        If not DDA (i.e. DIA), precursor indices will be equal to the
+        scan number within a DIA cycle.
+        
+    slice_as_dataframe : bool
+        If True, slicing returns a pd.DataFrame by default.
+        If False, slicing provides a np.int64[:] with raw indices.
+        This value can also be modified after creation.
+        Default is True.
+    """
     def __init__(
         self,
         msdata: MSData_Base,
         dda: bool,
         slice_as_dataframe: bool = True
     ):
-        """Create a AlphaTims object that contains all data in-memory.
-
-        Parameters
-        ----------
-        msdata : MSData_Base
-            The AlphaRaw data object.
-
-        dda : bool
-            If DDA, precursor indices will be equal to scan numbers.
-            If not DDA (i.e. DIA), precursor indices will be equal to the
-            scan number within a DIA cycle.
-            
-        slice_as_dataframe : bool
-            If True, slicing returns a pd.DataFrame by default.
-            If False, slicing provides a np.int64[:] with raw indices.
-            This value can also be modified after creation.
-            Default is True.
-        """
         self._use_calibrated_mz_values_as_default = False
         self._import_alpharaw_object(msdata, dda)
         self.thermo_raw_file_name = msdata.raw_file_path
@@ -47,19 +48,25 @@ class AlphaTimsWrapper(TimsTOF):
         self._version = alphatims.__version__
         mz_values = msdata.peak_df.mz.values
         self._intensity_values = msdata.peak_df.intensity.values
+
+        if (msdata.spectrum_df.peak_start_idx<0).any():
+            spectrum_df = msdata.spectrum_df.query('peak_start_idx!=-1')
+        else:
+            spectrum_df = msdata.spectrum_df
+        
         self._push_indptr = np.zeros(
-            len(msdata.spectrum_df)+1, dtype=np.int64
+            len(spectrum_df)+1, dtype=np.int64
         )
-        self._push_indptr[1:] = msdata.spectrum_df.peak_end_idx.values
-        self._rt_values = msdata.spectrum_df.rt_sec.values
-        self._quad_mz_values = msdata.spectrum_df[
+        self._push_indptr[1:] = spectrum_df.peak_stop_idx.values
+        self._rt_values = spectrum_df.rt.values*60
+        self._quad_mz_values = spectrum_df[
             ['isolation_lower_mz','isolation_upper_mz']
         ].values
         if dda:
             self._precursor_indices = np.zeros_like(
                 self._rt_values, dtype=np.int64
             )
-            ms2s = msdata.spectrum_df.ms_level.values==2
+            ms2s = spectrum_df.ms_level.values==2
             self._precursor_indices[ms2s] = np.cumsum(
                 ms2s, dtype=np.int64
             )[ms2s]
@@ -67,7 +74,7 @@ class AlphaTimsWrapper(TimsTOF):
             precursor_indices = []
             prev_mz = -1
             prev_idx = 0
-            for mz, ms_level in msdata.spectrum_df[
+            for mz, ms_level in spectrum_df[
                 ['precursor_mz','ms_level']
             ].values:
                 if ms_level == 1:
@@ -129,7 +136,11 @@ class AlphaTimsWrapper(TimsTOF):
         max_intensities = [
             np.max(self._intensity_values[
                 self._push_indptr[i]:self._push_indptr[i+1]
-            ]) for i in range(len(self._rt_values))
+            ]) if self._push_indptr[i+1]!=-1 and 
+                  self._push_indptr[i]!=-1 and 
+                  self._push_indptr[i]!=self._push_indptr[i+1] 
+              else 0
+            for i in range(len(self._rt_values))
         ]
         self._frames = pd.DataFrame(
             {
@@ -144,15 +155,15 @@ class AlphaTimsWrapper(TimsTOF):
         isolation_widths = self._quad_mz_values[:,1]+self._quad_mz_values[:,0]
         isolation_centers = self._quad_mz_values[:,1]-self._quad_mz_values[:,0]
         self._fragment_frames = pd.DataFrame(
-                {
-                    "Frame": frame_numbers[msmstype==1],
-                    "ScanNumBegin": 0,
-                    "ScanNumEnd": 0,
-                    "IsolationWidth": isolation_widths[msmstype==1],
-                    "IsolationMz": isolation_centers[msmstype==1],
-                    "Precursor": self._precursor_indices[msmstype==1],
-                }
-            )
+            {
+                "Frame": frame_numbers[msmstype==1],
+                "ScanNumBegin": 0,
+                "ScanNumEnd": 0,
+                "IsolationWidth": isolation_widths[msmstype==1],
+                "IsolationMz": isolation_centers[msmstype==1],
+                "Precursor": self._precursor_indices[msmstype==1],
+            }
+        )
         self._zeroth_frame = False
         offset = int(self.zeroth_frame)
         cycle_index = np.searchsorted(

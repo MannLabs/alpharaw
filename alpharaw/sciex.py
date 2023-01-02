@@ -1,17 +1,32 @@
 import numpy as np
 import pandas as pd
 import os
-import alpharaw.pysciexwifffilereader as pysciexwifffilereader
-from alpharaw.ms_data_base import MSData_Base
-    
+import warnings
+import alpharaw.raw_access.pysciexwifffilereader as pysciexwifffilereader
+from .ms_data_base import MSData_Base
+from .ms_data_base import ms_reader_provider
+
 class SciexWiffData(MSData_Base):
+    """
+    Loading Sciex Wiff data as MSData_Base data structure.
+    """
     def __init__(self, centroided:bool=True):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            if peaks will be centroided after loading, 
+            by default True
+        """
         super().__init__(centroided)
+        if self.centroided:
+            self.centroided = False
+            warnings.warn('Centroiding for Sciex data is not well implemented yet')
         self.centroid_mz_tol = 0.06
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
         self.sample_id = 0
-        self.file_type = 'Sciex'
+        self.file_type = 'sciex'
 
     def _import(self,
         _wiff_file_path:str
@@ -38,7 +53,7 @@ class SciexWiffData(MSData_Base):
             raw_data['peak_indices'][1:],
         )
         self.peak_df['peak_start_mz'] = raw_data['peak_start_mz']
-        self.peak_df['peak_end_mz'] = raw_data['peak_end_mz']
+        self.peak_df['peak_stop_mz'] = raw_data['peak_stop_mz']
         self.add_column_in_spec_df(
             'rt', raw_data['rt']
         )
@@ -65,3 +80,7 @@ class SciexWiffData(MSData_Base):
             'cycle_id', raw_data['cycle_id'],
             dtype=np.int32
         )
+
+ms_reader_provider.register_reader('sciex', SciexWiffData)
+ms_reader_provider.register_reader('sciex_wiff', SciexWiffData)
+ms_reader_provider.register_reader('sciex_raw', SciexWiffData)

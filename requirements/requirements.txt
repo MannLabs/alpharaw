@@ -1,3 +1,6 @@
+pywin32; sys_platform=='win32'
+pythonnet==2.5.2; sys_platform=='win32'
+
 h5py
 numba
 pandas
