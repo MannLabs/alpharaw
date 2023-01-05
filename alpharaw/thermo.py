@@ -110,4 +110,3 @@ class ThermoRawData(MSData_Base):
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
-ms_reader_provider.register_reader('thermo-raw', ThermoRawData)

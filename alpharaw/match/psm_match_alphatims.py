@@ -20,6 +20,11 @@ from alpharaw.wrappers.alphatims_wrapper import (
 from .psm_match import PepSpecMatch
 from ..utils.ms_path_utils import parse_ms_files_to_dict
 
+alphatims_hdf_types = [
+    'alphatims', 'alphatims_hdf',
+    'tims.hdf',
+]
+
 def load_ms_data_tims(
     ms_file:Union[str, MSData_Base, TimsTOF],
     ms_file_type:str='alpharaw_hdf',
@@ -34,7 +39,7 @@ def load_ms_data_tims(
 
     ms_file_type : str, optional
         ms2 file type, could be 
-        ["alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"].
+        ["alpharaw_hdf","raw.hdf","thermo","sciex","alphapept_hdf","mgf"].
         Default to 'alphatims_hdf'
 
     dda : bool, optional
@@ -48,9 +53,7 @@ def load_ms_data_tims(
     """
     if isinstance(ms_file, TimsTOF):
         return None, ms_file
-    elif ms_file_type.lower() in [
-        'alphatims', 'alphatims_hdf', 'timstof_raw'
-    ]:
+    elif ms_file_type.lower() in alphatims_hdf_types:
         return None, TimsTOF(ms_file)
     else:
         if isinstance(ms_file, MSData_Base):

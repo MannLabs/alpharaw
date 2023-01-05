@@ -258,4 +258,5 @@ class MSReaderProvider:
 
 ms_reader_provider = MSReaderProvider()
 ms_reader_provider.register_reader('alpharaw', MSData_HDF)
+ms_reader_provider.register_reader('raw.hdf', MSData_HDF)
 ms_reader_provider.register_reader('alpharaw_hdf', MSData_HDF)
