@@ -73,17 +73,33 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     this can be used for DIA PSM matching by selecting 
     spectra with RT (and IM) values.
     """
-    def get_peaks(self,
+
+    #: RT win to get a MS2 spectrum by slicing
+    rt_sec_win_to_slice_spectrum = 6.0
+
+    #: IM win to get a MS2 spectrum by slicing
+    im_win_to_slice_spectrum = 0.1
+
+    #: find closest MS2 for the given RT when slicing
+    find_closest_ms2_by_rt = True
+
+    def get_peak_df(self,
         rt:float,
         precursor_mz:float,
-        im_value:float=0,
+        im:float=0.0,
     ):
         rt_sec = rt*60
         im_slice = (
-            slice(None) if im_value == 0 else 
-            slice(im_value-0.05,im_value+0.05)
+            slice(None) if im == 0 else 
+            slice(
+                im-self.im_win_to_slice_spectrum/2,
+                im+self.im_win_to_slice_spectrum/2
+            )
         )
-        rt_slice = slice(rt_sec-0.5,rt_sec+0.5)
+        rt_slice = slice(
+            rt_sec-self.rt_sec_win_to_slice_spectrum/2,
+            rt_sec+self.rt_sec_win_to_slice_spectrum/2,
+        )
 
         spec_df = self.tims_data[
             rt_slice, im_slice
@@ -91,8 +107,26 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         spec_df = spec_df[
             (spec_df.quad_low_mz_values <= precursor_mz)
             &(spec_df.quad_high_mz_values >= precursor_mz)
-        ].sort_values('mz_values')
+        ]
 
+        if self.find_closest_ms2_by_rt:
+            closest_rt = 1000000
+            for _, df in spec_df.groupby('frame_indices'):
+                if (
+                    abs(df.rt_values.values[0]-rt_sec) < closest_rt 
+                ):
+                    spec_df = df
+                    closest_rt = abs(df.rt_values.values[0]-rt_sec)
+        
+        return spec_df.sort_values('mz_values').reset_index(drop=True)
+
+    def get_peaks(
+        self,
+        rt:float,
+        precursor_mz:float,
+        im:float=0.0,
+    ):
+        spec_df = self.get_peak_df(rt, precursor_mz, im)
         return (
             spec_df.mz_values.values, 
             spec_df.intensity_values.values
@@ -215,4 +249,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             np.inf if a fragment is not matched.
             
         """
-        raise NotImplementedError("Not necessary for matching multiple raw files, loop through `match_ms2_one_raw()`")
+        raise NotImplementedError(
+            "Not necessary for matching multiple raw files using AlphaTims, "
+            "loop through `match_ms2_one_raw()`"
+        )
