@@ -219,7 +219,8 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         ms_file_type: str = 'alphatims',
         dda:bool = False,
     ):
-        """Matching PSM dataframe against the ms2 files in ms_files
+        """
+        Matching PSM dataframe against the ms2 files in ms_files
         This method will store matched values as attributes:
         - self.psm_df
         - self.fragment_mz_df
