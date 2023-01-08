@@ -83,6 +83,7 @@ def match_one_raw_with_numba(
 def load_ms_data(
     ms_file:Union[str, MSData_Base],
     ms_file_type:str='alpharaw_hdf',
+    **kwargs
 )->MSData_Base:
     """Load MS files
 
