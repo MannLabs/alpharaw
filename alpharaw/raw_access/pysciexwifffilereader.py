@@ -55,8 +55,6 @@ class WillFileReader:
         self.msSample = self.wiffSample.MassSpectrometerSample
 
         _peak_indices = []
-        cycle_id_list = []
-        experiment_id_list = []
         peak_mz_array_list = []
         peak_intensity_array_list = []
         rt_list = []
@@ -107,8 +105,6 @@ class WillFileReader:
                 )
 
                 _peak_indices.append(len(peak_mz_array_list[-1]))
-                cycle_id_list.append(j)
-                experiment_id_list.append(i)
                 rt_list.append(exp.GetRTFromExperimentCycle(j))
                 # ScanMode = massSpectrumInfo.CentroidMode ? WiffFile.ScanMode.Centroid : WiffFile.ScanMode.Profile,
                 # Polarity = (details.Polarity == MSExperimentInfo.PolarityEnum.Positive) ? WiffFile.Polarity.Positive : WiffFile.Polarity.Negative,
@@ -143,8 +139,6 @@ class WillFileReader:
             "peak_indices": peak_indices, 
             "peak_mz": np.concatenate(peak_mz_array_list),
             "peak_intensity": np.concatenate(peak_intensity_array_list),
-            "experiment_id": np.array(experiment_id_list, dtype=np.int64), 
-            "cycle_id": np.array(cycle_id_list, dtype=np.int64), 
             "rt": np.array(rt_list, dtype=np.float64), 
             "ms_level": np.array(ms_level_list, dtype=np.int8), 
             "precursor_mz": np.array(precursor_mz_list, dtype=np.float64), 
