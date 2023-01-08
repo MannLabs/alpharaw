@@ -81,7 +81,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     rt_sec_win_to_slice_ms2 = 10.0
 
     #: IM win to get a MS2 spectrum by slicing
-    im_win_to_slice_ms2 = 0.4
+    im_win_to_slice_ms2 = 0.2
 
     #: find closest MS2 for the given RT when slicing
     find_closest_ms2_by_rt = True
