@@ -64,37 +64,6 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
     """MS2 from AlphaPept HDF"""
     def _import(self, _path):
         return _path
-
-    def _sort_rt(self):
-        """
-        Used by :class:`alpharaw.wrappers.alphatims_wrapper.AlphaTims_Wrapper`.
-        """
-        # if 'mobility' in self.spectrum_df.columns:
-        #     self.spectrum_df['_mobility'] = -self.spectrum_df.mobility
-        #     self.spectrum_df.sort_values(['rt','_mobility'],inplace=True)
-        #     self.spectrum_df.drop(columns=['_mobility'],inplace=True)
-        # else:
-        #     self.spectrum_df.sort_values('rt',inplace=True)
-        self.spectrum_df.sort_values('rt',inplace=True)
-        self.spectrum_df.reset_index(drop=True,inplace=True)
-        self.spectrum_df['spec_idx_old'] = self.spectrum_df.spec_idx
-        self.spectrum_df['spec_idx'] = self.spectrum_df.index
-        mzs_list = []
-        intens_list = []
-        idx_list = []
-        for start,end in self.spectrum_df[
-            ['peak_start_idx','peak_stop_idx']
-        ].values:
-            mzs_list.append(self.peak_df.mz.values[start:end])
-            intens_list.append(self.peak_df.intensity.values[start:end])
-            idx_list.append(end-start)
-        peak_indices = np.empty(len(idx_list)+1,dtype=np.int64)
-        peak_indices[0] = 0
-        peak_indices[1:] = np.cumsum(idx_list)
-        self.peak_df.mz.values[:] = np.concatenate(mzs_list)
-        self.peak_df.intensity.values[:] = np.concatenate(intens_list)
-        self.spectrum_df['peak_start_idx'] = peak_indices[:-1]
-        self.spectrum_df['peak_stop_idx'] = peak_indices[1:]
     
     def _set_dataframes(self, _path):
         hdf = HDF_File(_path)

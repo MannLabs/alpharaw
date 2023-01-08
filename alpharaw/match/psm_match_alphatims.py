@@ -25,6 +25,7 @@ def load_ms_data_tims(
     ms_file:Union[str, MSData_Base, TimsTOF],
     ms_file_type:str='alpharaw_hdf',
     dda:bool=False,
+    spectra_sorted_by_rt:bool=True,
 )->Tuple[MSData_Base, TimsTOF]:
     """Load ms data as TimsTOF object
 
@@ -40,6 +41,10 @@ def load_ms_data_tims(
 
     dda : bool, optional
         if it is DDA data, by default False
+
+    spectra_sorted_by_rt : bool, optional
+        If spectra are already sorted by RT.
+        Defaults to True
     
     Returns
     -------
@@ -60,7 +65,7 @@ def load_ms_data_tims(
             )
             raw_data.import_raw(ms_file)
 
-            if isinstance(raw_data, AlphaPept_HDF_MS2_Reader):
+            if not spectra_sorted_by_rt:
                 # RT may not be sorted in AP HDF for timsTOF after preprocessing
                 raw_data._sort_rt() 
 
@@ -185,9 +190,13 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             spec_df.intensity_values.values
         )
 
-    def load_ms_data(self, ms_file, ms_file_type, dda=False):
+    def load_ms_data(self, 
+        ms_file, ms_file_type, 
+        dda=False,
+        spectra_sorted_by_rt=True,
+    ):
         self.raw_data, self.tims_data = load_ms_data_tims(
-            ms_file, ms_file_type, dda
+            ms_file, ms_file_type, dda, spectra_sorted_by_rt
         )
 
     def match_ms2_one_raw(self, 
