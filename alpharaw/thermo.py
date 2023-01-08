@@ -44,7 +44,7 @@ class ThermoRawData(MSData_Base):
             else:
                 masses, intensities = rawfile.GetCentroidMassListFromScanNum(i)
             mz_values.append(masses)
-            intensity_values.append(intensities)
+            intensity_values.append(intensities.astype(np.float32))
             _peak_indices.append(len(masses))
             rt = rawfile.RTFromScanNum(i)
             rt_values.append(rt)
@@ -110,4 +110,3 @@ class ThermoRawData(MSData_Base):
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
-ms_reader_provider.register_reader('thermo-raw', ThermoRawData)

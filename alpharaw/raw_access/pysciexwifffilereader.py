@@ -88,7 +88,7 @@ class WillFileReader:
                 ): 
                     continue
                 mz_array = DotNetArrayToNPArray(massSpectrum.GetActualXValues())
-                int_array = DotNetArrayToNPArray(massSpectrum.GetActualYValues())
+                int_array = DotNetArrayToNPArray(massSpectrum.GetActualYValues()).astype(np.float32)
                 if centroid:
                     (
                         mz_array, int_array, mz_starts, mz_ends

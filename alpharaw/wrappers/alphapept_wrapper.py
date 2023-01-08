@@ -38,7 +38,6 @@ def extract_ms2(raw_data:MSData_Base, query_data:dict):
     charges = spec_df.charge.values
     charges[charges<=0] = 2
 
-
     mass_list_ms2, int_list_ms2 = get_peak_lists(
         spec_df.peak_start_idx.values, 
         spec_df.peak_stop_idx.values,
@@ -65,28 +64,6 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
     """MS2 from AlphaPept HDF"""
     def _import(self, _path):
         return _path
-
-    def _reset_peaks(self):
-        if 'mobility' in self.spectrum_df.columns:
-            self.spectrum_df['_mobility'] = -self.spectrum_df.mobility
-            self.spectrum_df.sort_values(['rt','_mobility'],inplace=True)
-            self.spectrum_df.drop(columns=['_mobility'],inplace=True)
-        else:
-            self.spectrum_df.sort_values('rt',inplace=True)
-        mzs_list = []
-        intens_list = []
-        idx_list = []
-        for start,end in self.spectrum_df[['peak_start_idx','peak_stop_idx']].values:
-            mzs_list.append(self.peak_df.mz.values[start:end])
-            intens_list.append(self.peak_df.intensity.values[start:end])
-            idx_list.append(end-start)
-        peak_indices = np.empty(len(idx_list)+1,dtype=np.int64)
-        peak_indices[0] = 0
-        peak_indices[1:] = np.cumsum(idx_list)
-        self.peak_df.mz.values[:] = np.concatenate(mzs_list)
-        self.peak_df.intensity.values[:] = np.concatenate(intens_list)
-        self.spectrum_df['peak_start_idx'] = peak_indices[:-1]
-        self.spectrum_df['peak_stop_idx'] = peak_indices[1:]
     
     def _set_dataframes(self, _path):
         hdf = HDF_File(_path)
@@ -136,7 +113,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             self.set_precursor_mz_windows(
                 precursor_mzs-2, precursor_mzs+2
             )
-        self._reset_peaks()
+
 
 ms_reader_provider.register_reader('alphapept', AlphaPept_HDF_MS2_Reader)
 ms_reader_provider.register_reader('alphapept_hdf', AlphaPept_HDF_MS2_Reader)

@@ -28,7 +28,7 @@ def match_closest_peaks(
         query n-D mz array
 
     query_mz_tols : np.ndarray
-        query n-D mz array tolerance, same shape as query_mzs
+        query n-D mz tolerance array, same shape as query_mzs
 
     Returns
     -------
@@ -77,7 +77,7 @@ def match_highest_peaks(
         query n-D mz array
 
     query_mz_tols : np.ndarray
-        query n-D mz array tolerance, same shape as query_mzs
+        query n-D mz tolerance array, same shape as query_mzs
 
     Returns
     -------
@@ -126,7 +126,7 @@ def match_profile_peaks(
         query n-D mz array
 
     query_mz_tols : np.ndarray
-        query n-D mz array tolerance, same shape as query_mzs
+        query n-D mz tolerance array, same shape as query_mzs
 
     Returns
     -------

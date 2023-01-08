@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 import time
+import warnings
 
 # require pythonnet, pip install pythonnet on Windows
 import clr
@@ -493,19 +494,31 @@ class RawFileReader(object):
     def GetProfileMassListFromScanNum(self, scanNumber):
         scanStatistics = self.source.GetScanStatsForScanNumber(scanNumber)
         segmentedScan = self.source.GetSegmentedScanFromScanNumber(scanNumber, scanStatistics)
-        return np.array([DotNetArrayToNPArray(segmentedScan.Positions), DotNetArrayToNPArray(segmentedScan.Intensities)])
+        return (
+            DotNetArrayToNPArray(segmentedScan.Positions), 
+            DotNetArrayToNPArray(segmentedScan.Intensities)
+        )
 
     def GetCentroidMassListFromScanNum(self, scanNumber):
         scanStatistics = self.source.GetScanStatsForScanNumber(scanNumber)
         if scanStatistics.IsCentroidScan:
             segmentedScan = self.source.GetSegmentedScanFromScanNumber(scanNumber, scanStatistics)
-            return np.array([DotNetArrayToNPArray(segmentedScan.Positions), DotNetArrayToNPArray(segmentedScan.Intensities)])
+            return (
+                DotNetArrayToNPArray(segmentedScan.Positions), 
+                DotNetArrayToNPArray(segmentedScan.Intensities)
+            )
         else:
             scan = ThermoFisher.CommonCore.Data.Business.Scan.FromFile(self.source, scanNumber)
             if scan.HasCentroidStream:
                 stream = self.source.GetCentroidStream(scanNumber, False)
-                return np.array([DotNetArrayToNPArray(stream.Masses), DotNetArrayToNPArray(stream.Intensities)])
+                return (
+                    DotNetArrayToNPArray(stream.Masses), 
+                    DotNetArrayToNPArray(stream.Intensities)
+                )
             else:
-                print("Profile scan {0} cannot be centroided!".format(scanNumber))
+                warnings.warn(f"Profile scan {scanNumber} cannot be centroided!")
                 segmentedScan = self.source.GetSegmentedScanFromScanNumber(scanNumber, scanStatistics)
-                return np.array([DotNetArrayToNPArray(segmentedScan.Positions), DotNetArrayToNPArray(segmentedScan.Intensities)])
+                return (
+                    DotNetArrayToNPArray(segmentedScan.Positions), 
+                    DotNetArrayToNPArray(segmentedScan.Intensities)
+                )
