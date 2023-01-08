@@ -38,7 +38,6 @@ def extract_ms2(raw_data:MSData_Base, query_data:dict):
     charges = spec_df.charge.values
     charges[charges<=0] = 2
 
-
     mass_list_ms2, int_list_ms2 = get_peak_lists(
         spec_df.peak_start_idx.values, 
         spec_df.peak_stop_idx.values,
@@ -66,17 +65,26 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
     def _import(self, _path):
         return _path
 
-    def _reset_peaks(self):
-        if 'mobility' in self.spectrum_df.columns:
-            self.spectrum_df['_mobility'] = -self.spectrum_df.mobility
-            self.spectrum_df.sort_values(['rt','_mobility'],inplace=True)
-            self.spectrum_df.drop(columns=['_mobility'],inplace=True)
-        else:
-            self.spectrum_df.sort_values('rt',inplace=True)
+    def _sort_rt(self):
+        """
+        Used by :class:`alpharaw.wrappers.alphatims_wrapper.AlphaTims_Wrapper`.
+        """
+        # if 'mobility' in self.spectrum_df.columns:
+        #     self.spectrum_df['_mobility'] = -self.spectrum_df.mobility
+        #     self.spectrum_df.sort_values(['rt','_mobility'],inplace=True)
+        #     self.spectrum_df.drop(columns=['_mobility'],inplace=True)
+        # else:
+        #     self.spectrum_df.sort_values('rt',inplace=True)
+        self.spectrum_df.sort_values('rt',inplace=True)
+        self.spectrum_df.reset_index(drop=True,inplace=True)
+        self.spectrum_df['spec_idx_old'] = self.spectrum_df.spec_idx
+        self.spectrum_df['spec_idx'] = self.spectrum_df.index
         mzs_list = []
         intens_list = []
         idx_list = []
-        for start,end in self.spectrum_df[['peak_start_idx','peak_stop_idx']].values:
+        for start,end in self.spectrum_df[
+            ['peak_start_idx','peak_stop_idx']
+        ].values:
             mzs_list.append(self.peak_df.mz.values[start:end])
             intens_list.append(self.peak_df.intensity.values[start:end])
             idx_list.append(end-start)
@@ -136,7 +144,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             self.set_precursor_mz_windows(
                 precursor_mzs-2, precursor_mzs+2
             )
-        self._reset_peaks()
+
 
 ms_reader_provider.register_reader('alphapept', AlphaPept_HDF_MS2_Reader)
 ms_reader_provider.register_reader('alphapept_hdf', AlphaPept_HDF_MS2_Reader)

@@ -25,7 +25,7 @@ def match_one_raw_with_numba(
     all_spec_mzs, all_spec_intensities, 
     peak_start_idxes, peak_stop_idxes,
     matched_intensities, matched_mz_errs,
-    use_ppm, tol, centroid_mode=True,
+    use_ppm, tol, matched_closest=True,
 ):
     """ 
     Internel function to match fragment mz values to spectrum mz values.
@@ -50,7 +50,7 @@ def match_one_raw_with_numba(
         else:
             frag_mz_tols = np.full_like(frag_mzs, tol)
         
-        if centroid_mode:
+        if matched_closest:
             matched_idxes = match_closest_peaks(
                 spec_mzs, spec_intens, 
                 frag_mzs, frag_mz_tols
@@ -109,11 +109,15 @@ class PepSpecMatch:
     """
     Extract fragment ions from MS2 data.
     """
+    match_closest:bool = True
+    use_ppm:bool = True
+    #: matching mass tolerance
+    tolerance:float = 20
     def __init__(self,
         charged_frag_types:list = get_charged_frag_types(
             ['b','y','b_modloss','y_modloss'], 2
         ), 
-        centroid_mode:bool=True,
+        match_closest:bool=True,
         use_ppm:bool = True,
         tol_value:float = 20.0
     ):
@@ -125,7 +129,7 @@ class PepSpecMatch:
             e.g. ['b_z1', 'y_z2', 'b_modloss_z1', 'y_H2O_z2'].
             By default `get_charged_frag_types(['b','y','b_modloss','y_modloss'], 2)`
 
-        centroid_mode : bool, optional
+        match_closest : bool, optional
             if True, match the closest peak for a m/z;
             if False, matched the higest peak for a m/z in the tolerance range.
             By default True
@@ -137,9 +141,9 @@ class PepSpecMatch:
             tolerance value, by default 20.0
         """
         self.charged_frag_types = charged_frag_types
-        self.centroid_mode = centroid_mode
+        self.match_closest = match_closest
         self.use_ppm = use_ppm
-        self.tol = tol_value
+        self.tolerance = tol_value
 
     def _preprocess_psms(self, psm_df):
         pass
@@ -243,11 +247,11 @@ class PepSpecMatch:
         ]
 
         if self.use_ppm:
-            mz_tols = frag_mzs*self.tol*1e-6
+            mz_tols = frag_mzs*self.tolerance*1e-6
         else:
-            mz_tols = np.full_like(frag_mzs, self.tol)
+            mz_tols = np.full_like(frag_mzs, self.tolerance)
 
-        if self.centroid_mode:
+        if self.match_closest:
             matched_idxes = match_closest_peaks(
                 spec_mzs, spec_intens, frag_mzs, mz_tols
             )
@@ -274,6 +278,7 @@ class PepSpecMatch:
 
     def match_ms2_one_raw(self, 
         psm_df_one_raw: pd.DataFrame,
+        verbose:bool=False,
     )->tuple:
         """
         Matching psm_df_one_raw against self.raw_data 
@@ -309,13 +314,17 @@ class PepSpecMatch:
             matched_intensity_df,
             matched_mz_err_df,
         ) = self._prepare_matching_dfs(psm_df_one_raw)
+
+        psm_iters = psm_df_one_raw[[
+            'spec_idx', 'frag_start_idx', 
+            'frag_stop_idx'
+        ]].values
+        if verbose:
+            psm_iters = tqdm.tqdm(psm_iters)
         
         for (
             spec_idx, frag_start_idx, frag_stop_idx
-        ) in psm_df_one_raw[[
-            'spec_idx', 'frag_start_idx', 
-            'frag_stop_idx'
-        ]].values:
+        ) in psm_iters:
             (
                 spec_mzs, spec_intens
             ) = self.get_peaks(spec_idx)
@@ -354,8 +363,8 @@ class PepSpecMatch:
                 raw_data.spectrum_df.peak_stop_idx.values,
                 self.matched_intensity_df.values,
                 self.matched_mz_err_df.values,
-                self.use_ppm, self.tol, 
-                self.centroid_mode
+                self.use_ppm, self.tolerance, 
+                self.match_closest
             )
     
     def match_ms2_multi_raw(self,
