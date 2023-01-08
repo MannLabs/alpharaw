@@ -52,8 +52,6 @@ class SciexWiffData(MSData_Base):
             raw_data['peak_indices'][:-1],
             raw_data['peak_indices'][1:],
         )
-        self.peak_df['peak_start_mz'] = raw_data['peak_start_mz']
-        self.peak_df['peak_stop_mz'] = raw_data['peak_stop_mz']
         self.add_column_in_spec_df(
             'rt', raw_data['rt']
         )
@@ -69,16 +67,8 @@ class SciexWiffData(MSData_Base):
             dtype=np.int8
         )
         self.set_precursor_mz_windows(
-            raw_data['precursor_mz_lower'],
-            raw_data['precursor_mz_upper'],
-        )
-        self.add_column_in_spec_df(
-            'experiment_id', raw_data['experiment_id'],
-            dtype=np.int32
-        )
-        self.add_column_in_spec_df(
-            'cycle_id', raw_data['cycle_id'],
-            dtype=np.int32
+            raw_data['isolation_mz_lower'],
+            raw_data['isolation_mz_upper'],
         )
 
 ms_reader_provider.register_reader('sciex', SciexWiffData)

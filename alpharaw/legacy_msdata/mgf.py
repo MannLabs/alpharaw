@@ -86,8 +86,8 @@ class MGFReader(MSData_Base):
             'peak_intensity': np.concatenate(intens_list),
             'rt': np.array(rt_list),
             'precursor_mz': precursor_mz_list,
-            'precursor_mz_lower': precursor_mz_list-2,
-            'precursor_mz_upper': precursor_mz_list+2,
+            'isolation_mz_lower': precursor_mz_list-2,
+            'isolation_mz_upper': precursor_mz_list+2,
             'spec_idx': np.array(spec_idx_list, dtype=np.int64),
             'precursor_charge': np.array(charge_list, dtype=np.int8),
         }
@@ -105,9 +105,9 @@ class MGFReader(MSData_Base):
         precursor_mzs = np.zeros(spec_num)
         precursor_mzs[spec_idxes] = raw_data['precursor_mz']
         mz_lowers = np.zeros(spec_num)
-        mz_lowers[spec_idxes] = raw_data['precursor_mz_lower']
+        mz_lowers[spec_idxes] = raw_data['isolation_mz_lower']
         mz_uppers = np.zeros(spec_num)
-        mz_uppers[spec_idxes] = raw_data['precursor_mz_upper']
+        mz_uppers[spec_idxes] = raw_data['isolation_mz_upper']
         charges = np.zeros(spec_num, np.int8)
         charges[spec_idxes] = raw_data['precursor_charge']
 
