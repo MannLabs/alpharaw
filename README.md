@@ -152,7 +152,7 @@ otherwise *dependancy conflicts can occur with already existing
 packages*.
 
 ``` bash
-conda create --name alpharaw python=3.8 -y
+conda create --name alpharaw python=3.9 -y
 conda activate alpharaw
 ```
 

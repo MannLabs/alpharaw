@@ -1,5 +1,5 @@
 cd ../..
-conda create -n alpharaw_pypi_wheel python=3.8
+conda create -n alpharaw_pypi_wheel python=3.9
 conda activate alpharaw_pypi_wheel
 pip install twine
 rm -rf dist
