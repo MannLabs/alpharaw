@@ -111,7 +111,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
                 precursor_mzs
             )
             self.set_precursor_mz_windows(
-                precursor_mzs-2, precursor_mzs+2
+                precursor_mzs-3, precursor_mzs+3
             )
 
 

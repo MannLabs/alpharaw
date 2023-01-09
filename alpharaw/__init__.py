@@ -26,7 +26,7 @@ __keywords__ = [
     "data accession",
     "data storage"
 ]
-__python_version__ = ">=3.8,<3.10"
+__python_version__ = ">=3.8"
 __classifiers__ = [
     # "Development Status :: 1 - Planning",
     "Development Status :: 2 - Pre-Alpha",
