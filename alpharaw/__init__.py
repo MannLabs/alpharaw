@@ -11,7 +11,7 @@ except ImportError:
     pass
 
 __project__ = "alpharaw"
-__version__ = "0.0.2"
+__version__ = "0.1.0"
 __license__ = "Apache"
 __description__ = "An open-source Python package to unify raw MS data accession and storage."
 __author__ = "Mann Labs"

@@ -172,7 +172,8 @@ class MSData_Base:
         column_name:str, 
         values:np.ndarray, 
         scan_nums:np.ndarray,
-        dtype:np.dtype=np.float64, na_value=np.nan,
+        dtype:np.dtype=np.float64, 
+        na_value=np.nan,
     ):
         self.add_column_in_spec_df(
             column_name, values,

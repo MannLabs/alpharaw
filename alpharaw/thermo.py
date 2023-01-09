@@ -31,8 +31,8 @@ class ThermoRawData(MSData_Base):
         intensity_values = []
         rt_values = []
         precursor_mz_values = []
-        precursor_mz_lowers = []
-        precursor_mz_uppers = []
+        isolation_mz_lowers = []
+        isolation_mz_uppers = []
         precursor_charges = []
         ms_order_list = []
         for i in range(
@@ -52,8 +52,8 @@ class ThermoRawData(MSData_Base):
             ms_order_list.append(ms_order)
             if ms_order == 1:
                 precursor_mz_values.append(-1.0)
-                precursor_mz_lowers.append(-1.0)
-                precursor_mz_uppers.append(-1.0)
+                isolation_mz_lowers.append(-1.0)
+                isolation_mz_uppers.append(-1.0)
                 precursor_charges.append(0)
             else:
                 isolation_center = rawfile.GetPrecursorMassForScanNum(i)
@@ -63,8 +63,8 @@ class ThermoRawData(MSData_Base):
 
                 precursor_mz_values.append(mono_mz)
                 precursor_charges.append(charge)
-                precursor_mz_lowers.append(isolation_center - isolation_width / 2)
-                precursor_mz_uppers.append(isolation_center + isolation_width / 2)
+                isolation_mz_lowers.append(isolation_center - isolation_width / 2)
+                isolation_mz_uppers.append(isolation_center + isolation_width / 2)
         rawfile.Close()
         peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
         peak_indices[0] = 0
@@ -76,8 +76,8 @@ class ThermoRawData(MSData_Base):
             'rt': np.array(rt_values),
             'precursor_mz': np.array(precursor_mz_values),
             'precursor_charge': np.array(precursor_charges, dtype=np.int8),
-            'precursor_mz_lower': np.array(precursor_mz_lowers),
-            'precursor_mz_upper': np.array(precursor_mz_uppers),
+            'isolation_mz_lower': np.array(isolation_mz_lowers),
+            'isolation_mz_upper': np.array(isolation_mz_uppers),
             'ms_level': np.array(ms_order_list, dtype=np.int8),
         }
 
@@ -104,8 +104,8 @@ class ThermoRawData(MSData_Base):
             dtype=np.int8
         )
         self.set_precursor_mz_windows(
-            raw_data['precursor_mz_lower'],
-            raw_data['precursor_mz_upper'],
+            raw_data['isolation_mz_lower'],
+            raw_data['isolation_mz_upper'],
         )
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
