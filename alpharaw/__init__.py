@@ -1,12 +1,12 @@
 #!python
 
 try:
+    from .ms_data_base import ms_reader_provider
     from .sciex import SciexWiffData
     from .thermo import ThermoRawData
     from .legacy_msdata import mgf
     from .legacy_msdata import mzml
     from .wrappers import alphapept_wrapper
-    from .ms_data_base import ms_reader_provider
 except ImportError:
     pass
 
@@ -26,7 +26,7 @@ __keywords__ = [
     "data accession",
     "data storage"
 ]
-__python_version__ = ">=3.8,<3.10"
+__python_version__ = ">=3.8"
 __classifiers__ = [
     # "Development Status :: 1 - Planning",
     "Development Status :: 2 - Pre-Alpha",
