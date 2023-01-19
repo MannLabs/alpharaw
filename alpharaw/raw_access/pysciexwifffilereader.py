@@ -119,6 +119,8 @@ class WillFileReader:
                     if details.IsSwath and details.MassRangeInfo.Length > 0:
                         center_mz = DotNetWiffOps.get_center_mz(details)
                         isolation_window = DotNetWiffOps.get_isolation_window(details)
+                    if isolation_window <= 0:
+                        isolation_window = 2.0
                     precursor_mz_list.append(massSpectrumInfo.ParentMZ)
                     precursor_charge_list.append(massSpectrumInfo.ParentChargeState)
                     ce_list.append(float(massSpectrumInfo.CollisionEnergy))

@@ -61,10 +61,18 @@ class ThermoRawData(MSData_Base):
 
                 mono_mz, charge = rawfile.GetMS2MonoMzAndChargeFromScanNum(i)
 
-                precursor_mz_values.append(mono_mz)
-                precursor_charges.append(charge)
-                isolation_mz_lowers.append(isolation_center - isolation_width / 2)
-                isolation_mz_uppers.append(isolation_center + isolation_width / 2)
+                # In thermo_tof, ms1 = ms_order==2&NCE==0?
+                if isolation_center <= 0 and mono_mz <= 0:
+                    precursor_mz_values.append(-1.0)
+                    isolation_mz_lowers.append(-1.0)
+                    isolation_mz_uppers.append(-1.0)
+                    precursor_charges.append(0)
+                    ms_order_list[-1] = 1
+                else:
+                    precursor_mz_values.append(isolation_center)
+                    isolation_mz_lowers.append(isolation_center - isolation_width / 2)
+                    isolation_mz_uppers.append(isolation_center + isolation_width / 2)
+                    precursor_charges.append(charge)
         rawfile.Close()
         peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
         peak_indices[0] = 0

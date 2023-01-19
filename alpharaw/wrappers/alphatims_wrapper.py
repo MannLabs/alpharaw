@@ -102,12 +102,13 @@ class AlphaTimsWrapper(TimsTOF):
         self._intensity_min_value = float(np.min(self._intensity_values))
         self._intensity_max_value = float(np.max(self._intensity_values))
         self._intensity_corrections = np.ones(self._frame_max_index)
-        self._quad_min_mz_value = float(
-            np.min(
-                self._quad_mz_values[self._quad_mz_values != -1]
-            )
-        )
-        self._quad_max_mz_value = float(np.max(self._quad_mz_values))
+        _q_mzs = self._quad_mz_values[self._quad_mz_values != -1]
+        if len(_q_mzs) > 0:
+            self._quad_min_mz_value = float(np.min(_q_mzs))
+            self._quad_max_mz_value = float(np.max(_q_mzs))
+        else:
+            self._quad_min_mz_value = 0
+            self._quad_max_mz_value = 0
         self._precursor_max_index = int(np.max(self._precursor_indices)) + 1
         self._acquisition_mode = msdata.file_type + ' ' + (
             "DDA" if dda else "DIA"
