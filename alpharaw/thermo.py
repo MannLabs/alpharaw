@@ -35,6 +35,7 @@ class ThermoRawData(MSData_Base):
         isolation_mz_uppers = []
         precursor_charges = []
         ms_order_list = []
+        ce_list = []
         for i in range(
             rawfile.FirstSpectrumNumber,
             rawfile.LastSpectrumNumber + 1
@@ -55,13 +56,15 @@ class ThermoRawData(MSData_Base):
                 isolation_mz_lowers.append(-1.0)
                 isolation_mz_uppers.append(-1.0)
                 precursor_charges.append(0)
+                ce_list.append(0)
             else:
                 isolation_center = rawfile.GetPrecursorMassForScanNum(i)
                 isolation_width = rawfile.GetIsolationWidthForScanNum(i)
 
                 mono_mz, charge = rawfile.GetMS2MonoMzAndChargeFromScanNum(i)
+                ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
 
-                # In thermo_tof, ms1 = ms_order==2&NCE==0?
+                # In case that: ms1 = ms_order==2&NCE==0?
                 if isolation_center <= 0 and mono_mz <= 0:
                     precursor_mz_values.append(-1.0)
                     isolation_mz_lowers.append(-1.0)
@@ -87,6 +90,7 @@ class ThermoRawData(MSData_Base):
             'isolation_mz_lower': np.array(isolation_mz_lowers),
             'isolation_mz_upper': np.array(isolation_mz_uppers),
             'ms_level': np.array(ms_order_list, dtype=np.int8),
+            'nce': np.array(ce_list, dtype=np.float32),
         }
 
     def _set_dataframes(self, raw_data:dict):
