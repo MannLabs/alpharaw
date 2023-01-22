@@ -52,27 +52,30 @@ class ThermoRawData(MSData_Base):
             ms_order = rawfile.GetMSOrderForScanNum(i)
             ms_order_list.append(ms_order)
             if ms_order == 1:
+                ce_list.append(0)
                 precursor_mz_values.append(-1.0)
                 isolation_mz_lowers.append(-1.0)
                 isolation_mz_uppers.append(-1.0)
                 precursor_charges.append(0)
-                ce_list.append(0)
             else:
+                ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
+
                 isolation_center = rawfile.GetPrecursorMassForScanNum(i)
                 isolation_width = rawfile.GetIsolationWidthForScanNum(i)
 
                 mono_mz, charge = rawfile.GetMS2MonoMzAndChargeFromScanNum(i)
-                ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
+                if mono_mz <= 0:
+                    mono_mz = isolation_center
 
                 # In case that: ms1 = ms_order==2&NCE==0?
-                if isolation_center <= 0 and mono_mz <= 0:
+                if mono_mz <= 0:
                     precursor_mz_values.append(-1.0)
                     isolation_mz_lowers.append(-1.0)
                     isolation_mz_uppers.append(-1.0)
                     precursor_charges.append(0)
                     ms_order_list[-1] = 1
                 else:
-                    precursor_mz_values.append(isolation_center)
+                    precursor_mz_values.append(mono_mz)
                     isolation_mz_lowers.append(isolation_center - isolation_width / 2)
                     isolation_mz_uppers.append(isolation_center + isolation_width / 2)
                     precursor_charges.append(charge)
