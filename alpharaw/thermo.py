@@ -9,7 +9,7 @@ class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
     """
-    def __init__(self, centroided:bool=True):
+    def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
         ----------

@@ -10,7 +10,7 @@ class SciexWiffData(MSData_Base):
     """
     Loading Sciex Wiff data as MSData_Base data structure.
     """
-    def __init__(self, centroided:bool=True):
+    def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
         ----------

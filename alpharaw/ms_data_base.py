@@ -6,7 +6,32 @@ class MSData_Base:
     """
     The base data structure for MS Data, other MSData loader inherit
     """
-    def __init__(self, centroided:bool=True):
+
+    spectrum_df: pd.DataFrame
+    """
+    Spectrum dataframe containing the following columns:
+
+    - `rt` (float64): in minutes
+    - `precursor_mz` (float64): mono_mz (DDA) or isolation center mz
+    - `isolation_lower_mz` (float64): left of the isolation window
+    - `isolation_upper_mz` (float64): right of the isolation window
+    - `spec_idx` (int64): spectrum index. For thermo, it is `scan_num - 1`
+    - `peak_start_idx` (int64): peak start position pointing to `self.peak_df`
+    - `peak_stop_idx` (int64): peak stop position pointing to `self._peak_df`
+    - `ms_level` (int8): =1 for MS1, =2 for MS2, ...
+    - [`scan_num`] (int64): Thermo scan number
+    - [`mobility`] (float64): Bruker timsTOF mobility
+
+    Other columns depends on different vendors and file formats
+    """
+
+    peak_df: pd.DataFrame
+    """
+    Peak list dataframe containing the follow columns:
+    - `mz` (float64): m/z values of the peak
+    - `intensity` (float32): intensity values of the peak
+    """
+    def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
         ----------

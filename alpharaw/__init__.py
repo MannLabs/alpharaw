@@ -1,14 +1,15 @@
 #!python
 
-try:
+def register_all_readers():
     from .ms_data_base import ms_reader_provider
-    from .sciex import SciexWiffData
-    from .thermo import ThermoRawData
     from .legacy_msdata import mgf
-    from .legacy_msdata import mzml
+    from . import mzml
     from .wrappers import alphapept_wrapper
-except ImportError:
-    pass
+    try:
+        from .sciex import SciexWiffData
+        from .thermo import ThermoRawData
+    except (RuntimeError, ImportError):
+        return "[WARN] pythonnet is not installed"
 
 __project__ = "alpharaw"
 __version__ = "0.1.0"
