@@ -1,6 +1,6 @@
 #!python
 
-def register_all_readers():
+def register_readers():
     from .ms_data_base import ms_reader_provider
     from .legacy_msdata import mgf
     from . import mzml
@@ -50,5 +50,5 @@ __urls__ = {
     # "Scientific paper": None,
 }
 __extra_requirements__ = {
-    "development": "requirements_development.txt",
+    "development": "extra_requirements/development.txt",
 }

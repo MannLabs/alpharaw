@@ -3,48 +3,23 @@
 import numpy as np
 from numba import njit
 from numba.typed import List
-import numba
 
 @njit
-def get_a_centroid_group_all_adjacent(
-    start_list, end_list,
+def get_neighbors_start_stop(
+    peak_mzs:np.ndarray,
+    start_list, stop_list,
     start_idx:int,
     mz_tol:float,
     mz_diffs:np.ndarray,
-    int_grads:np.ndarray,
 ):
     for i in range(start_idx, len(mz_diffs)):
         if mz_diffs[i] > mz_tol:
             start_list.append(start_idx)
-            end_list.append(i)
+            stop_list.append(i+1)
             return i + 1
     start_list.append(start_idx)
-    end_list.append(len(mz_diffs))
+    stop_list.append(len(mz_diffs))
     return len(mz_diffs)+1
-
-@njit
-def get_a_centroid_group(
-    start_list, end_list,
-    start_idx:int,
-    mz_tol:float,
-    mz_diffs:np.ndarray,
-    int_grads:np.ndarray,
-):
-    go_up = True
-    for i in range(start_idx, len(int_grads)):
-        if mz_diffs[i] > mz_tol:
-            start_list.append(start_idx)
-            end_list.append(i)
-            return i + 1
-        elif int_grads[i] > 0 and not go_up:
-            start_list.append(start_idx)
-            end_list.append(i)
-            return i
-        elif go_up:
-            go_up = False
-    start_list.append(start_idx)
-    end_list.append(len(int_grads))
-    return len(int_grads)+1
 
 @njit
 def get_peaks(
@@ -52,8 +27,8 @@ def get_peaks(
     int_array: np.ndarray,
     mz_tol:float,
 ) -> list:
-    start_list = List.empty_list(numba.int64)
-    end_list = List.empty_list(numba.int64)
+    start_list = List()
+    end_list = List()
     gradient = np.diff(int_array)
     mz_diffs = np.diff(mz_array)
     start = 0
