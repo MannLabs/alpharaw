@@ -46,7 +46,7 @@ class SciexWiffData(MSData_Base):
     
     def _set_dataframes(self, raw_data:dict):
         self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peaks_by_cat_array(
+        self.set_peak_df_by_indexed_array(
             raw_data['peak_mz'],
             raw_data['peak_intensity'],
             raw_data['peak_indices'][:-1],
@@ -66,7 +66,7 @@ class SciexWiffData(MSData_Base):
             'charge', raw_data['precursor_charge'],
             dtype=np.int8
         )
-        self.set_precursor_mz_windows(
+        self.set_isolation_mz_windows(
             raw_data['isolation_mz_lower'],
             raw_data['isolation_mz_upper'],
         )

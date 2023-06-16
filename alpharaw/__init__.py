@@ -3,7 +3,7 @@
 def register_readers():
     from .ms_data_base import ms_reader_provider
     from .legacy_msdata import mgf
-    from . import mzml
+    from .mzml import MzMLReader
     from .wrappers import alphapept_wrapper
     try:
         from .sciex import SciexWiffData

@@ -88,7 +88,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
         rt_values = np.zeros(spec_num)
         rt_values[spec_idxes] = hdf.Raw.MS2_scans.rt_list_ms2.values
 
-        self.set_peaks_by_cat_array(
+        self.set_peak_df_by_indexed_array(
             hdf.Raw.MS2_scans.mass_list_ms2.values,
             hdf.Raw.MS2_scans.int_list_ms2.values,
             start_idxes, end_idxes

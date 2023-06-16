@@ -10,7 +10,8 @@ from alphabase.peptide.fragment import (
 )
 
 from alpharaw.ms_data_base import (
-    MSData_Base, ms_reader_provider
+    MSData_Base, ms_reader_provider,
+    PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 )
 
 from alpharaw.match.match_utils import (
@@ -21,11 +22,11 @@ from ..utils.ms_path_utils import parse_ms_files_to_dict
 @numba.njit
 def match_one_raw_with_numba(
     spec_idxes, frag_start_idxes, frag_stop_idxes,
-    all_frag_mzs,
+    all_frag_mzs, all_frag_mz_tols,
     all_spec_mzs, all_spec_intensities, 
     peak_start_idxes, peak_stop_idxes,
-    matched_intensities, matched_mz_errs,
-    use_ppm, tol, matched_closest=True,
+    matched_intensities, matched_mz_errs, 
+    matched_closest=True,
 ):
     """ 
     Internel function to match fragment mz values to spectrum mz values.
@@ -44,11 +45,7 @@ def match_one_raw_with_numba(
         spec_intens = all_spec_intensities[peak_start:peak_stop]
 
         frag_mzs = all_frag_mzs[frag_start:frag_end,:].copy()
-        
-        if use_ppm:
-            frag_mz_tols = frag_mzs*tol*1e-6
-        else:
-            frag_mz_tols = np.full_like(frag_mzs, tol)
+        frag_mz_tols = all_frag_mz_tols[frag_start:frag_end,:].copy()
         
         if matched_closest:
             matched_idxes = match_closest_peaks(
@@ -112,7 +109,7 @@ class PepSpecMatch:
     match_closest:bool = True
     use_ppm:bool = True
     #: matching mass tolerance
-    tolerance:float = 20
+    tolerance:PEAK_MZ_DTYPE = 20.0
     def __init__(self,
         charged_frag_types:list = get_charged_frag_types(
             ['b','y','b_modloss','y_modloss'], 2
@@ -150,7 +147,8 @@ class PepSpecMatch:
 
     def get_fragment_mz_df(self, psm_df):
         return create_fragment_mz_dataframe(
-            psm_df, self.charged_frag_types
+            psm_df, self.charged_frag_types,
+            dtype=PEAK_MZ_DTYPE,
         )
 
     def _add_missing_columns_to_psm_df(self,
@@ -189,10 +187,11 @@ class PepSpecMatch:
     def _prepare_matching_dfs(self, psm_df):
 
         fragment_mz_df = self.get_fragment_mz_df(psm_df)
-        
+
         matched_intensity_df = pd.DataFrame(
             np.zeros_like(
-                fragment_mz_df.values, dtype=np.float64
+                fragment_mz_df.values, 
+                dtype=PEAK_INTENSITY_DTYPE
             ), 
             columns=fragment_mz_df.columns
         )
@@ -200,7 +199,7 @@ class PepSpecMatch:
         matched_mz_err_df = pd.DataFrame(
             np.full_like(
                 fragment_mz_df.values, np.inf, 
-                dtype=np.float64
+                dtype=PEAK_MZ_DTYPE
             ), 
             columns=fragment_mz_df.columns
         )
@@ -243,6 +242,8 @@ class PepSpecMatch:
     ):
         if len(spec_mzs)==0: return
 
+        spec_mzs = spec_mzs.astype(PEAK_MZ_DTYPE)
+
         frag_mzs = fragment_mz_df.values[
             frag_start_idx:frag_stop_idx,:
         ]
@@ -250,7 +251,9 @@ class PepSpecMatch:
         if self.use_ppm:
             mz_tols = frag_mzs*self.tolerance*1e-6
         else:
-            mz_tols = np.full_like(frag_mzs, self.tolerance)
+            mz_tols = np.full_like(
+                frag_mzs, self.tolerance
+            )
 
         if self.match_closest:
             matched_idxes = match_closest_peaks(
@@ -353,18 +356,23 @@ class PepSpecMatch:
                 df_group, raw_data
             )
 
+            if self.use_ppm:
+                all_frag_mz_tols = self.fragment_mz_df.values*self.tolerance*1e-6
+            else:
+                all_frag_mz_tols = np.full_like(self.fragment_mz_df.values, self.tolerance)
+
             match_one_raw_with_numba(
                 df_group.spec_idx.values,
                 df_group.frag_start_idx.values,
                 df_group.frag_stop_idx.values,
                 self.fragment_mz_df.values,
+                all_frag_mz_tols, 
                 raw_data.peak_df.mz.values, 
                 raw_data.peak_df.intensity.values,
                 raw_data.spectrum_df.peak_start_idx.values,
                 raw_data.spectrum_df.peak_stop_idx.values,
                 self.matched_intensity_df.values,
                 self.matched_mz_err_df.values,
-                self.use_ppm, self.tolerance, 
                 self.match_closest
             )
     

@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from alphabase.io.hdf import HDF_File
+from alphabase.constants._const import (
+    PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
+)
 
 class MSData_Base:
     """
@@ -28,9 +31,15 @@ class MSData_Base:
     peak_df: pd.DataFrame
     """
     Peak list dataframe containing the follow columns:
-    - `mz` (float64): m/z values of the peak
-    - `intensity` (float32): intensity values of the peak
+    - `mz` (PEAK_MZ_DTYPE in alphabase, float32 by default): m/z values of the peak
+    - `intensity` (PEAK_INTENSITY_DTYPE in alphabase, float32 by default): intensity values of the peak
     """
+
+    vocab: list = [
+        "CID", "HCD", "ETD", "ECD", "EAD", "EXD", "UVPD",
+        "ETHCD", "ETCID", "EXCID", "NETD",
+        "IT", "FT", "TOF", 
+    ]
     def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
@@ -47,6 +56,16 @@ class MSData_Base:
         self.centroided = centroided
         self.creation_time = ''
         self.file_type = ''
+        self.instrument = 'none'
+
+    def _get_term_id(self, terminology:str):
+        """
+        Get terminology id from :data:`self.vocab`, -1 if not exist.
+        """
+        try:
+            return self.vocab.index(terminology)
+        except ValueError:
+            return -1
 
     @property
     def raw_file_path(self)->str:
@@ -66,16 +85,20 @@ class MSData_Base:
         self.import_raw(_path)
 
     def _save_meta_to_hdf(self, hdf:HDF_File):
-        hdf.ms_data.creation_time = self.creation_time
-        hdf.ms_data.raw_file_path = self.raw_file_path
-        hdf.ms_data.file_type = self.file_type
-        hdf.ms_data.centroided = self.centroided
+        hdf.ms_data.meta = {
+            "creation_time": self.creation_time,
+            "raw_file_path": self.raw_file_path,
+            "file_type": self.file_type,
+            "centroided": self.centroided,
+            "instrument": self.instrument,
+        }
 
     def _load_meta_from_hdf(self, hdf:HDF_File):
-        self.creation_time = hdf.ms_data.creation_time
-        self.raw_file_path = hdf.ms_data.raw_file_path
-        self.file_type = hdf.ms_data.file_type
-        self.centroided = hdf.ms_data.centroided
+        self.creation_time = hdf.ms_data.meta.creation_time
+        self.raw_file_path = hdf.ms_data.meta.raw_file_path
+        self.file_type = hdf.ms_data.meta.file_type
+        self.centroided = hdf.ms_data.meta.centroided
+        self.instrument = hdf.ms_data.meta.instrument
 
     def save_hdf(self, _path:str):
         hdf = HDF_File(
@@ -123,6 +146,13 @@ class MSData_Base:
         self._check_rt()
         # self._check_mobility()
         self._check_precursor_mz()
+        self._check_peak_dtypes()
+
+    def _check_peak_dtypes(self):
+        if self.peak_df.mz.dtype != PEAK_MZ_DTYPE:
+            self.peak_df.mz = self.peak_df.mz.astype(PEAK_MZ_DTYPE)
+        if self.peak_df.intensity.dtype != PEAK_INTENSITY_DTYPE:
+            self.peak_df.intensity = self.peak_df.intensity.astype(PEAK_INTENSITY_DTYPE)
     
     def _check_rt(self):
         assert 'rt' in self.spectrum_df.columns
@@ -147,25 +177,25 @@ class MSData_Base:
         )
         self.spectrum_df['spec_idx'] = self.spectrum_df.index.values
 
-    def set_peaks_by_cat_array(self, 
+    def set_peak_df_by_indexed_array(self, 
         mz_array:np.ndarray, 
         intensity_array:np.ndarray,
         peak_start_indices:np.ndarray,
         peak_stop_indices:np.ndarray,
     ):
         self.peak_df = pd.DataFrame({
-            'mz': mz_array,
-            'intensity': intensity_array
+            'mz': mz_array.astype(PEAK_MZ_DTYPE),
+            'intensity': intensity_array.astype(PEAK_INTENSITY_DTYPE)
         })
         self.spectrum_df['peak_start_idx'] = peak_start_indices
         self.spectrum_df['peak_stop_idx'] = peak_stop_indices
 
-    def set_peaks_by_array_list(self,
+    def set_peak_df_by_array_list(self,
         mz_array_list:list,
         intensity_array_list:list,
     ):
         indices = index_ragged_list(mz_array_list)
-        self.set_peaks_by_cat_array(
+        self.set_peak_df_by_indexed_array(
             np.concatenate(mz_array_list),
             np.concatenate(intensity_array_list),
             indices[:-1],
@@ -193,13 +223,16 @@ class MSData_Base:
                 column_name
             ] = self.spectrum_df[column_name].astype(dtype)
 
-    def add_column_in_df_by_thermo_scan_num(self, 
+    def add_column_in_df_by_scan_num(self, 
         column_name:str, 
         values:np.ndarray, 
         scan_nums:np.ndarray,
         dtype:np.dtype=np.float64, 
         na_value=np.nan,
     ):
+        """
+        scan num starts from 1 not 0
+        """
         self.add_column_in_spec_df(
             column_name, values,
             scan_nums-1, 
@@ -225,7 +258,7 @@ class MSData_Base:
             spec_idxes, np.float64, -1.0
         )
     
-    def set_precursor_mz_windows(self,
+    def set_isolation_mz_windows(self,
         precursor_lower_mz_values:np.ndarray,
         precursor_upper_mz_values:np.ndarray,
         spec_idxes:np.ndarray=None, 

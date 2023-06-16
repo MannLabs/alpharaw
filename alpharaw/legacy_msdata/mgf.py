@@ -2,7 +2,8 @@ import numpy as np
 
 from alpharaw.ms_data_base import (
     index_ragged_list, MSData_Base,
-    ms_reader_provider
+    ms_reader_provider,
+    PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 )
 
 def read_until(file, until):
@@ -73,8 +74,8 @@ class MGFReader(MSData_Base):
                 rt_list.append(RT)
                 precursor_mz_list.append(precursor_mz)
                 charge_list.append(charge)
-                masses_list.append(np.array(masses))
-                intens_list.append(np.array(intens))
+                masses_list.append(np.array(masses, dtype=PEAK_MZ_DTYPE))
+                intens_list.append(np.array(intens, dtype=PEAK_INTENSITY_DTYPE))
         if isinstance(_path, str): 
             f.close()
 
@@ -111,7 +112,7 @@ class MGFReader(MSData_Base):
         charges = np.zeros(spec_num, np.int8)
         charges[spec_idxes] = raw_data['precursor_charge']
 
-        self.set_peaks_by_cat_array(
+        self.set_peak_df_by_indexed_array(
             raw_data['peak_mz'],
             raw_data['peak_intensity'],
             start_idxes,end_idxes
@@ -122,7 +123,7 @@ class MGFReader(MSData_Base):
         self.set_precursor_mz(
             precursor_mzs
         )
-        self.set_precursor_mz_windows(
+        self.set_isolation_mz_windows(
             mz_lowers,mz_uppers
         )
 
