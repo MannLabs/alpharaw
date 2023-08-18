@@ -98,36 +98,5 @@ class ThermoRawData(MSData_Base):
             'nce': np.array(ce_list, dtype=np.float32),
         }
 
-    def _set_dataframes(self, raw_data:dict):
-        self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peak_df_by_indexed_array(
-            raw_data['peak_mz'],
-            raw_data['peak_intensity'],
-            raw_data['peak_indices'][:-1],
-            raw_data['peak_indices'][1:],
-        )
-        self.add_column_in_spec_df(
-            'rt', raw_data['rt']
-        )
-        self.add_column_in_spec_df(
-            'ms_level', raw_data['ms_level'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz(
-            raw_data['precursor_mz']
-        )
-        self.add_column_in_spec_df(
-            'charge', raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.set_isolation_mz_windows(
-            raw_data['isolation_mz_lower'],
-            raw_data['isolation_mz_upper'],
-        )
-        self.add_column_in_spec_df(
-            "nce", raw_data["nce"],
-            dtype=np.float32,
-        )
-
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
