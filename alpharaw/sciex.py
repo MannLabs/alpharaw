@@ -10,7 +10,7 @@ class SciexWiffData(MSData_Base):
     """
     Loading Sciex Wiff data as MSData_Base data structure.
     """
-    def __init__(self, centroided:bool=True):
+    def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
         ----------
@@ -43,33 +43,6 @@ class SciexWiffData(MSData_Base):
         self.creation_time = wiff_reader.wiffSample.Details.AcquisitionDateTime.ToString("O")
         wiff_reader.close()
         return data_dict
-    
-    def _set_dataframes(self, raw_data:dict):
-        self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peaks_by_cat_array(
-            raw_data['peak_mz'],
-            raw_data['peak_intensity'],
-            raw_data['peak_indices'][:-1],
-            raw_data['peak_indices'][1:],
-        )
-        self.add_column_in_spec_df(
-            'rt', raw_data['rt']
-        )
-        self.add_column_in_spec_df(
-            'ms_level', raw_data['ms_level'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz(
-            raw_data['precursor_mz']
-        )
-        self.add_column_in_spec_df(
-            'charge', raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz_windows(
-            raw_data['isolation_mz_lower'],
-            raw_data['isolation_mz_upper'],
-        )
 
 ms_reader_provider.register_reader('sciex', SciexWiffData)
 ms_reader_provider.register_reader('sciex_wiff', SciexWiffData)

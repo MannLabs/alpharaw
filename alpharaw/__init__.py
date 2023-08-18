@@ -1,17 +1,18 @@
 #!python
 
-try:
+def register_readers():
     from .ms_data_base import ms_reader_provider
-    from .sciex import SciexWiffData
-    from .thermo import ThermoRawData
     from .legacy_msdata import mgf
-    from .legacy_msdata import mzml
+    from .mzml import MzMLReader
     from .wrappers import alphapept_wrapper
-except ImportError:
-    pass
+    try:
+        from .sciex import SciexWiffData
+        from .thermo import ThermoRawData
+    except (RuntimeError, ImportError):
+        return "[WARN] pythonnet is not installed"
 
 __project__ = "alpharaw"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __license__ = "Apache"
 __description__ = "An open-source Python package to unify raw MS data accession and storage."
 __author__ = "Mann Labs"
@@ -49,5 +50,5 @@ __urls__ = {
     # "Scientific paper": None,
 }
 __extra_requirements__ = {
-    "development": "requirements_development.txt",
+    "development": "extra_requirements/development.txt",
 }

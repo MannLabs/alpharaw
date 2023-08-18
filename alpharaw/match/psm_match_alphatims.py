@@ -83,16 +83,18 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     """
 
     #: RT win to get a MS2 spectrum by slicing
-    rt_sec_win_to_slice_ms2 = 10.0
+    rt_sec_tol_to_slice_ms2 = 3.0
 
     #: IM win to get a MS2 spectrum by slicing
-    im_win_to_slice_ms2 = 0.2
+    im_tol_to_slice_ms2 = 0.03
 
     #: find closest MS2 for the given RT when slicing
-    find_closest_ms2_by_rt = True
+    find_k_nearest_ms2_by_rt = True
+    k_rt_nearest = 1
 
     # : find closest MS2 for the given RT when slicing
-    find_closest_ms2_by_im = True
+    find_k_nearest_ms2_by_im = False
+    k_im_nearest = 11
 
     def get_peak_df(self,
         precursor_mz:float,
@@ -116,51 +118,60 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         """
         rt_sec = rt*60
         rt_slice = slice(
-            rt_sec-self.rt_sec_win_to_slice_ms2/2,
-            rt_sec+self.rt_sec_win_to_slice_ms2/2,
+            rt_sec-self.rt_sec_tol_to_slice_ms2,
+            rt_sec+self.rt_sec_tol_to_slice_ms2,
         )
 
         if im == 0 or self.tims_data.scan_max_index == 1:
             im_slice = slice(None)
-        elif self.find_closest_ms2_by_im and self.tims_data.scan_max_index > 1:
+        elif self.find_k_nearest_ms2_by_im and self.tims_data.scan_max_index > 1:
             # AlphaTims without AlphaRaw for .d files
             im_slice = self.tims_data.scan_max_index-np.searchsorted(
                 self.tims_data.mobility_values[::-1], im
             )
         else:
             im_slice = slice(
-                im-self.im_win_to_slice_ms2/2,
-                im+self.im_win_to_slice_ms2/2
+                im-self.im_tol_to_slice_ms2,
+                im+self.im_tol_to_slice_ms2
             )
 
         spec_df = self.tims_data[
             rt_slice, im_slice, precursor_mz:precursor_mz
         ]
 
-        def find_nearest(array, val):
-            return np.argmin(np.abs(array-val))
+        def find_k_nearest(array, val, k=3):
+            nearest = np.argmin(np.abs(array-val))
+            if nearest <= k//2:
+                return slice(k)
+            elif nearest >= len(array)-k//2-1:
+                return slice(-k, None)
+            else:
+                return slice(nearest-k//2, nearest+k//2+1)
 
         if (
-            self.find_closest_ms2_by_im and 
-            im>0 and self.tims_data.scan_max_index==1
+            self.find_k_nearest_ms2_by_im and 
+            im>0 and self.tims_data.scan_max_index>1
         ):
             # RAW from AlphaRaw, mobility===0 in AlphaTims wrapper obj
-            spec_idxes = spec_df.frame_indices.unique() 
-            if len(spec_idxes) > 1: # im from psm
-                spec_idx = spec_idxes[
-                    find_nearest(
-                        self.raw_data.spectrum_df.mobility.values[spec_idxes], im
+            scan_idxes = np.sort(spec_df.scan_indices.unique())
+            if len(scan_idxes) > 1: # im from psm
+                scan_idxes = scan_idxes[
+                    find_k_nearest(
+                        self.raw_data.spectrum_df.mobility.values[scan_idxes], 
+                        im, self.k_im_nearest
                     )
                 ]
-                spec_df = spec_df[spec_df.frame_indices==spec_idx]
+                spec_df = spec_df[spec_df.scan_indices.isin(scan_idxes)]
 
-        if self.find_closest_ms2_by_rt:
-            rt_values = spec_df.rt_values.unique()
+        if self.find_k_nearest_ms2_by_rt:
+            rt_values = np.sort(spec_df.rt_values.unique())
             if len(rt_values) > 1:
-                closest_rt = rt_values[find_nearest(rt_values, rt_sec)]
-                spec_df = spec_df[spec_df.rt_values==closest_rt]
+                closest_rts = rt_values[
+                    find_k_nearest(rt_values, rt_sec, self.k_rt_nearest)
+                ]
+                spec_df = spec_df[spec_df.rt_values.isin(closest_rts)]
         
-        return spec_df.sort_values('mz_values').reset_index(drop=True)
+        return spec_df
 
     def get_peaks(
         self,
@@ -185,6 +196,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             np.ndarray: peak intensity values
         """
         spec_df = self.get_peak_df(precursor_mz, rt, im)
+        spec_df = spec_df.sort_values('mz_values').reset_index(drop=True)
         return (
             spec_df.mz_values.values, 
             spec_df.intensity_values.values

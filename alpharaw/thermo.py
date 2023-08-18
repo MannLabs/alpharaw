@@ -2,14 +2,16 @@ import numpy as np
 import pandas as pd
 import os
 import alpharaw.raw_access.pythermorawfilereader as pyrawfilereader
-from .ms_data_base import MSData_Base
+from .ms_data_base import (
+    MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
+)
 from .ms_data_base import ms_reader_provider
 
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
     """
-    def __init__(self, centroided:bool=True):
+    def __init__(self, centroided:bool=True, **kwargs):
         """
         Parameters
         ----------
@@ -35,6 +37,7 @@ class ThermoRawData(MSData_Base):
         isolation_mz_uppers = []
         precursor_charges = []
         ms_order_list = []
+        ce_list = []
         for i in range(
             rawfile.FirstSpectrumNumber,
             rawfile.LastSpectrumNumber + 1
@@ -43,28 +46,41 @@ class ThermoRawData(MSData_Base):
                 masses, intensities = rawfile.GetProfileMassListFromScanNum(i)
             else:
                 masses, intensities = rawfile.GetCentroidMassListFromScanNum(i)
-            mz_values.append(masses)
-            intensity_values.append(intensities.astype(np.float32))
+            mz_values.append(masses.astype(PEAK_MZ_DTYPE))
+            intensity_values.append(intensities.astype(PEAK_INTENSITY_DTYPE))
             _peak_indices.append(len(masses))
             rt = rawfile.RTFromScanNum(i)
             rt_values.append(rt)
             ms_order = rawfile.GetMSOrderForScanNum(i)
             ms_order_list.append(ms_order)
             if ms_order == 1:
+                ce_list.append(0)
                 precursor_mz_values.append(-1.0)
                 isolation_mz_lowers.append(-1.0)
                 isolation_mz_uppers.append(-1.0)
                 precursor_charges.append(0)
             else:
+                ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
+
                 isolation_center = rawfile.GetPrecursorMassForScanNum(i)
                 isolation_width = rawfile.GetIsolationWidthForScanNum(i)
 
                 mono_mz, charge = rawfile.GetMS2MonoMzAndChargeFromScanNum(i)
+                if mono_mz <= 0:
+                    mono_mz = isolation_center
 
-                precursor_mz_values.append(mono_mz)
-                precursor_charges.append(charge)
-                isolation_mz_lowers.append(isolation_center - isolation_width / 2)
-                isolation_mz_uppers.append(isolation_center + isolation_width / 2)
+                # In case that: ms1 = ms_order==2&NCE==0?
+                if mono_mz <= 0:
+                    precursor_mz_values.append(-1.0)
+                    isolation_mz_lowers.append(-1.0)
+                    isolation_mz_uppers.append(-1.0)
+                    precursor_charges.append(0)
+                    ms_order_list[-1] = 1
+                else:
+                    precursor_mz_values.append(mono_mz)
+                    isolation_mz_lowers.append(isolation_center - isolation_width / 2)
+                    isolation_mz_uppers.append(isolation_center + isolation_width / 2)
+                    precursor_charges.append(charge)
         rawfile.Close()
         peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
         peak_indices[0] = 0
@@ -79,34 +95,8 @@ class ThermoRawData(MSData_Base):
             'isolation_mz_lower': np.array(isolation_mz_lowers),
             'isolation_mz_upper': np.array(isolation_mz_uppers),
             'ms_level': np.array(ms_order_list, dtype=np.int8),
+            'nce': np.array(ce_list, dtype=np.float32),
         }
-
-    def _set_dataframes(self, raw_data:dict):
-        self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peaks_by_cat_array(
-            raw_data['peak_mz'],
-            raw_data['peak_intensity'],
-            raw_data['peak_indices'][:-1],
-            raw_data['peak_indices'][1:],
-        )
-        self.add_column_in_spec_df(
-            'rt', raw_data['rt']
-        )
-        self.add_column_in_spec_df(
-            'ms_level', raw_data['ms_level'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz(
-            raw_data['precursor_mz']
-        )
-        self.add_column_in_spec_df(
-            'charge', raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz_windows(
-            raw_data['isolation_mz_lower'],
-            raw_data['isolation_mz_upper'],
-        )
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)

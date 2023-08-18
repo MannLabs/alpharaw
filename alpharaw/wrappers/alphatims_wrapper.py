@@ -6,6 +6,40 @@ from alphatims.bruker import TimsTOF
 
 from ..ms_data_base import MSData_Base
 
+class AlphaTimsReader(MSData_Base):
+    """
+    > TimsTOF data are too large, do not use this class
+    """
+    def import_raw(self, burker_d_folder:str):
+        tims = TimsTOF(
+            burker_d_folder,
+        )
+
+        self.raw_file_path = burker_d_folder
+        self.file_type = 'bruker'
+
+        self.spectrum_df
+
+        self.spectrum_df['precursor_mz'] = tims.fragment_frames.IsolationMz.values
+        isolations = tims.fragment_frames.IsolationWidth.values/2
+        self.spectrum_df['isolation_lower_mz'] = self.spectrum_df.precursor_mz - isolations
+        self.spectrum_df['isolation_upper_mz'] = self.spectrum_df.precursor_mz + isolations
+        self.spectrum_df['peak_start_idx'] = tims._push_indptr[:-1]
+        self.spectrum_df['peak_stop_idx'] = tims._push_indptr[1:]
+        self.spectrum_df['rt'] = tims.rt_values/60
+        self.spectrum_df['mobility'] = tims.mobility_values
+        self.spectrum_df['ms_level'] = (
+            tims.precursor_indices>0
+        ).astype(np.int8)+1
+        self.spectrum_df['spec_idx'] = self.spectrum_df.index.values
+        self.spectrum_df['tims_frame'] = self.spectrum_df.spec_idx // tims.scan_max_index
+        self.spectrum_df['tims_scan'] = self.spectrum_df.spec_idx % tims.scan_max_index
+        
+        self.peak_df['mz'] = tims.mz_values[tims.tof_indices]
+        self.peak_df['intensity'] = tims.intensity_values.astype(np.float32)
+        
+
+
 class AlphaTimsWrapper(TimsTOF):
     """Create a AlphaTims object that contains 
     all data in-memory (or memory mapping).
@@ -102,12 +136,13 @@ class AlphaTimsWrapper(TimsTOF):
         self._intensity_min_value = float(np.min(self._intensity_values))
         self._intensity_max_value = float(np.max(self._intensity_values))
         self._intensity_corrections = np.ones(self._frame_max_index)
-        self._quad_min_mz_value = float(
-            np.min(
-                self._quad_mz_values[self._quad_mz_values != -1]
-            )
-        )
-        self._quad_max_mz_value = float(np.max(self._quad_mz_values))
+        _q_mzs = self._quad_mz_values[self._quad_mz_values != -1]
+        if len(_q_mzs) > 0:
+            self._quad_min_mz_value = float(np.min(_q_mzs))
+            self._quad_max_mz_value = float(np.max(_q_mzs))
+        else:
+            self._quad_min_mz_value = 0
+            self._quad_max_mz_value = 0
         self._precursor_max_index = int(np.max(self._precursor_indices)) + 1
         self._acquisition_mode = msdata.file_type + ' ' + (
             "DDA" if dda else "DIA"

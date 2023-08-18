@@ -36,11 +36,13 @@ def match_closest_peaks(
         Matched indices of spec_mzs, -1 means no peaks were matched.
         Same shape as query_mzs 
     """
-    query_left_mzs = query_mzs-query_mz_tols
-    query_right_mzs = query_mzs+query_mz_tols
+    mzs = query_mzs.reshape(-1)
+    query_mz_tols = query_mz_tols.reshape(-1)
+    query_left_mzs = mzs-query_mz_tols
+    query_right_mzs = mzs+query_mz_tols
     idxes = np.searchsorted(spec_mzs, query_left_mzs)
-    ret_indices = np.empty_like(query_mzs, dtype=np.int32)
-    for i,idx in np.ndenumerate(idxes):
+    ret_indices = np.empty_like(mzs, dtype=np.int32)
+    for i,idx in enumerate(idxes):
         min_merr = 1000000
         closest_idx = -1
         for _idx in range(idx, len(spec_mzs)):
@@ -48,11 +50,11 @@ def match_closest_peaks(
                 break
             elif spec_mzs[_idx]<query_left_mzs[i]:
                 continue
-            elif min_merr > abs(spec_mzs[_idx]-query_mzs[i]):
-                min_merr = abs(spec_mzs[_idx]-query_mzs[i])
+            elif min_merr > abs(spec_mzs[_idx]-mzs[i]):
+                min_merr = abs(spec_mzs[_idx]-mzs[i])
                 closest_idx = _idx
         ret_indices[i] = closest_idx
-    return ret_indices
+    return ret_indices.reshape(query_mzs.shape)
 
 
 @numba.njit
@@ -85,11 +87,13 @@ def match_highest_peaks(
         Matched indices of spec_mzs, -1 means no peaks were matched.
         Same shape as query_mzs 
     """
-    query_left_mzs = query_mzs-query_mz_tols
-    query_right_mzs = query_mzs+query_mz_tols
+    mzs = query_mzs.reshape(-1)
+    query_mz_tols = query_mz_tols.reshape(-1)
+    query_left_mzs = mzs-query_mz_tols
+    query_right_mzs = mzs+query_mz_tols
     idxes = np.searchsorted(spec_mzs, query_left_mzs)
-    ret_indices = np.empty_like(query_mzs, dtype=np.int32)
-    for i,idx in np.ndenumerate(idxes):
+    ret_indices = np.empty_like(mzs, dtype=np.int32)
+    for i,idx in enumerate(idxes):
         highest = 0
         highest_idx = -1
         for _idx in range(idx, len(spec_mzs)):
@@ -101,7 +105,7 @@ def match_highest_peaks(
                 highest = spec_intens[_idx]
                 highest_idx = _idx
         ret_indices[i] = highest_idx
-    return ret_indices
+    return ret_indices.reshape(query_mzs.shape)
 
 @numba.njit
 def match_profile_peaks(
@@ -137,16 +141,18 @@ def match_profile_peaks(
         np.ndarray: matched last (right-most) indices, the shape is the same as query_mzs.
         -1 means no peaks are matched for the query mz.
     """
-    query_left_mzs = query_mzs-query_mz_tols
-    query_right_mzs = query_mzs+query_mz_tols
+    mzs = query_mzs.reshape(-1)
+    query_mz_tols = query_mz_tols.reshape(-1)
+    query_left_mzs = mzs-query_mz_tols
+    query_right_mzs = mzs+query_mz_tols
     idxes = np.searchsorted(spec_mzs, query_left_mzs)
     first_indices = np.full_like(
-        query_mzs, -1, dtype=np.int32
+        mzs, -1, dtype=np.int32
     )
     last_indices = np.full_like(
-        query_mzs, -1, dtype=np.int32
+        mzs, -1, dtype=np.int32
     )
-    for i,idx in np.ndenumerate(idxes):
+    for i,idx in enumerate(idxes):
         for first_idx in range(idx, len(spec_mzs)):
             if spec_mzs[first_idx]<query_left_mzs[i]:
                 continue
@@ -162,5 +168,8 @@ def match_profile_peaks(
                             break
                     last_indices[i] = last_idx-1
                     break
-    return first_indices, last_indices
+    return (
+        first_indices.reshape(query_mzs.shape), 
+        last_indices.reshape(query_mzs.shape),
+    )
 
