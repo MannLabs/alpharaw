@@ -12,7 +12,7 @@ def register_readers():
         return "[WARN] pythonnet is not installed"
 
 __project__ = "alpharaw"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __license__ = "Apache"
 __description__ = "An open-source Python package to unify raw MS data accession and storage."
 __author__ = "Mann Labs"
