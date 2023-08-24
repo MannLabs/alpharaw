@@ -279,7 +279,6 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             spec_mzs, spec_intens = self.get_peaks(
                 *items[2:],
             )
-
             self._match_one_psm(
                 spec_mzs, spec_intens,
                 fragment_mz_df, 
