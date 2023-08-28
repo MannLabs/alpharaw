@@ -113,7 +113,7 @@ class ThermoRawData(MSData_Base):
     def __init__(self, 
             centroided : bool = True,
             process_count : int = 10,
-            mp_batch_size : int = 1000,
+            mp_batch_size : int = 10000,
             **kwargs):
         """
         Parameters
@@ -147,7 +147,7 @@ class ThermoRawData(MSData_Base):
 
         # use multiprocessing to load batches
         _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
-        with Pool(processes = 10) as pool:
+        with Pool(processes = self.process_count) as pool:
             batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
 
         # collect peak indices
