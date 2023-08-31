@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import platform
 import os
 from multiprocessing.pool import Pool
 from functools import partial
@@ -142,13 +143,18 @@ class ThermoRawData(MSData_Base):
         # create batches for multiprocessing
         first_spectrum_number = rawfile.FirstSpectrumNumber
         last_spectrum_number = rawfile.LastSpectrumNumber
-        batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
-        batches = np.append(batches, last_spectrum_number+1)
 
-        # use multiprocessing to load batches
-        _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
-        with Pool(processes = self.process_count) as pool:
-            batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
+        if platform.system() != 'Linux':
+            batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
+            batches = np.append(batches, last_spectrum_number+1)
+
+            # use multiprocessing to load batches
+            _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
+            with Pool(processes = self.process_count) as pool:
+                batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
+
+        else:
+            batches = [_import_batch(raw_file_path, self.centroided, (first_spectrum_number, last_spectrum_number+1))]
 
         # collect peak indices
         _peak_indices = np.concatenate([batch['_peak_indices'] for batch in batches])        
