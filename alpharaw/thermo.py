@@ -101,8 +101,8 @@ def _import_batch(
         'rt': np.array(rt_values),
         'precursor_mz': np.array(precursor_mz_values),
         'precursor_charge': np.array(precursor_charges, dtype=np.int8),
-        'isolation_mz_lower': np.array(isolation_mz_lowers),
-        'isolation_mz_upper': np.array(isolation_mz_uppers),
+        'isolation_lower_mz': np.array(isolation_mz_lowers),
+        'isolation_upper_mz': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
     }

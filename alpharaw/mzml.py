@@ -73,8 +73,8 @@ class MzMLReader(MSData_Base):
             'rt': np.array(rt_list),
             'precursor_mz': np.array(prec_mz_list),
             'precursor_charge': np.array(charge_list, dtype=np.int8),
-            'isolation_mz_lower': np.array(isolation_lower_mz_list),
-            'isolation_mz_upper': np.array(isolation_upper_mz_list),
+            'isolation_lower_mz': np.array(isolation_lower_mz_list),
+            'isolation_upper_mz': np.array(isolation_upper_mz_list),
             'ms_level': np.array(ms_level_list, dtype=np.int8),
         }
         nce_list = np.array(nce_list, dtype=np.float32)

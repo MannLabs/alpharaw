@@ -155,10 +155,10 @@ class MSData_Base:
             dtype=np.int8
         )
         self.spectrum_df["isolation_lower_mz"] = np.array(
-            raw_data['isolation_mz_lower'], dtype=np.float64
+            raw_data['isolation_lower_mz'], dtype=np.float64
         )
-        self.spectrum_df["isolation_mz_upper"] = np.array(
-            raw_data['isolation_mz_upper'], dtype=np.float64
+        self.spectrum_df["isolation_upper_mz"] = np.array(
+            raw_data['isolation_upper_mz'], dtype=np.float64
         )
         if "nce" in raw_data:
             self.spectrum_df["nce"] = np.array(
