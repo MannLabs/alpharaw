@@ -556,7 +556,6 @@ def get_dia_spec_idxes(
 
 class PepSpecMatch_DIA(PepSpecMatch):
     max_spec_per_query: int = 3
-    min_score: int = 6
     min_frag_mz: float = 200.0
 
     def _prepare_matching_dfs(self):
@@ -649,15 +648,13 @@ class PepSpecMatch_DIA(PepSpecMatch):
             process_num
         )
 
-        scores = get_ion_count_scores(
+        self.psm_df["score"] = get_ion_count_scores(
             self.fragment_mz_df.values,
             self.matched_intensity_df.values,
             self.psm_df.frag_start_idx.values,
             self.psm_df.frag_stop_idx.values,
             self.min_frag_mz,
         )
-
-        self.psm_df = self.psm_df[scores>=self.min_score].copy()
 
         return (
             self.psm_df, self.fragment_mz_df, 
