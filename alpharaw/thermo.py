@@ -173,6 +173,10 @@ class ThermoRawData(MSData_Base):
         rawfile.Close()
 
         return output_dict
+    
+    def import_raw(self, _path: str):
+        super().import_raw(_path)
+        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)

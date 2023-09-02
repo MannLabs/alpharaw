@@ -43,6 +43,10 @@ class SciexWiffData(MSData_Base):
         self.creation_time = wiff_reader.wiffSample.Details.AcquisitionDateTime.ToString("O")
         wiff_reader.close()
         return data_dict
+    
+    def import_raw(self, _path: str):
+        super().import_raw(_path)
+        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('sciex', SciexWiffData)
 ms_reader_provider.register_reader('sciex_wiff', SciexWiffData)
