@@ -456,23 +456,24 @@ class PepSpecMatch:
 
         self._ms_file_type = ms_file_type
 
-        if process_num <= 1 or len(self._ms_file_dict) <= 1:
-            for raw_name, df_group in tqdm.tqdm(
-                self.psm_df.groupby('raw_name')
-            ):
-                self._match_ms2_one_raw_numba((raw_name, df_group))
-        else:
-            with mp.get_context("spawn").Pool(processes=process_num) as p:
-                df_groupby = self.psm_df.groupby('raw_name')
-                def gen_group_df(df_groupby):
-                    for raw_name, df_group in df_groupby:
-                        yield (raw_name, df_group)
-                process_bar(
-                    p.imap_unordered(
-                        self._match_ms2_one_raw_numba, 
-                        gen_group_df(df_groupby)
-                    ), df_groupby.ngroups
-                )
+        self.ms_loader_thread_num = process_num
+        # if process_num <= 1 or len(self._ms_file_dict) <= 1:
+        for raw_name, df_group in tqdm.tqdm(
+            self.psm_df.groupby('raw_name')
+        ):
+            self._match_ms2_one_raw_numba((raw_name, df_group))
+        # else:
+        #     with mp.get_context("spawn").Pool(processes=process_num) as p:
+        #         df_groupby = self.psm_df.groupby('raw_name')
+        #         def gen_group_df(df_groupby):
+        #             for raw_name, df_group in df_groupby:
+        #                 yield (raw_name, df_group)
+        #         process_bar(
+        #             p.imap_unordered(
+        #                 self._match_ms2_one_raw_numba, 
+        #                 gen_group_df(df_groupby)
+        #             ), df_groupby.ngroups
+        #         )
                     
         return (
             self.psm_df, self.fragment_mz_df, 
