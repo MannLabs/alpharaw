@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import platform
 import os
-from multiprocessing.pool import Pool
+import multiprocessing as mp
 from functools import partial
 from tqdm import tqdm
 
@@ -150,7 +150,7 @@ class ThermoRawData(MSData_Base):
 
             # use multiprocessing to load batches
             _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
-            with Pool(processes = self.process_count) as pool:
+            with mp.get_context("spawn").Pool(processes = self.process_count) as pool:
                 batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
 
         else:
