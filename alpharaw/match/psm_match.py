@@ -176,6 +176,12 @@ class PepSpecMatch:
             add_spec_info_list.append('rt')
 
         if (
+            'nce' in raw_data.spectrum_df.columns 
+            and 'nce' not in psm_df.columns
+        ):
+            add_spec_info_list.append('nce')
+
+        if (
             'mobility' not in psm_df.columns and 
             'mobility' in raw_data.spectrum_df.columns
         ):
@@ -558,6 +564,7 @@ def get_dia_spec_idxes(
 class PepSpecMatch_DIA(PepSpecMatch):
     max_spec_per_query: int = 3
     min_frag_mz: float = 200.0
+    rt_query_window: float = 20.0/60.0 # 20 seconds
 
     def _prepare_matching_dfs(self):
 
@@ -569,6 +576,8 @@ class PepSpecMatch_DIA(PepSpecMatch):
 
         psm_df_list = []
         len_frags = len(fragment_mz_df)//self.max_spec_per_query
+        self.psm_df["rt_start"] = self.psm_df.rt - self.rt_query_window/2
+        self.psm_df["rt_stop"] = self.psm_df.rt + self.rt_query_window/2
         for i in range(self.max_spec_per_query):
             psm_df = self.psm_df.copy()
             psm_df["frag_start_idx"] = psm_df.frag_start_idx+i*len_frags
