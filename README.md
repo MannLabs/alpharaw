@@ -56,20 +56,13 @@ Pythonnet will be automatically installed via pip.
     requires you to add the ppa to your trusted sources!
 2.  Install pythonnet with `pip install pythonnet`.
 
-#### For MacOS
+#### For MacOS including M1/M2 platform
 
-1.  Install [brew](https://brew.sh) and pkg-config:
-    `brew install pkg-config` 3. Install Mono from mono-project website
-    [Mono Mac](https://www.mono-project.com/download/stable/)
-2.  Register the Mono-Path to your system: For macOS Catalina, open the
-    configuration of zsh via the terminal:
-
-- Type `nano ~/.zshrc` to open the configuration of the terminal
-- Append the mono path to your `PKG_CONFIG_PATH`:
-  `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/Library/Frameworks/Mono.framework/Versions/Current/lib/pkgconfig:$PKG_CONFIG_PATH`.
-- Save everything and execute `. ~/.zshrc`
-
-3.  Install pythonnet with `pip install pythonnet`.
+1.  Install [brew](https://brew.sh).
+2.  Install mono: `brew install mono`.
+3.  Create a pseudo mono folder: `sudo mkdir -p /Library/Frameworks/Mono.framework/Versions`.
+4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions`. Where `6.12.0.182` is the brew-installed mono version, please check yours installed version.
+5.  Install pythonnet: `pip install pythonnet`.
 
 ------------------------------------------------------------------------
 

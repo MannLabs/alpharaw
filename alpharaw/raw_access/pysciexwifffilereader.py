@@ -147,7 +147,7 @@ class WillFileReader:
             "ms_level": np.array(ms_level_list, dtype=np.int8), 
             "precursor_mz": np.array(precursor_mz_list, dtype=np.float64), 
             "precursor_charge": np.array(precursor_charge_list, dtype=np.int8), 
-            'isolation_mz_lower': np.array(isolation_lower_mz_list),
-            'isolation_mz_upper': np.array(isolation_upper_mz_list),
+            'isolation_lower_mz': np.array(isolation_lower_mz_list),
+            'isolation_upper_mz': np.array(isolation_upper_mz_list),
             'nce': np.array(ce_list, dtype=np.float32),
         }
