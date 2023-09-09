@@ -566,6 +566,12 @@ class PepSpecMatch_DIA(PepSpecMatch):
     min_frag_mz: float = 200.0
     rt_query_window: float = 20.0/60.0 # 20 seconds
 
+    def _add_missing_columns_to_psm_df(self,
+        psm_df:pd.DataFrame, raw_data=None
+    ):
+        # DIA results do not have spec_idx in psm_df, nothing to merge
+        return psm_df
+    
     def _prepare_matching_dfs(self):
 
         fragment_mz_df = self.get_fragment_mz_df()
