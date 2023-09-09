@@ -9,14 +9,14 @@ def register_readers():
         from .sciex import SciexWiffData
         from .thermo import ThermoRawData
     except (RuntimeError, ImportError):
-        return "[WARN] pythonnet is not installed"
+        print("[WARN] pythonnet is not installed")
 
 __project__ = "alpharaw"
 __version__ = "0.2.0"
 __license__ = "Apache"
-__description__ = "An open-source Python package to unify raw MS data accession and storage."
+__description__ = "An open-source Python package to unify raw MS data access and storage."
 __author__ = "Mann Labs"
-__author_email__ = "opensource@alphapept.com"
+__author_email__ = "jalew.zwf@qq.com"
 __github__ = "https://github.com/MannLabs/alpharaw"
 __keywords__ = [
     "bioinformatics",
@@ -24,14 +24,14 @@ __keywords__ = [
     "AlphaPept ecosystem",
     "mass spectrometry",
     "raw data",
-    "data accession",
+    "data access",
     "data storage"
 ]
 __python_version__ = ">=3.8"
 __classifiers__ = [
     # "Development Status :: 1 - Planning",
-    "Development Status :: 2 - Pre-Alpha",
-    # "Development Status :: 3 - Alpha",
+    # "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     # "Development Status :: 4 - Beta",
     # "Development Status :: 5 - Production/Stable",
     # "Development Status :: 6 - Mature",
@@ -49,6 +49,9 @@ __urls__ = {
     # "PyPi": None,
     # "Scientific paper": None,
 }
+__console_scripts__ = [
+    "alpharaw=alpharaw.cli:run",
+]
 __extra_requirements__ = {
     "development": "extra_requirements/development.txt",
 }
