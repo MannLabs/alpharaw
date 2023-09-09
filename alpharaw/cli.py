@@ -57,7 +57,7 @@ def _parse(raw_type:str, raw:list):
         print(f"{raw_type} is not supported, this may be due to the failed installion of PythonNet or other packages")
     else:
         for raw_file in raw:
-            if os.path.isfile(raw_file):
+            if not os.path.isfile(raw_file):
                 print(f"{raw_file} does not exist")
                 continue
             reader.import_raw(raw_file)
