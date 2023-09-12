@@ -6,6 +6,8 @@ from .ms_data_base import (
     MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 )
 
+from .ms_data_base import ms_reader_provider
+
 class MzMLReader(MSData_Base):
     def _import(self,
         filename: str,
@@ -132,3 +134,5 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
         rt, prec_mz, isolation_lower_mz, isolation_upper_mz, 
         ms_level, nce, charge, masses, intensities
     )
+
+ms_reader_provider.register_reader("mzml", MzMLReader)
