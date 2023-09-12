@@ -375,7 +375,6 @@ class PepSpecMatch:
     def _match_ms2_one_raw_numba(self, 
         raw_name_psm_df_one_raw:tuple
     ):
-        print(raw_name_psm_df_one_raw)
         raw_name, psm_df_one_raw = raw_name_psm_df_one_raw
         if raw_name in self._ms_file_dict:
             raw_data = load_ms_data(
@@ -406,6 +405,8 @@ class PepSpecMatch:
                 self.matched_mz_err_df.values,
                 self.match_closest
             )
+        else:
+            print(f"`{raw_name}` is not found in ms_file_dict.")
     
     def match_ms2_multi_raw(self,
         psm_df: pd.DataFrame,
@@ -652,6 +653,9 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 self.matched_mz_err_df.values,
                 self.match_closest
             )
+        else:
+            print(f"`{raw_name}` is not found in ms_file_dict.")
+            
 
     def match_ms2_multi_raw(self, 
         psm_df: pd.DataFrame, 
