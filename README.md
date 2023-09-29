@@ -61,7 +61,7 @@ Pythonnet will be automatically installed via pip.
 1.  Install [brew](https://brew.sh).
 2.  Install mono: `brew install mono`.
 3.  Create a pseudo mono folder: `sudo mkdir -p /Library/Frameworks/Mono.framework/Versions`.
-4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions`. Where `6.12.0.182` is the brew-installed mono version, please check yours installed version.
+4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions`. Here, `6.12.0.182` is the brew-installed mono version, please check your installed version. Navigate to `/Library/Frameworks/Mono.framework/Versions` and run `ls -l` to verify that the link `Current` points to `/opt/homebrew/Cellar/mono/6.12.0.182`. If Current points to a different installation and/or `/opt/homebrew/Cellar/mono/6.12.0.182` is referenced by a different link, delete the corresponding links and run `ln -s /opt/homebrew/Cellar/mono/6.12.0.182 Current`.     
 5.  Install pythonnet: `pip install pythonnet`.
 
 ------------------------------------------------------------------------
