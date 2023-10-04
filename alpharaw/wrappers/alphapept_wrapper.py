@@ -85,8 +85,6 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
         start_idxes[spec_idxes] = peak_indices[:-1]
         end_idxes = np.full(spec_num, -1, dtype=np.int64)
         end_idxes[spec_idxes] = peak_indices[1:]
-        rt_values = np.zeros(spec_num)
-        rt_values[spec_idxes] = hdf.Raw.MS2_scans.rt_list_ms2.values
 
         self.set_peak_df_by_indexed_array(
             hdf.Raw.MS2_scans.mass_list_ms2.values,
@@ -94,25 +92,27 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             start_idxes, end_idxes
         )
 
-        self.add_column_in_spec_df(
-            'rt', rt_values
+        self.add_column_in_spec_df_by_spec_idxes(
+            "rt", hdf.Raw.MS2_scans.rt_list_ms2.values, 
+            spec_idxes, dtype=np.float64, na_value=0
         )
         self.spectrum_df['ms_level'] = 2
 
         if hasattr(hdf.Raw.MS2_scans, 'mobility2'):
-            self.add_column_in_spec_df(
-                'mobility', hdf.Raw.MS2_scans.mobility2.values
+            self.add_column_in_spec_df_by_spec_idxes(
+                'mobility', 
+                hdf.Raw.MS2_scans.mobility2.values,
+                spec_idxes,
             )
 
         if hasattr(hdf.Raw.MS2_scans, 'mono_mzs2'):
-            precursor_mzs = np.zeros(spec_num)
-            precursor_mzs[spec_idxes] = hdf.Raw.MS2_scans.mono_mzs2.values
-            self.set_precursor_mz(
-                precursor_mzs
+            self.add_column_in_spec_df_by_spec_idxes(
+                "precursor_mz", hdf.Raw.MS2_scans.mono_mzs2.values,
+                spec_idxes
             )
-            self.set_precursor_mz_windows(
-                precursor_mzs-1.5, precursor_mzs+1.5
-            )
+            # self.set_isolation_mz_windows(
+            #     precursor_mzs-1.5, precursor_mzs+1.5
+            # )
 
 ms_reader_provider.register_reader('alphapept', AlphaPept_HDF_MS2_Reader)
 ms_reader_provider.register_reader('alphapept_hdf', AlphaPept_HDF_MS2_Reader)

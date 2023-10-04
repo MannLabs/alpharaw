@@ -34,13 +34,16 @@ class MGFReader(MSData_Base):
             f = open(_path)
         else:
             f = _path
-        scanset = set()
+        scan_mz_dict = {}
+        scan_charge_dict = {}
         masses_list = []
         intens_list = []
         spec_idx_list = []
+        scan_list = []
         rt_list = []
         precursor_mz_list = []
         charge_list = []
+        self._has_chimeras = False
         while True:
             line = f.readline()
             if not line: break
@@ -64,12 +67,18 @@ class MGFReader(MSData_Base):
                     elif line.startswith('PEPMASS='):
                         precursor_mz = float(line.split('=')[1])
                     elif line.startswith('CHARGE='):
-                        charge = float(line.split('=')[1].strip()[:-1])
+                        charge = int(line.split('=')[1].strip()[:-1])
                 if not scan:
                     title = find_line(lines, 'TITLE=')
                     scan = parse_scan_from_TITLE(title)
-                if scan in scanset: continue
-                scanset.add(scan)
+                if scan in scan_mz_dict: 
+                    scan_mz_dict[scan].append(precursor_mz)
+                    scan_charge_dict[scan].append(charge)
+                    self._has_chimeras = True
+                    continue
+                scan_mz_dict[scan] = [precursor_mz]
+                scan_charge_dict[scan] = [charge]
+                scan_list.append(scan)
                 spec_idx_list.append(scan-1)
                 rt_list.append(RT)
                 precursor_mz_list.append(precursor_mz)
@@ -79,7 +88,9 @@ class MGFReader(MSData_Base):
         if isinstance(_path, str): 
             f.close()
 
-        precursor_mz_list = np.array(precursor_mz_list)
+        if self._has_chimeras:
+            precursor_mz_list = [scan_mz_dict[scan] for scan in scan_list]
+            charge_list = [scan_charge_dict[scan] for scan in scan_list]
 
         return {
             'peak_indices': index_ragged_list(masses_list),
@@ -87,10 +98,9 @@ class MGFReader(MSData_Base):
             'peak_intensity': np.concatenate(intens_list),
             'rt': np.array(rt_list),
             'precursor_mz': precursor_mz_list,
-            'isolation_mz_lower': precursor_mz_list-2,
-            'isolation_mz_upper': precursor_mz_list+2,
             'spec_idx': np.array(spec_idx_list, dtype=np.int64),
-            'precursor_charge': np.array(charge_list, dtype=np.int8),
+            'scan': np.array(scan_list, dtype=np.int64),
+            'precursor_charge': charge_list,
         }
 
     def _set_dataframes(self, raw_data:dict):
@@ -103,28 +113,28 @@ class MGFReader(MSData_Base):
         end_idxes[spec_idxes] = raw_data['peak_indices'][1:]
         rt_values = np.zeros(spec_num)
         rt_values[spec_idxes] = raw_data['rt']
-        precursor_mzs = np.zeros(spec_num)
-        precursor_mzs[spec_idxes] = raw_data['precursor_mz']
-        mz_lowers = np.zeros(spec_num)
-        mz_lowers[spec_idxes] = raw_data['isolation_mz_lower']
-        mz_uppers = np.zeros(spec_num)
-        mz_uppers[spec_idxes] = raw_data['isolation_mz_upper']
-        charges = np.zeros(spec_num, np.int8)
-        charges[spec_idxes] = raw_data['precursor_charge']
+        if self._has_chimeras:
+            precursor_mzs = [[]]*spec_num
+            charges = [[]]*spec_num
+            mz_vals = raw_data['precursor_mz']
+            ch_vals = raw_data["precursor_charge"]
+            for i,idx in enumerate(spec_idxes):
+                precursor_mzs[idx] = mz_vals[i]
+                charges[idx] = ch_vals[i]
+        else:
+            precursor_mzs = np.zeros(spec_num)
+            precursor_mzs[spec_idxes] = raw_data['precursor_mz']
+            charges = np.zeros(spec_num, np.int8)
+            charges[spec_idxes] = raw_data['precursor_charge']
+
+        self.spectrum_df["charge"] = charges
+        self.spectrum_df["precursor_mz"] = precursor_mzs
 
         self.set_peak_df_by_indexed_array(
             raw_data['peak_mz'],
             raw_data['peak_intensity'],
             start_idxes,end_idxes
         )
-        self.add_column_in_spec_df('rt', rt_values)
-        self.add_column_in_spec_df('charge', charges)
+        self.add_column_in_spec_df_by_spec_idxes('rt', raw_data['rt'], spec_idxes, na_value=0)
         self.spectrum_df['ms_level'] = 2
-        self.set_precursor_mz(
-            precursor_mzs
-        )
-        self.set_isolation_mz_windows(
-            mz_lowers,mz_uppers
-        )
-
 ms_reader_provider.register_reader('mgf', MGFReader)

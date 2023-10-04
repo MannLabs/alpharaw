@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import platform
 import os
-from multiprocessing.pool import Pool
+import multiprocessing as mp
 from functools import partial
 from tqdm import tqdm
 
@@ -110,8 +111,8 @@ def _import_batch(
         'rt': np.array(rt_values),
         'precursor_mz': np.array(precursor_mz_values),
         'precursor_charge': np.array(precursor_charges, dtype=np.int8),
-        'isolation_mz_lower': np.array(isolation_mz_lowers),
-        'isolation_mz_upper': np.array(isolation_mz_uppers),
+        'isolation_lower_mz': np.array(isolation_mz_lowers),
+        'isolation_upper_mz': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
         'cv': np.array(cv_list, dtype=np.float32),
@@ -152,13 +153,18 @@ class ThermoRawData(MSData_Base):
         # create batches for multiprocessing
         first_spectrum_number = rawfile.FirstSpectrumNumber
         last_spectrum_number = rawfile.LastSpectrumNumber
-        batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
-        batches = np.append(batches, last_spectrum_number+1)
 
-        # use multiprocessing to load batches
-        _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
-        with Pool(processes = self.process_count) as pool:
-            batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
+        if platform.system() != 'Linux':
+            batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
+            batches = np.append(batches, last_spectrum_number+1)
+
+            # use multiprocessing to load batches
+            _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
+            with mp.get_context("spawn").Pool(processes = self.process_count) as pool:
+                batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
+
+        else:
+            batches = [_import_batch(raw_file_path, self.centroided, (first_spectrum_number, last_spectrum_number+1))]
 
         # collect peak indices
         _peak_indices = np.concatenate([batch['_peak_indices'] for batch in batches])        
@@ -212,6 +218,11 @@ class ThermoRawData(MSData_Base):
             "cv", raw_data["cv"],
             dtype=np.float32,
         )
+
+    
+    def import_raw(self, _path: str):
+        super().import_raw(_path)
+        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)

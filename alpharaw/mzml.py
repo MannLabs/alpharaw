@@ -73,8 +73,8 @@ class MzMLReader(MSData_Base):
             'rt': np.array(rt_list),
             'precursor_mz': np.array(prec_mz_list),
             'precursor_charge': np.array(charge_list, dtype=np.int8),
-            'isolation_mz_lower': np.array(isolation_lower_mz_list),
-            'isolation_mz_upper': np.array(isolation_upper_mz_list),
+            'isolation_lower_mz': np.array(isolation_lower_mz_list),
+            'isolation_upper_mz': np.array(isolation_upper_mz_list),
             'ms_level': np.array(ms_level_list, dtype=np.int8),
         }
         nce_list = np.array(nce_list, dtype=np.float32)
@@ -82,38 +82,6 @@ class MzMLReader(MSData_Base):
             return ret_dict
         ret_dict["nce"] = nce_list
         return ret_dict
-
-    def _set_dataframes(self, raw_data:dict):
-        self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peak_df_by_indexed_array(
-            raw_data['peak_mz'],
-            raw_data['peak_intensity'],
-            raw_data['peak_indices'][:-1],
-            raw_data['peak_indices'][1:],
-        )
-        self.add_column_in_spec_df(
-            'rt', raw_data['rt']
-        )
-        self.add_column_in_spec_df(
-            'ms_level', raw_data['ms_level'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz(
-            raw_data['precursor_mz']
-        )
-        self.add_column_in_spec_df(
-            'charge', raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.set_isolation_mz_windows(
-            raw_data['isolation_mz_lower'],
-            raw_data['isolation_mz_upper'],
-        )
-        if "nce" in raw_data:
-            self.add_column_in_spec_df(
-                "nce", raw_data["nce"],
-                dtype=np.float32,
-            )
 
 def parse_mzml_entry(item_dict: dict) -> tuple:
     rt = float(item_dict.get('scanList').get('scan')[0].get('scan start time'))

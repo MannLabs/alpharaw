@@ -134,10 +134,45 @@ class MSData_Base:
             f"{self.__class__} must implement `_import()`"
         )
     
-    def _set_dataframes(self, raw_data):
-        raise NotImplementedError(
-            f"{self.__class__} must implement `_set_dataframes()`"
+    def _set_dataframes(self, raw_data:dict):
+        self.create_spectrum_df(len(raw_data['rt']))
+        self.set_peak_df_by_indexed_array(
+            raw_data['peak_mz'],
+            raw_data['peak_intensity'],
+            raw_data['peak_indices'][:-1],
+            raw_data['peak_indices'][1:],
         )
+        self.spectrum_df["rt"] = raw_data['rt']
+        self.spectrum_df["ms_level"] = np.array(
+            raw_data['ms_level'], dtype=np.int8
+        )
+        self.spectrum_df["precursor_mz"] = np.array(
+            raw_data['precursor_mz'], dtype=np.float64
+        )
+        
+        self.spectrum_df["charge"] = np.array(
+            raw_data['precursor_charge'],
+            dtype=np.int8
+        )
+        self.spectrum_df["isolation_lower_mz"] = np.array(
+            raw_data['isolation_lower_mz'], dtype=np.float64
+        )
+        self.spectrum_df["isolation_upper_mz"] = np.array(
+            raw_data['isolation_upper_mz'], dtype=np.float64
+        )
+        if "nce" in raw_data:
+            self.spectrum_df["nce"] = np.array(
+                raw_data["nce"],
+                dtype=np.float32,
+            )
+        if "fragmentation" in raw_data:
+            self.spectrum_df["fragmentation"] = np.array(
+                raw_data["fragmentation"]
+            )
+        if "detector" in raw_data:
+            self.spectrum_df["detector"] = np.array(
+                raw_data["detector"]
+            )
 
     def _read_creation_time(self, raw_data):
         pass
@@ -202,26 +237,22 @@ class MSData_Base:
             indices[1:]
         )
 
-    def add_column_in_spec_df(self, 
+    def add_column_in_spec_df_by_spec_idxes(self, 
         column_name:str, 
         values:np.ndarray, 
-        spec_idxes:np.ndarray = None,
-        dtype:np.dtype=np.float64, na_value=np.nan,
+        spec_idxes:np.ndarray,
+        dtype:np.dtype=np.float64, 
+        na_value=np.nan,
     ):
-        if spec_idxes is None:
-            self.spectrum_df[
-                column_name
-            ] = np.array(values, dtype=dtype)
-        else:
-            self.spectrum_df.loc[
-                spec_idxes, column_name
-            ] = values
-            self.spectrum_df[column_name].fillna(
-                na_value, inplace=True
-            )
-            self.spectrum_df[
-                column_name
-            ] = self.spectrum_df[column_name].astype(dtype)
+        self.spectrum_df.loc[
+            spec_idxes, column_name
+        ] = values
+        self.spectrum_df[column_name].fillna(
+            na_value, inplace=True
+        )
+        self.spectrum_df[
+            column_name
+        ] = self.spectrum_df[column_name].astype(dtype)
 
     def add_column_in_df_by_scan_num(self, 
         column_name:str, 
@@ -233,7 +264,7 @@ class MSData_Base:
         """
         scan num starts from 1 not 0
         """
-        self.add_column_in_spec_df(
+        self.add_column_in_spec_df_by_spec_idxes(
             column_name, values,
             scan_nums-1, 
             dtype, na_value
@@ -248,27 +279,27 @@ class MSData_Base:
             self.peak_df.intensity.values[start:end],
         )
 
-    def set_precursor_mz(self, 
+    def set_precursor_mz_by_spec_idxes(self, 
         precursor_mz_values:np.ndarray,
-        spec_idxes:np.ndarray=None, 
+        spec_idxes:np.ndarray, 
     ):
-        self.add_column_in_spec_df(
+        self.add_column_in_spec_df_by_spec_idxes(
             'precursor_mz', 
             precursor_mz_values, 
             spec_idxes, np.float64, -1.0
         )
     
-    def set_isolation_mz_windows(self,
+    def set_isolation_mz_windows_by_spec_idxes(self,
         precursor_lower_mz_values:np.ndarray,
         precursor_upper_mz_values:np.ndarray,
-        spec_idxes:np.ndarray=None, 
+        spec_idxes:np.ndarray, 
     ):
-        self.add_column_in_spec_df(
+        self.add_column_in_spec_df_by_spec_idxes(
             'isolation_lower_mz',
             precursor_lower_mz_values, 
             spec_idxes, np.float64, -1.0
         )
-        self.add_column_in_spec_df(
+        self.add_column_in_spec_df_by_spec_idxes(
             'isolation_upper_mz',
             precursor_upper_mz_values, 
             spec_idxes, np.float64, -1.0
@@ -350,3 +381,5 @@ ms_reader_provider = MSReaderProvider()
 ms_reader_provider.register_reader('alpharaw', MSData_HDF)
 ms_reader_provider.register_reader('raw.hdf', MSData_HDF)
 ms_reader_provider.register_reader('alpharaw_hdf', MSData_HDF)
+ms_reader_provider.register_reader('hdf', MSData_HDF)
+ms_reader_provider.register_reader('hdf5', MSData_HDF)

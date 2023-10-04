@@ -3,10 +3,23 @@ import numba
 import pandas as pd
 import tqdm
 from typing import Union, Tuple
+import multiprocessing as mp
+from alphabase.utils import process_bar
+try:
+    from alpharaw.thermo import ThermoRawData
+    from alpharaw.sciex import SciexWiffData
+except:
+    pass
+
+from alpharaw.mzml import MzMLReader
+from alpharaw.wrappers.alphapept_wrapper import AlphaPept_HDF_MS2_Reader
+from alpharaw.legacy_msdata.mgf import MGFReader
+
 
 from alphabase.peptide.fragment import (
     create_fragment_mz_dataframe, 
-    get_charged_frag_types
+    get_charged_frag_types,
+    concat_precursor_fragment_dataframes
 )
 
 from alpharaw.ms_data_base import (
@@ -35,17 +48,18 @@ def match_one_raw_with_numba(
     Results will saved in place of matched_intensities 
     and matched_mz_errs.
     """
-    for spec_idx, frag_start, frag_end in zip(
+    for spec_idx, frag_start, frag_stop in zip(
         spec_idxes, frag_start_idxes, frag_stop_idxes
     ):
+        if spec_idx == -1: continue
         peak_start = peak_start_idxes[spec_idx]
         peak_stop = peak_stop_idxes[spec_idx]
         if peak_stop == peak_start: continue
         spec_mzs = all_spec_mzs[peak_start:peak_stop]
         spec_intens = all_spec_intensities[peak_start:peak_stop]
 
-        frag_mzs = all_frag_mzs[frag_start:frag_end,:].copy()
-        frag_mz_tols = all_frag_mz_tols[frag_start:frag_end,:].copy()
+        frag_mzs = all_frag_mzs[frag_start:frag_stop,:].copy()
+        frag_mz_tols = all_frag_mz_tols[frag_start:frag_stop,:].copy()
         
         if matched_closest:
             matched_idxes = match_closest_peaks(
@@ -69,17 +83,17 @@ def match_one_raw_with_numba(
         matched_mass_errs[matched_idxes==-1] = np.inf
 
         matched_intensities[
-            frag_start:frag_end,:
+            frag_start:frag_stop,:
         ] = matched_intens.reshape(frag_mzs.shape)
 
         matched_mz_errs[
-            frag_start:frag_end,:
+            frag_start:frag_stop,:
         ] = matched_mass_errs.reshape(frag_mzs.shape)
-
 
 def load_ms_data(
     ms_file:Union[str, MSData_Base],
     ms_file_type:str='alpharaw_hdf',
+    process_count:int = 8,
 )->MSData_Base:
     """Load MS files
 
@@ -97,7 +111,7 @@ def load_ms_data(
         return ms_file
     else:
         raw_data = ms_reader_provider.get_reader(
-            ms_file_type
+            ms_file_type, process_count=process_count
         )
         raw_data.import_raw(ms_file)
         return raw_data
@@ -109,7 +123,8 @@ class PepSpecMatch:
     match_closest:bool = True
     use_ppm:bool = True
     #: matching mass tolerance
-    tolerance:PEAK_MZ_DTYPE = 20.0
+    tolerance:float = 20.0
+    ms_loader_thread_num:int = 4
     def __init__(self,
         charged_frag_types:list = get_charged_frag_types(
             ['b','y','b_modloss','y_modloss'], 2
@@ -145,9 +160,9 @@ class PepSpecMatch:
     def _preprocess_psms(self, psm_df):
         pass
 
-    def get_fragment_mz_df(self, psm_df):
+    def get_fragment_mz_df(self):
         return create_fragment_mz_dataframe(
-            psm_df, self.charged_frag_types,
+            self.psm_df, self.charged_frag_types,
             dtype=PEAK_MZ_DTYPE,
         )
 
@@ -159,6 +174,12 @@ class PepSpecMatch:
         add_spec_info_list = []
         if 'rt' not in psm_df.columns:
             add_spec_info_list.append('rt')
+
+        if (
+            'nce' in raw_data.spectrum_df.columns 
+            and 'nce' not in psm_df.columns
+        ):
+            add_spec_info_list.append('nce')
 
         if (
             'mobility' not in psm_df.columns and 
@@ -184,9 +205,9 @@ class PepSpecMatch:
         #     psm_df['rt_sec'] = psm_df.rt*60
         return psm_df
 
-    def _prepare_matching_dfs(self, psm_df):
+    def _prepare_matching_dfs(self):
 
-        fragment_mz_df = self.get_fragment_mz_df(psm_df)
+        fragment_mz_df = self.get_fragment_mz_df()
 
         matched_intensity_df = pd.DataFrame(
             np.zeros_like(
@@ -211,6 +232,7 @@ class PepSpecMatch:
     def load_ms_data(self,
         ms_file:Union[str, MSData_Base],
         ms_file_type:str='alpharaw_hdf',
+        process_count:int = 8,
         **kwargs
     ):
         """Load MS files
@@ -225,7 +247,10 @@ class PepSpecMatch:
             ["alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"].
             Default to 'alpharaw_hdf'
         """
-        self.raw_data = load_ms_data(ms_file, ms_file_type)
+        self.raw_data = load_ms_data(
+            ms_file, ms_file_type, 
+            process_count=process_count
+        )
 
     def get_peaks(self,
         spec_idx:int,
@@ -308,6 +333,7 @@ class PepSpecMatch:
             
         """
         self._preprocess_psms(psm_df_one_raw)
+        self.psm_df = psm_df_one_raw
 
         psm_df_one_raw = self._add_missing_columns_to_psm_df(
             psm_df_one_raw
@@ -317,7 +343,7 @@ class PepSpecMatch:
             fragment_mz_df, 
             matched_intensity_df,
             matched_mz_err_df,
-        ) = self._prepare_matching_dfs(psm_df_one_raw)
+        ) = self._prepare_matching_dfs()
 
         psm_iters = psm_df_one_raw[[
             'spec_idx', 'frag_start_idx', 
@@ -346,14 +372,19 @@ class PepSpecMatch:
             matched_intensity_df, matched_mz_err_df
         )
 
-    def _match_ms2_one_raw_numba(self, raw_name, df_group):
+    def _match_ms2_one_raw_numba(self, 
+        raw_name_psm_df_one_raw:tuple
+    ):
+        print(raw_name_psm_df_one_raw)
+        raw_name, psm_df_one_raw = raw_name_psm_df_one_raw
         if raw_name in self._ms_file_dict:
             raw_data = load_ms_data(
-                self._ms_file_dict[raw_name], self._ms_file_type
+                self._ms_file_dict[raw_name], self._ms_file_type,
+                process_count=self.ms_loader_thread_num,
             )
 
-            df_group = self._add_missing_columns_to_psm_df(
-                df_group, raw_data
+            psm_df_one_raw = self._add_missing_columns_to_psm_df(
+                psm_df_one_raw, raw_data
             )
 
             if self.use_ppm:
@@ -362,9 +393,9 @@ class PepSpecMatch:
                 all_frag_mz_tols = np.full_like(self.fragment_mz_df.values, self.tolerance)
 
             match_one_raw_with_numba(
-                df_group.spec_idx.values,
-                df_group.frag_start_idx.values,
-                df_group.frag_stop_idx.values,
+                psm_df_one_raw.spec_idx.values,
+                psm_df_one_raw.frag_start_idx.values,
+                psm_df_one_raw.frag_stop_idx.values,
                 self.fragment_mz_df.values,
                 all_frag_mz_tols, 
                 raw_data.peak_df.mz.values, 
@@ -380,6 +411,7 @@ class PepSpecMatch:
         psm_df: pd.DataFrame,
         ms_files: Union[dict,list],
         ms_file_type:str = 'alpharaw_hdf',
+        process_num:int = 1,
     ):
         """Matching PSM dataframe against the ms2 files in ms_files
         This method will store matched values as attributes:
@@ -421,7 +453,7 @@ class PepSpecMatch:
             self.fragment_mz_df, 
             self.matched_intensity_df,
             self.matched_mz_err_df,
-        ) = self._prepare_matching_dfs(psm_df)
+        ) = self._prepare_matching_dfs()
         
         if isinstance(ms_files, dict):
             self._ms_file_dict = ms_files
@@ -430,12 +462,218 @@ class PepSpecMatch:
 
         self._ms_file_type = ms_file_type
 
+        self.ms_loader_thread_num = process_num
+        # if process_num <= 1 or len(self._ms_file_dict) <= 1:
         for raw_name, df_group in tqdm.tqdm(
             self.psm_df.groupby('raw_name')
         ):
-            self._match_ms2_one_raw_numba(raw_name, df_group)
+            self._match_ms2_one_raw_numba((raw_name, df_group))
+        # else:
+        #     with mp.get_context("spawn").Pool(processes=process_num) as p:
+        #         df_groupby = self.psm_df.groupby('raw_name')
+        #         def gen_group_df(df_groupby):
+        #             for raw_name, df_group in df_groupby:
+        #                 yield (raw_name, df_group)
+        #         process_bar(
+        #             p.imap_unordered(
+        #                 self._match_ms2_one_raw_numba, 
+        #                 gen_group_df(df_groupby)
+        #             ), df_groupby.ngroups
+        #         )
+                    
+        return (
+            self.psm_df, self.fragment_mz_df, 
+            self.matched_intensity_df, self.matched_mz_err_df
+        )
+    
+@numba.njit
+def get_best_matched_intens(
+    matched_intensity_values:np.ndarray,
+    frag_start_idxes:np.ndarray,
+    frag_stop_idxes:np.ndarray,
+):
+    ret_intens = np.zeros(
+        shape = matched_intensity_values.shape[1:],
+        dtype=matched_intensity_values.dtype
+    )
+    for i in range(len(frag_start_idxes)):
+        start = frag_start_idxes[i]
+        stop = frag_stop_idxes[i]
+        i = np.argmax(np.matmul(
+            matched_intensity_values[:,start:stop,:],
+            matched_intensity_values[:,start:stop,:].T
+        ).sum())
+        ret_intens[start:stop,:] = matched_intensity_values[i,start:stop,:]
+    return ret_intens
+
+@numba.njit
+def get_ion_count_scores(
+    frag_mz_values:np.ndarray,
+    matched_intens:np.ndarray,
+    frag_start_idxes:np.ndarray,
+    frag_stop_idxes:np.ndarray,
+    min_mz:float = 200,
+):
+    scores = []
+    for i in range(len(frag_start_idxes)):
+        scores.append(np.count_nonzero(
+            matched_intens[
+                frag_start_idxes[i]:frag_stop_idxes[i],:
+            ].copy().reshape(-1)[
+                frag_mz_values[
+                    frag_start_idxes[i]:frag_stop_idxes[i],:
+                ].copy().reshape(-1)>=min_mz
+            ]
+        ))
+    return np.array(scores,np.int32)
+
+@numba.njit    
+def get_dia_spec_idxes(
+    spec_rt_values:np.ndarray, 
+    spec_isolation_lower_mz_values:np.ndarray, 
+    spec_isolation_upper_mz_values:np.ndarray,
+    query_start_rt_values:np.ndarray, 
+    query_stop_rt_values:np.ndarray,
+    query_mz_values:np.ndarray,
+    max_spec_per_query:int,
+):
+    rt_start_idxes = np.searchsorted(spec_rt_values, query_start_rt_values)
+    rt_stop_idxes = np.searchsorted(spec_rt_values, query_stop_rt_values)
+    
+    spec_idxes = np.full(
+        (len(query_mz_values),max_spec_per_query),
+        -1, dtype=np.int32
+    )
+    for iquery in range(len(rt_start_idxes)):
+        idx_list = []
+        for ispec in range(rt_start_idxes[iquery], rt_stop_idxes[iquery]):
+            if (
+                query_mz_values[iquery]>=spec_isolation_lower_mz_values[ispec] and
+                query_mz_values[iquery]<=spec_isolation_upper_mz_values[ispec]
+            ):
+                idx_list.append(ispec)
+        if len(idx_list) > max_spec_per_query:
+            spec_idxes[iquery,:] = idx_list[
+                len(idx_list)/2-max_spec_per_query//2:
+                len(idx_list)/2+max_spec_per_query//2+1
+            ]
+        else:
+            spec_idxes[iquery,:len(idx_list)] = idx_list
+    return spec_idxes
+
+class PepSpecMatch_DIA(PepSpecMatch):
+    max_spec_per_query: int = 3
+    min_frag_mz: float = 200.0
+    rt_query_window: float = 20.0/60.0 # 20 seconds
+
+    def _add_missing_columns_to_psm_df(self,
+        psm_df:pd.DataFrame, raw_data=None
+    ):
+        # DIA results do not have spec_idx in psm_df, nothing to merge
+        return psm_df
+    
+    def _prepare_matching_dfs(self):
+
+        fragment_mz_df = self.get_fragment_mz_df()
+        fragment_mz_df = pd.concat(
+            [fragment_mz_df]*self.max_spec_per_query,
+            ignore_index=True
+        )
+
+        psm_df_list = []
+        len_frags = len(fragment_mz_df)//self.max_spec_per_query
+        self.psm_df["rt_start"] = self.psm_df.rt - self.rt_query_window/2
+        self.psm_df["rt_stop"] = self.psm_df.rt + self.rt_query_window/2
+        for i in range(self.max_spec_per_query):
+            psm_df = self.psm_df.copy()
+            psm_df["frag_start_idx"] = psm_df.frag_start_idx+i*len_frags
+            psm_df["frag_stop_idx"] = psm_df.frag_stop_idx+i*len_frags
+            psm_df_list.append(psm_df)
+        self.psm_df = pd.concat(psm_df_list, ignore_index=True)
+
+        matched_intensity_df = pd.DataFrame(
+            np.zeros_like(
+                fragment_mz_df.values,
+                dtype=PEAK_INTENSITY_DTYPE
+        ), columns=fragment_mz_df.columns)
+
+        matched_mz_err_df = pd.DataFrame(
+            np.zeros_like(
+                fragment_mz_df.values,
+                dtype=PEAK_MZ_DTYPE
+        ), columns=fragment_mz_df.columns)
+
+        return (
+            fragment_mz_df, matched_intensity_df, 
+            matched_mz_err_df
+        )
+    def _match_ms2_one_raw_numba(self, 
+        raw_name_psm_df_one_raw:tuple
+    ):
+        raw_name, psm_df_one_raw = raw_name_psm_df_one_raw
+        if raw_name in self._ms_file_dict:
+            raw_data = load_ms_data(
+                self._ms_file_dict[raw_name], self._ms_file_type,
+                process_count=self.ms_loader_thread_num
+            )
+
+            psm_df_one_raw = self._add_missing_columns_to_psm_df(
+                psm_df_one_raw, raw_data
+            )
+
+            if self.use_ppm:
+                all_frag_mz_tols = self.fragment_mz_df.values*self.tolerance*1e-6
+            else:
+                all_frag_mz_tols = np.full_like(self.fragment_mz_df.values, self.tolerance)
+
+            spec_idxes = get_dia_spec_idxes(
+                raw_data.spectrum_df.rt.values,
+                raw_data.spectrum_df.isolation_lower_mz.values,
+                raw_data.spectrum_df.isolation_upper_mz.values,
+                psm_df_one_raw.rt_start.values[:len(psm_df_one_raw)//self.max_spec_per_query],
+                psm_df_one_raw.rt_stop.values[:len(psm_df_one_raw)//self.max_spec_per_query],
+                psm_df_one_raw.precursor_mz.values[:len(psm_df_one_raw)//self.max_spec_per_query],
+                max_spec_per_query=self.max_spec_per_query
+            )
+
+            psm_df_one_raw["spec_idx"] = spec_idxes.T.reshape(-1)
+
+            match_one_raw_with_numba(
+                psm_df_one_raw.spec_idx.values,
+                psm_df_one_raw.frag_start_idx.values,
+                psm_df_one_raw.frag_stop_idx.values,
+                self.fragment_mz_df.values,
+                all_frag_mz_tols, 
+                raw_data.peak_df.mz.values, 
+                raw_data.peak_df.intensity.values,
+                raw_data.spectrum_df.peak_start_idx.values,
+                raw_data.spectrum_df.peak_stop_idx.values,
+                self.matched_intensity_df.values,
+                self.matched_mz_err_df.values,
+                self.match_closest
+            )
+
+    def match_ms2_multi_raw(self, 
+        psm_df: pd.DataFrame, 
+        ms_files: Tuple[dict,list], 
+        ms_file_type: str = "alpharaw_hdf",
+        process_num:int = 8,
+    ):
+        super().match_ms2_multi_raw(
+            psm_df, ms_files, ms_file_type,
+            process_num
+        )
+
+        self.psm_df["score"] = get_ion_count_scores(
+            self.fragment_mz_df.values,
+            self.matched_intensity_df.values,
+            self.psm_df.frag_start_idx.values,
+            self.psm_df.frag_stop_idx.values,
+            self.min_frag_mz,
+        )
 
         return (
             self.psm_df, self.fragment_mz_df, 
             self.matched_intensity_df, self.matched_mz_err_df
         )
+            
