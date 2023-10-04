@@ -49,6 +49,8 @@ def _import_batch(
     precursor_charges = []
     ms_order_list = []
     ce_list = []
+    cv_list = []
+
     for i in range(
         start,
         stop
@@ -67,12 +69,18 @@ def _import_batch(
 
         if ms_order == 1:
             ce_list.append(0)
+            cv_list.append(0)
             precursor_mz_values.append(-1.0)
             isolation_mz_lowers.append(-1.0)
             isolation_mz_uppers.append(-1.0)
             precursor_charges.append(0)
         else:
             ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
+            n_cvs = rawfile.GetNumberOfSourceFragmentsFromScanNum(i)
+            if n_cvs > 0:
+                cv_list.append(rawfile.GetSourceFragmentValueFromScanNum(i,0))
+            else:
+                cv_list.append(0)
 
             isolation_center = rawfile.GetPrecursorMassForScanNum(i)
             isolation_width = rawfile.GetIsolationWidthForScanNum(i)
@@ -94,6 +102,7 @@ def _import_batch(
                 isolation_mz_uppers.append(isolation_center + isolation_width / 2)
                 precursor_charges.append(charge)
     rawfile.Close()
+
     return {
         '_peak_indices': _peak_indices,
         'peak_mz': np.concatenate(mz_values),
@@ -105,6 +114,7 @@ def _import_batch(
         'isolation_mz_upper': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
+        'cv': np.array(cv_list, dtype=np.float32),
     }
 class ThermoRawData(MSData_Base):
     """
@@ -196,6 +206,10 @@ class ThermoRawData(MSData_Base):
         )
         self.add_column_in_spec_df(
             "nce", raw_data["nce"],
+            dtype=np.float32,
+        )
+        self.add_column_in_spec_df(
+            "cv", raw_data["cv"],
             dtype=np.float32,
         )
 
