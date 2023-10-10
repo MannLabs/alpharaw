@@ -50,6 +50,8 @@ def _import_batch(
     precursor_charges = []
     ms_order_list = []
     ce_list = []
+    injection_time_list = []
+
     for i in range(
         start,
         stop
@@ -65,6 +67,7 @@ def _import_batch(
         rt_values.append(rt)
         ms_order = rawfile.GetMSOrderForScanNum(i)
         ms_order_list.append(ms_order)
+        injection_time_list.append(rawfile.GetInjectionTimeForScanNum(i))
 
         if ms_order == 1:
             ce_list.append(0)
@@ -106,6 +109,7 @@ def _import_batch(
         'isolation_upper_mz': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
+        'injection_time': np.array(injection_time_list, dtype=np.float32)
     }
 class ThermoRawData(MSData_Base):
     """

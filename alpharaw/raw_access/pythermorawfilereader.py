@@ -522,3 +522,10 @@ class RawFileReader(object):
                     DotNetArrayToNPArray(segmentedScan.Positions), 
                     DotNetArrayToNPArray(segmentedScan.Intensities)
                 )
+            
+    def GetInjectionTimeForScanNum(self, scanNumber):
+        """Returns the recorded injection time for the current controller. This function is only valid for
+        MS controllers."""
+        trailer = self.source.GetTrailerExtraInformation(scanNumber)
+        trailer_dict = {trailer.Labels[i]: trailer.Values[i] for i in range(trailer.Length)}
+        return float(trailer_dict['Ion Injection Time (ms):'])
