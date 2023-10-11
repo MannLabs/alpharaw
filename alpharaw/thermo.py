@@ -133,7 +133,7 @@ class ThermoRawData(MSData_Base):
         mp_batch_size : int, default = 10000
             number of spectra to load in each batch
         """
-        super().__init__(centroided)
+        super().__init__(centroided, **kwargs)
         self.file_type = 'thermo'
         self.process_count = process_count
         self.mp_batch_size = mp_batch_size
@@ -177,10 +177,6 @@ class ThermoRawData(MSData_Base):
         rawfile.Close()
 
         return output_dict
-    
-    def import_raw(self, _path: str):
-        super().import_raw(_path)
-        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)

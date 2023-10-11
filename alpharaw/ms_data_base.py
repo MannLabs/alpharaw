@@ -40,7 +40,12 @@ class MSData_Base:
         "ETHCD", "ETCID", "EXCID", "NETD",
         "IT", "FT", "TOF", 
     ]
-    def __init__(self, centroided:bool=True, **kwargs):
+    def __init__(
+            self, 
+            centroided:bool=True,
+            save_as_hdf:bool=False,
+            **kwargs
+            ):
         """
         Parameters
         ----------
@@ -54,6 +59,7 @@ class MSData_Base:
         self.peak_df:pd.DataFrame = pd.DataFrame()
         self._raw_file_path = ''
         self.centroided = centroided
+        self.save_as_hdf = save_as_hdf
         self.creation_time = ''
         self.file_type = ''
         self.instrument = 'none'
@@ -80,6 +86,9 @@ class MSData_Base:
         raw_data = self._import(_path)
         self._set_dataframes(raw_data)
         self._check_df()
+
+        if self.save_as_hdf:
+            self.save_hdf(_path+'.hdf')
 
     def load_raw(self, _path:str):
         self.import_raw(_path)
