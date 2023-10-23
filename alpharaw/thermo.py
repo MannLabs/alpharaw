@@ -50,6 +50,8 @@ def _import_batch(
     precursor_charges = []
     ms_order_list = []
     ce_list = []
+    injection_time_list = []
+
     for i in range(
         start,
         stop
@@ -65,6 +67,7 @@ def _import_batch(
         rt_values.append(rt)
         ms_order = rawfile.GetMSOrderForScanNum(i)
         ms_order_list.append(ms_order)
+        injection_time_list.append(rawfile.GetInjectionTimeForScanNum(i))
 
         if ms_order == 1:
             ce_list.append(0)
@@ -106,6 +109,7 @@ def _import_batch(
         'isolation_upper_mz': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
+        'injection_time': np.array(injection_time_list, dtype=np.float32)
     }
 class ThermoRawData(MSData_Base):
     """
@@ -129,7 +133,7 @@ class ThermoRawData(MSData_Base):
         mp_batch_size : int, default = 10000
             number of spectra to load in each batch
         """
-        super().__init__(centroided)
+        super().__init__(centroided, **kwargs)
         self.file_type = 'thermo'
         self.process_count = process_count
         self.mp_batch_size = mp_batch_size
@@ -173,10 +177,6 @@ class ThermoRawData(MSData_Base):
         rawfile.Close()
 
         return output_dict
-    
-    def import_raw(self, _path: str):
-        super().import_raw(_path)
-        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
