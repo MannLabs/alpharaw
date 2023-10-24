@@ -52,6 +52,8 @@ def _import_batch(
     ce_list = []
     injection_time_list = []
 
+    cv_list = []
+
     for i in range(
         start,
         stop
@@ -67,7 +69,13 @@ def _import_batch(
         rt_values.append(rt)
         ms_order = rawfile.GetMSOrderForScanNum(i)
         ms_order_list.append(ms_order)
-        injection_time_list.append(rawfile.GetInjectionTimeForScanNum(i))
+
+        trailer_data = rawfile.GetTrailerExtraForScanNum(i)
+        injection_time_list.append(trailer_data['Ion Injection Time (ms):'])
+
+        # check if FAIMS is enabled
+        if trailer_data['FAIMS Voltage On:'] == 'Yes':
+            cv_list.append(float(trailer_data['FAIMS CV:']))
 
         if ms_order == 1:
             ce_list.append(0)
@@ -98,7 +106,7 @@ def _import_batch(
                 isolation_mz_uppers.append(isolation_center + isolation_width / 2)
                 precursor_charges.append(charge)
     rawfile.Close()
-    return {
+    out_dict = {
         '_peak_indices': _peak_indices,
         'peak_mz': np.concatenate(mz_values),
         'peak_intensity': np.concatenate(intensity_values),
@@ -109,8 +117,12 @@ def _import_batch(
         'isolation_upper_mz': np.array(isolation_mz_uppers),
         'ms_level': np.array(ms_order_list, dtype=np.int8),
         'nce': np.array(ce_list, dtype=np.float32),
-        'injection_time': np.array(injection_time_list, dtype=np.float32)
+        'injection_time': np.array(injection_time_list, dtype=np.float32),
     }
+    if len(cv_list) > 0:
+        out_dict['cv'] = np.array(cv_list, dtype=np.float32)
+
+    return out_dict
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.

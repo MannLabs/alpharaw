@@ -187,6 +187,11 @@ class MSData_Base:
                 raw_data["injection_time"]
             )
 
+        if "cv" in raw_data:
+            self.spectrum_df["cv"] = np.array(
+                raw_data["cv"],
+            )
+
     def _read_creation_time(self, raw_data):
         pass
 
