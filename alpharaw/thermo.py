@@ -98,18 +98,21 @@ def _import_batch(
                 isolation_mz_uppers.append(isolation_center + isolation_width / 2)
                 precursor_charges.append(charge)
     rawfile.Close()
+
+    # copys of numpy arrays are needed to move them explicitly to cpython heap
+    # otherwise mono might interfere later
     return {
         '_peak_indices': _peak_indices,
-        'peak_mz': np.concatenate(mz_values),
-        'peak_intensity': np.concatenate(intensity_values),
-        'rt': np.array(rt_values),
-        'precursor_mz': np.array(precursor_mz_values),
-        'precursor_charge': np.array(precursor_charges, dtype=np.int8),
-        'isolation_lower_mz': np.array(isolation_mz_lowers),
-        'isolation_upper_mz': np.array(isolation_mz_uppers),
-        'ms_level': np.array(ms_order_list, dtype=np.int8),
-        'nce': np.array(ce_list, dtype=np.float32),
-        'injection_time': np.array(injection_time_list, dtype=np.float32)
+        'peak_mz': np.concatenate(mz_values).copy(),
+        'peak_intensity': np.concatenate(intensity_values).copy(),
+        'rt': np.array(rt_values).copy(),
+        'precursor_mz': np.array(precursor_mz_values).copy(),
+        'precursor_charge': np.array(precursor_charges, dtype=np.int8).copy(),
+        'isolation_lower_mz': np.array(isolation_mz_lowers).copy(),
+        'isolation_upper_mz': np.array(isolation_mz_uppers).copy(),
+        'ms_level': np.array(ms_order_list, dtype=np.int8).copy(),
+        'nce': np.array(ce_list, dtype=np.float32).copy(),
+        'injection_time': np.array(injection_time_list, dtype=np.float32).copy()
     }
 class ThermoRawData(MSData_Base):
     """
