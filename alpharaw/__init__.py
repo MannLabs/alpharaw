@@ -1,5 +1,8 @@
 #!python
 
+import warnings
+warnings.filterwarnings("ignore")
+
 def register_readers():
     from .ms_data_base import ms_reader_provider
     from .legacy_msdata import mgf
