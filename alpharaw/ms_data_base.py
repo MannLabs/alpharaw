@@ -132,7 +132,8 @@ class MSData_Base:
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
 
-        self._load_meta_from_hdf(hdf)
+        if hasattr(hdf.ms_data, "meta"):
+            self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
         self.spectrum_df.reset_index(drop=True, inplace=True)
