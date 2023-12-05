@@ -40,7 +40,12 @@ class MSData_Base:
         "ETHCD", "ETCID", "EXCID", "NETD",
         "IT", "FT", "TOF", 
     ]
-    def __init__(self, centroided:bool=True, **kwargs):
+    def __init__(
+            self, 
+            centroided:bool=True,
+            save_as_hdf:bool=False,
+            **kwargs
+            ):
         """
         Parameters
         ----------
@@ -54,6 +59,7 @@ class MSData_Base:
         self.peak_df:pd.DataFrame = pd.DataFrame()
         self._raw_file_path = ''
         self.centroided = centroided
+        self.save_as_hdf = save_as_hdf
         self.creation_time = ''
         self.file_type = ''
         self.instrument = 'none'
@@ -80,6 +86,9 @@ class MSData_Base:
         raw_data = self._import(_path)
         self._set_dataframes(raw_data)
         self._check_df()
+
+        if self.save_as_hdf:
+            self.save_hdf(_path+'.hdf')
 
     def load_raw(self, _path:str):
         self.import_raw(_path)
@@ -123,7 +132,8 @@ class MSData_Base:
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
 
-        self._load_meta_from_hdf(hdf)
+        if hasattr(hdf.ms_data, "meta"):
+            self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
         self.spectrum_df.reset_index(drop=True, inplace=True)
@@ -172,6 +182,10 @@ class MSData_Base:
         if "detector" in raw_data:
             self.spectrum_df["detector"] = np.array(
                 raw_data["detector"]
+            )
+        if "injection_time" in raw_data:
+            self.spectrum_df["injection_time"] = np.array(
+                raw_data["injection_time"]
             )
 
     def _read_creation_time(self, raw_data):

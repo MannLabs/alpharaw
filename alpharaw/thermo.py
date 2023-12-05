@@ -50,7 +50,9 @@ def _import_batch(
     precursor_charges = []
     ms_order_list = []
     ce_list = []
+    injection_time_list = []
     cv_list = []
+
 
     for i in range(
         start,
@@ -67,6 +69,7 @@ def _import_batch(
         rt_values.append(rt)
         ms_order = rawfile.GetMSOrderForScanNum(i)
         ms_order_list.append(ms_order)
+        injection_time_list.append(rawfile.GetInjectionTimeForScanNum(i))
 
         if ms_order == 1:
             ce_list.append(0)
@@ -104,17 +107,20 @@ def _import_batch(
                 precursor_charges.append(charge)
     rawfile.Close()
 
+    # copys of numpy arrays are needed to move them explicitly to cpython heap
+    # otherwise mono might interfere later
     return {
         '_peak_indices': _peak_indices,
-        'peak_mz': np.concatenate(mz_values),
-        'peak_intensity': np.concatenate(intensity_values),
-        'rt': np.array(rt_values),
-        'precursor_mz': np.array(precursor_mz_values),
-        'precursor_charge': np.array(precursor_charges, dtype=np.int8),
-        'isolation_lower_mz': np.array(isolation_mz_lowers),
-        'isolation_upper_mz': np.array(isolation_mz_uppers),
-        'ms_level': np.array(ms_order_list, dtype=np.int8),
-        'nce': np.array(ce_list, dtype=np.float32),
+        'peak_mz': np.concatenate(mz_values).copy(),
+        'peak_intensity': np.concatenate(intensity_values).copy(),
+        'rt': np.array(rt_values).copy(),
+        'precursor_mz': np.array(precursor_mz_values).copy(),
+        'precursor_charge': np.array(precursor_charges, dtype=np.int8).copy(),
+        'isolation_lower_mz': np.array(isolation_mz_lowers).copy(),
+        'isolation_upper_mz': np.array(isolation_mz_uppers).copy(),
+        'ms_level': np.array(ms_order_list, dtype=np.int8).copy(),
+        'nce': np.array(ce_list, dtype=np.float32).copy(),
+        'injection_time': np.array(injection_time_list, dtype=np.float32).copy()
         'cv': np.array(cv_list, dtype=np.float32),
     }
 class ThermoRawData(MSData_Base):
@@ -124,7 +130,7 @@ class ThermoRawData(MSData_Base):
     def __init__(self, 
             centroided : bool = True,
             process_count : int = 10,
-            mp_batch_size : int = 10000,
+            mp_batch_size : int = 5000,
             **kwargs):
         """
         Parameters
@@ -139,7 +145,7 @@ class ThermoRawData(MSData_Base):
         mp_batch_size : int, default = 10000
             number of spectra to load in each batch
         """
-        super().__init__(centroided)
+        super().__init__(centroided, **kwargs)
         self.file_type = 'thermo'
         self.process_count = process_count
         self.mp_batch_size = mp_batch_size
@@ -154,17 +160,15 @@ class ThermoRawData(MSData_Base):
         first_spectrum_number = rawfile.FirstSpectrumNumber
         last_spectrum_number = rawfile.LastSpectrumNumber
 
-        if platform.system() != 'Linux':
-            batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
-            batches = np.append(batches, last_spectrum_number+1)
+        mode = 'spawn' if platform.system() != 'Linux' else 'forkserver'
+            
+        batches = np.arange(first_spectrum_number, last_spectrum_number+1, self.mp_batch_size)
+        batches = np.append(batches, last_spectrum_number+1)
 
-            # use multiprocessing to load batches
-            _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
-            with mp.get_context("spawn").Pool(processes = self.process_count) as pool:
-                batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
-
-        else:
-            batches = [_import_batch(raw_file_path, self.centroided, (first_spectrum_number, last_spectrum_number+1))]
+        # use multiprocessing to load batches
+        _import_batch_partial = partial(_import_batch, raw_file_path, self.centroided)
+        with mp.get_context(mode).Pool(processes = self.process_count) as pool:
+            batches = list(tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))))
 
         # collect peak indices
         _peak_indices = np.concatenate([batch['_peak_indices'] for batch in batches])        
@@ -184,45 +188,6 @@ class ThermoRawData(MSData_Base):
 
         return output_dict
 
-    def _set_dataframes(self, raw_data:dict):
-        self.create_spectrum_df(len(raw_data['rt']))
-        self.set_peak_df_by_indexed_array(
-            raw_data['peak_mz'],
-            raw_data['peak_intensity'],
-            raw_data['peak_indices'][:-1],
-            raw_data['peak_indices'][1:],
-        )
-        self.add_column_in_spec_df(
-            'rt', raw_data['rt']
-        )
-        self.add_column_in_spec_df(
-            'ms_level', raw_data['ms_level'],
-            dtype=np.int8
-        )
-        self.set_precursor_mz(
-            raw_data['precursor_mz']
-        )
-        self.add_column_in_spec_df(
-            'charge', raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.set_isolation_mz_windows(
-            raw_data['isolation_mz_lower'],
-            raw_data['isolation_mz_upper'],
-        )
-        self.add_column_in_spec_df(
-            "nce", raw_data["nce"],
-            dtype=np.float32,
-        )
-        self.add_column_in_spec_df(
-            "cv", raw_data["cv"],
-            dtype=np.float32,
-        )
-
-    
-    def import_raw(self, _path: str):
-        super().import_raw(_path)
-        self.save_hdf(_path+".hdf")
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
