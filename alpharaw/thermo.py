@@ -51,6 +51,8 @@ def _import_batch(
     ms_order_list = []
     ce_list = []
     injection_time_list = []
+    cv_list = []
+
 
     for i in range(
         start,
@@ -71,12 +73,18 @@ def _import_batch(
 
         if ms_order == 1:
             ce_list.append(0)
+            cv_list.append(0)
             precursor_mz_values.append(-1.0)
             isolation_mz_lowers.append(-1.0)
             isolation_mz_uppers.append(-1.0)
             precursor_charges.append(0)
         else:
             ce_list.append(rawfile.GetCollisionEnergyForScanNum(i))
+            n_cvs = rawfile.GetNumberOfSourceFragmentsFromScanNum(i)
+            if n_cvs > 0:
+                cv_list.append(rawfile.GetSourceFragmentValueFromScanNum(i,0))
+            else:
+                cv_list.append(0)
 
             isolation_center = rawfile.GetPrecursorMassForScanNum(i)
             isolation_width = rawfile.GetIsolationWidthForScanNum(i)
@@ -113,6 +121,7 @@ def _import_batch(
         'ms_level': np.array(ms_order_list, dtype=np.int8).copy(),
         'nce': np.array(ce_list, dtype=np.float32).copy(),
         'injection_time': np.array(injection_time_list, dtype=np.float32).copy()
+        'cv': np.array(cv_list, dtype=np.float32),
     }
 class ThermoRawData(MSData_Base):
     """
@@ -178,6 +187,7 @@ class ThermoRawData(MSData_Base):
         rawfile.Close()
 
         return output_dict
+
 
 ms_reader_provider.register_reader('thermo', ThermoRawData)
 ms_reader_provider.register_reader('thermo_raw', ThermoRawData)
