@@ -22,4 +22,5 @@ jinja2
 contextfilter
 furo
 
-alphabase
+alphabase>=1.1.0
+alphatims
