@@ -9,6 +9,9 @@ import typing
 import plotly.graph_objects as go
 
 from .plot_utils import plot_scatter
+from .df_utils import (
+    make_psm_plot_df, make_plot_df, 
+)
 
 color_map:dict = defaultdict(lambda:"brown")
 color_map.update({
@@ -24,10 +27,106 @@ color_map.update({
     'B': 'darkgreen',
 })
 
+def plot_multi_psms(
+    spec_masses_list:typing.List[np.ndarray],
+    spec_intens_list:typing.List[np.ndarray],
+    sequence: str,
+    mods: str,
+    mod_sites: str,
+    charge: int,
+    title:str = "",
+    ppm:float = 20.0,
+    charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
+    include_fragments:bool=True,
+    include_precursor_isotopes:bool=False,
+    max_isotope:int = 6,
+    min_frag_mz:float = 100.0,
+    plot_unmatched_peaks = True,
+    match_mode:typing.Literal["closest","highest"]="closest",
+    plot_template = 'plotly_white',
+    plot_height = 600,
+):
+    plot_df = make_plot_df(
+        sequence, mods, mod_sites, charge,
+        charged_frag_types=charged_frag_types,
+        include_fragments=include_fragments,
+        include_precursor_isotopes=include_precursor_isotopes,
+        max_isotope=max_isotope,
+        min_frag_mz=min_frag_mz,
+    )
+
+    return plot_multi_spectra(
+        spec_masses_list, spec_intens_list,
+        query_masses=plot_df.mz.values,
+        query_ion_names=plot_df.ion_name.values,
+        query_mass_tols=plot_df.mz.values*ppm*1e-6,
+        title=title,
+        plot_unmatched_peaks=plot_unmatched_peaks,
+        match_mode=match_mode,
+        plot_template=plot_template,
+        plot_height=plot_height,
+    )
+
+def plot_multi_spectra(
+    spec_masses_list:typing.List[np.ndarray],
+    spec_intens_list:typing.List[np.ndarray],
+    query_masses:np.ndarray,
+    query_ion_names:typing.List[str],
+    query_mass_tols:np.ndarray,
+    title:str = "",
+    plot_unmatched_peaks = True,
+    match_mode:typing.Literal["closest","highest"]="closest",
+    plot_template = 'plotly_white',
+    plot_height = 600,
+):
+    plot_dfs = []
+    for spec_masses, spec_intens in zip(
+        spec_masses_list, spec_intens_list
+    ):
+        plot_dfs.append(make_psm_plot_df(
+            spec_masses=spec_masses,
+            spec_intensities=spec_intens,
+            query_masses=query_masses,
+            query_ion_names=query_ion_names,
+            query_mass_tols=query_mass_tols,
+            query_frag_idxes=np.zeros_like(query_masses, dtype=np.int64),
+            modified_sequence="",
+            match_mode=match_mode
+        ))
+    fig = make_subplots(
+        rows=len(plot_dfs), cols=1, 
+        shared_xaxes=True,
+    )
+    layout_vlines = []
+    for i in range(len(plot_dfs)):
+        _plot = PeakPlot(fig, i+1)
+        _plot.plot(plot_dfs[i], plot_unmatched_peaks=plot_unmatched_peaks)
+        layout_vlines.extend(_plot.layout_vlines)
+
+    fig.update_layout(
+        shapes=layout_vlines
+    )
+    
+    fig.update_layout(
+        template=plot_template,
+        title=dict(
+            text=title,
+            yanchor='bottom'
+        ),
+        hovermode='x',
+        height=plot_height,
+    )
+    fig.update_xaxes(matches='x')
+    fig.update_yaxes(
+        title = 'intensity',
+    )
+    return fig
+
 class PSM_Plot:
     vertical_spacing = 0.05
     template = 'plotly_white'
     plot_height = 600
+
     def __init__(self, 
         peak_plot_rows = 4,
         mass_err_plot_rows = 1,
@@ -121,6 +220,11 @@ class PSM_Plot:
         self.frag_cov_plot.plot(
             plot_df, sequence
         )
+
+        self.fig.update_layout(
+            shapes=self.peak_plot.layout_vlines
+        )
+
         return self.fig
 
     def _init_plot(self, title):
@@ -264,7 +368,7 @@ class PeakPlot:
         #     plot_df, 'z'
         # )
 
-        self._plot_peak_vlines(
+        self._get_peak_vlines(
             plot_df,
         )
 
@@ -341,26 +445,23 @@ class PeakPlot:
                 col=self.col,
             )
 
-    def _plot_peak_vlines(self,
+    def _get_peak_vlines(self,
         plot_df,
     ):
-        self.fig.update_layout(
-            shapes=[
-                dict(
-                    type='line',
-                    xref=f'x{self.row}',
-                    yref=f'y{self.row}',
-                    x0=plot_df.loc[i, 'mz'],
-                    y0=0,
-                    x1=plot_df.loc[i, 'mz'],
-                    y1=plot_df.loc[i, 'intensity'],
-                    line=dict(
-                        color=color_map[plot_df.loc[i,'ion_name'][0]],
-                        width=self.peak_line_width,
-                    )
-                ) for i in plot_df.index
-            ]
-        )
+        self.layout_vlines = [dict(
+                type='line',
+                xref=f'x{self.row}',
+                yref=f'y{self.row}',
+                x0=plot_df.loc[i, 'mz'],
+                y0=0,
+                x1=plot_df.loc[i, 'mz'],
+                y1=plot_df.loc[i, 'intensity'],
+                line=dict(
+                    color=color_map[plot_df.loc[i,'ion_name'][0]],
+                    width=self.peak_line_width,
+                ),
+            ) for i in plot_df.index
+        ]
         # for i in plot_df.index:
         #     self.fig.add_shape(type='line',
         #         x0=plot_df.loc[i, 'mz'],

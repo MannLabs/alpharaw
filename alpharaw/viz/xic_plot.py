@@ -11,9 +11,161 @@ from alphatims.bruker import (
     TimsTOF, 
 )
 
+from alpharaw.ms_data_base import MSData_Base
+from alpharaw.utils.df_processing import remove_unused_peaks
+from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
+
 from .plot_utils import (
     plot_line_fast
 )
+
+def convert_to_timstof(
+    spec_df:pd.DataFrame, 
+    peak_df:pd.DataFrame,
+    remove_used_peaks:bool=False
+)->TimsTOF:
+    """ 
+    Convert any spectrum dataframe or sliced spectrum dataframe
+    and its peak dataframe into AlphaTims' TimsTOF object (AlphaTimsWrapper).
+
+    Args:
+        spec_df (pd.DataFrame): 
+            spectrum dataframe or sliced spectrum dataframe in AlphaRaw's format
+        peak_df (pd.DataFrame): 
+            peak dataframe in AlphaRaw's format
+        remove_used_peaks (bool, optional): 
+            For sliced spectrum dataframe, this will remove peaks in `peak_df` 
+            that are not in `spec_df`.
+            Defaults to False.
+
+    Returns:
+        TimsTOF: AlphaTims' TimsTOF object (AlphaTimsWrapper).
+    """
+    if remove_used_peaks:
+        spec_df, peak_df = remove_unused_peaks(
+            spec_df, peak_df
+        )
+    ms_data = MSData_Base()
+    ms_data.spectrum_df = spec_df
+    ms_data.peak_df = peak_df
+    
+    return AlphaTimsWrapper(ms_data, dda=False)
+
+class XIC_Plot():
+    # hovermode = "x" | "y" | "closest" | False | "x unified" | "y unified"
+    hovermode = 'closest'
+    plot_height = 550
+    colorscale_qualitative="Alphabet"
+    colorscale_sequential="Viridis"
+    theme_template='plotly_white'
+    ms1_ppm = 20.0
+    ms2_ppm = 20.0
+    rt_sec_win = 30.0
+    plot_rt_unit:str = "minute"
+    im_win = 0.05
+    fig:go.Figure = None
+
+    "list of XIC_Trace objects"
+    traces:list = []
+
+    def plot(self, 
+        tims_data:TimsTOF,
+        query_df:pd.DataFrame,
+        view_dim:typing.Literal["rt","im"]="rt",
+    ):
+        rt_sec = query_df['rt_sec'].values[0]
+        if "im" not in query_df.columns:
+            im = 0.0
+        else:
+            im = query_df["im"].values[0]
+        if "precursor_mz" not in query_df.columns:
+            precursor_mz = 0.0
+        else:
+            precursor_mz = query_df.precursor_mz.values[0]
+        query_masses = query_df.mz.values
+        if "intensity" in query_df.columns:
+            query_intensities = query_df.intensity.values
+        else:
+            query_intensities = None
+        ion_names = query_df.ion_name.values
+
+        return self.plot_query_masses(
+            tims_data=tims_data,
+            query_masses=query_masses,
+            query_ion_names=ion_names,
+            query_rt_sec=rt_sec,
+            query_im=im,
+            precursor_mz=precursor_mz,
+            view_dim=view_dim,
+            query_intensities=query_intensities
+        )
+
+    def _init_plot(self, rows=1, view_dim='rt'):
+        self.fig = make_subplots(
+            rows=rows, 
+            cols=1,
+            shared_xaxes=True,
+            x_title=f'RT ({self.plot_rt_unit})' if view_dim == 'rt' else 'Mobility',
+            y_title='Intensity',
+            vertical_spacing=0.2/rows,
+        )
+        self.traces = [
+            XIC_Trace(fig=self.fig, row=i+1) 
+            for i in range(rows)
+        ]
+
+    def plot_query_masses(self,
+        tims_data:TimsTOF,
+        query_masses:np.ndarray,
+        query_ion_names:typing.List[str],
+        query_rt_sec:float, 
+        query_im:float,
+        precursor_mz:float,
+        view_dim:typing.Literal["rt","im"]="rt",
+        query_intensities:np.ndarray = None,
+    ):
+        self._init_plot(rows=1, view_dim=view_dim)
+        mass_tols = query_masses*1e-6*(
+            self.ms1_ppm if precursor_mz == 0 else self.ms2_ppm
+        )
+        self.traces[0].add_traces(
+            tims_data=tims_data,
+            query_masses=query_masses,
+            mass_tols=mass_tols,
+            ion_names=query_ion_names,
+            marker_colors=self._get_color_set(len(query_masses)),
+            query_rt_sec=query_rt_sec,
+            query_im=query_im,
+            precursor_mz=precursor_mz,
+            precursor_mz_tol=precursor_mz*1e-6*self.ms1_ppm,
+            view_dim=view_dim,
+            rt_sec_win=self.rt_sec_win,
+            im_win=self.im_win,
+            query_intensities=query_intensities,
+        )
+        self.fig.update_layout(
+            template=self.theme_template,
+            # width=width,
+            height=self.plot_height,
+            hovermode=self.hovermode,
+            showlegend=True,
+        )
+        return self.fig
+
+    def _get_color_set(self, n_query):
+        if n_query <= len(
+            getattr(px.colors.qualitative, self.colorscale_qualitative)
+        ):
+            color_set = getattr(
+                px.colors.qualitative, self.colorscale_qualitative
+            )
+        else:
+            color_set = px.colors.sample_colorscale(
+                self.colorscale_sequential, 
+                samplepoints=n_query
+            )
+        return color_set
+
 
 class XIC_Trace():
     label_format = '{ion_name} {mz:.3f}'
@@ -21,14 +173,17 @@ class XIC_Trace():
     fig:go.Figure
     row:int = 1
     col:int = 1
+    plot_rt_unit:str = "minute"
 
     def __init__(self, 
         fig:go.Figure, 
         row:int=1, col:int=1,
+        plot_rt_unit:str = "minute",
     ):
         self.fig = fig
         self.row = row
         self.col = col
+        self.plot_rt_unit = plot_rt_unit
 
     def add_traces(self, 
         tims_data:TimsTOF,
@@ -148,119 +303,6 @@ class XIC_Trace():
             ),
             row=self.row, col=self.col,
         )
-
-class XIC_Plot():
-    # hovermode = "x" | "y" | "closest" | False | "x unified" | "y unified"
-    hovermode = 'closest'
-    plot_height = 550
-    colorscale_qualitative="Alphabet"
-    colorscale_sequential="Viridis"
-    theme_template='plotly_white'
-    ms1_ppm = 20.0
-    ms2_ppm = 20.0
-    rt_sec_win = 30.0
-    im_win = 0.05
-    fig:go.Figure = None
-    traces:typing.List[XIC_Trace] = None
-
-    def plot(self, 
-        tims_data:TimsTOF,
-        query_df:pd.DataFrame,
-        view_dim:typing.Literal["rt","im"]="rt",
-    ):
-        rt_sec = query_df['rt_sec'].values[0]
-        if "im" not in query_df.columns:
-            im = 0.0
-        else:
-            im = query_df["im"].values[0]
-        if "precursor_mz" not in query_df.columns:
-            precursor_mz = 0.0
-        else:
-            precursor_mz = query_df.precursor_mz.values[0]
-        query_masses = query_df.mz.values
-        if "intensity" in query_df.columns:
-            query_intensities = query_df.intensity.values
-        else:
-            query_intensities = None
-        ion_names = query_df.ion_name.values
-
-        return self.plot(
-            tims_data=tims_data,
-            query_masses=query_masses,
-            query_ion_names=ion_names,
-            query_rt_sec=rt_sec,
-            query_im=im,
-            precursor_mz=precursor_mz,
-            view_dim=view_dim,
-            query_intensities=query_intensities
-        )
-
-    def plot_query_masses(self,
-        tims_data:TimsTOF,
-        query_masses:np.ndarray,
-        query_ion_names:typing.List[str],
-        query_rt_sec:float, 
-        query_im:float,
-        precursor_mz:float,
-        view_dim:typing.Literal["rt","im"]="rt",
-        query_intensities:np.ndarray = None,
-    ):
-        self._init_plot(rows=1, view_dim=view_dim)
-        mass_tols = query_masses*1e-6*(
-            self.ms1_ppm if precursor_mz == 0 else self.ms2_ppm
-        )
-        self.traces[0].add_traces(
-            tims_data=tims_data,
-            query_masses=query_masses,
-            mass_tols=mass_tols,
-            ion_names=query_ion_names,
-            marker_colors=self._get_color_set(len(query_masses)),
-            query_rt_sec=query_rt_sec,
-            query_im=query_im,
-            precursor_mz=precursor_mz,
-            precursor_mz_tol=precursor_mz*1e-6*self.ms1_ppm,
-            view_dim=view_dim,
-            rt_sec_win=self.rt_sec_win,
-            im_win=self.im_win,
-            query_intensities=query_intensities,
-        )
-        self.fig.update_layout(
-            template=self.theme_template,
-            # width=width,
-            height=self.plot_height,
-            hovermode=self.hovermode,
-            showlegend=True,
-        )
-        return self.fig
-
-    def _init_plot(self, rows=1, view_dim='rt'):
-        self.fig = make_subplots(
-            rows=rows, 
-            cols=1,
-            shared_xaxes=True,
-            x_title='RT (Sec)' if view_dim == 'rt' else 'Mobility',
-            y_title='Intensity',
-            vertical_spacing=0.2/rows,
-        )
-        self.traces = [
-            XIC_Trace(fig=self.fig, row=i+1) 
-            for i in range(rows)
-        ]
-
-    def _get_color_set(self, n_query):
-        if n_query <= len(
-            getattr(px.colors.qualitative, self.colorscale_qualitative)
-        ):
-            color_set = getattr(
-                px.colors.qualitative, self.colorscale_qualitative
-            )
-        else:
-            color_set = px.colors.sample_colorscale(
-                self.colorscale_sequential, 
-                samplepoints=n_query
-            )
-        return color_set
-
 
 def get_plotting_slices(
     tims_data: TimsTOF,

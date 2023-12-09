@@ -18,6 +18,48 @@ from alphabase.peptide.fragment import (
 )
 
 from alphabase.constants.modification import MOD_MASS
+from alphabase.constants.atom import MASS_ISOTOPE
+
+def make_psm_plot_df_for_peptide(
+    spec_masses:np.ndarray,
+    spec_intensities:np.ndarray,
+    sequence: str,
+    mods: str,
+    mod_sites: str,
+    charge: int,
+    rt_sec: float = 0.0,
+    mobility: float = 0.0,
+    ppm:float = 20.0,
+    charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
+    include_fragments:bool=True,
+    include_precursor_isotopes:bool=False,
+    max_isotope:int = 6,
+    min_frag_mz:float = 100.0,
+    match_mode:typing.Literal["closest","highest"]="closest"
+)->pd.DataFrame:
+    
+    plot_df = make_plot_df(
+        sequence, mods, mod_sites, charge,
+        rt_sec=rt_sec, mobility=mobility,
+        charged_frag_types=charged_frag_types,
+        include_fragments=include_fragments,
+        include_precursor_isotopes=include_precursor_isotopes,
+        max_isotope=max_isotope,
+        min_frag_mz=min_frag_mz,
+    )
+
+    return make_psm_plot_df(
+        spec_masses=spec_masses,
+        spec_intensities=spec_intensities,
+        query_masses=plot_df.mz.values,
+        query_ion_names = plot_df.ion_name.values,
+        query_mass_tols = plot_df.mz.values*ppm*1e-6,
+        query_frag_idxes = plot_df.fragment_idx.values,
+        modified_sequence = plot_df.modified_sequence.values[0],
+        query_intensities = plot_df.intensity.values 
+            if "intensity" in plot_df.columns else None,
+        match_mode = match_mode,    
+    )
 
 def make_plot_df(
     sequence: str,
@@ -26,8 +68,8 @@ def make_plot_df(
     charge: int,
     rt_sec: float = 0.0,
     mobility: float = 0.0,
-    include_fragments:bool=True,
     charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
+    include_fragments:bool=True,
     include_precursor_isotopes:bool=False,
     max_isotope:int = 6,
     min_frag_mz:float = 100.0,
@@ -70,14 +112,14 @@ def make_psm_plot_df(
     spec_masses:np.ndarray,
     spec_intensities:np.ndarray,
     query_masses:np.ndarray,
-    ion_names:typing.List[str],
+    query_ion_names:typing.List[str],
     query_mass_tols:np.ndarray,
     query_frag_idxes:np.ndarray,
     modified_sequence:str = "",
     query_intensities:np.ndarray = None,
     match_mode:typing.Literal["closest","highest"]="closest"
-):
-    ion_names = np.array(ion_names, dtype="U")
+)->pd.DataFrame:
+    query_ion_names = np.array(query_ion_names, dtype="U")
     if match_mode == "highest":
         matched_idxes = match_highest_peaks(
             spec_masses, spec_intensities,
@@ -93,7 +135,7 @@ def make_psm_plot_df(
     matched_bools = (matched_idxes!=-1)&(query_masses>0)
     matched_query_masses = query_masses[matched_bools]
     matched_frag_idxes = query_frag_idxes[matched_bools]
-    matched_ion_names = ion_names[matched_bools]
+    matched_ion_names = query_ion_names[matched_bools]
     matched_idxes = matched_idxes[matched_bools]
     matched_spec_masses = spec_masses[matched_idxes]
     matched_spec_intens = spec_intensities[matched_idxes]
@@ -133,7 +175,7 @@ def make_psm_plot_df(
             fragment_idx=-1,
             ppm_err=0,
             mass_err=0,
-            ion_name=ion_names,
+            ion_name=query_ion_names,
         ))
 
     return pd.concat([
@@ -174,7 +216,7 @@ def translate_precursor_fragment_df_to_plot_df(
     mobility:float = 0.0,
     min_frag_mz:float = 100.0,
     min_frag_intensity:float = 0.001,
-):
+)->pd.DataFrame:
     fragment_mz_df = fragment_mz_df.mask(
         fragment_mz_df<min_frag_mz, 0
     )
@@ -203,6 +245,32 @@ def translate_precursor_fragment_df_to_plot_df(
             +"+"*x[3],
         axis=1
     )
+
+    isotope_names = [col for col in precursor_df.columns if col.startswith("i_")]
+    if len(isotope_names) > 0:
+        isotope_df = pd.DataFrame(np.zeros(
+            (len(isotope_names),len(fragment_df.columns)),
+        ), columns=fragment_df.columns)
+        isotope_df["type"] = ord('M')
+        charge = precursor_df.charge.values[0]
+        precursor_mz = precursor_df.precursor_mz.values[0]
+        isotope_mzs = []
+        ion_names = []
+        mono_idx = precursor_df.mono_isotope_idx.values[0]
+        for i in range(len(isotope_names)):
+            isotope_mzs.append(
+                precursor_mz+(i-mono_idx)*MASS_ISOTOPE/charge
+            )
+            ion_names.append(f"M{i-mono_idx}")
+        isotope_df["mz"] = np.array(
+            isotope_mzs, dtype=fragment_mz_df.values.dtype
+        )
+        if "intensity" in fragment_df.columns:
+            isotope_df["intensity"] = precursor_df[isotope_names].values.astype(
+                fragment_intensity_df.values.dtype
+            )
+        isotope_df["ion_name"] = ion_names
+        fragment_df = pd.concat((fragment_df, isotope_df), ignore_index=True)
 
     fragment_df["sequence"] = precursor_df.sequence.values[0]
     fragment_df["modified_sequence"] = get_modified_sequence(
@@ -245,6 +313,8 @@ def make_precursor_fragment_df(
             precursor_df, charged_frag_types
         )
     else:
+        precursor_df["frag_start_idx"] = 0
+        precursor_df["frag_stop_idx"] = 0
         fragment_mz_df = pd.DataFrame(
             columns=charged_frag_types
         )

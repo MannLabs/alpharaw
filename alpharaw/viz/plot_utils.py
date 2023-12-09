@@ -42,6 +42,7 @@ def plot_line_fast(
     marker_color: str,
     view_dim:typing.Literal['rt','im']='rt', # or 'im'
     intensity_scale:float=1.0,
+    rt_unit:str = "minute"
 ):
     """Plot an XIC as a lineplot.
 
@@ -70,6 +71,8 @@ def plot_line_fast(
     if view_dim == 'rt': 
         x_ticks = tims_data.rt_values[tims_view_indices]
         intensities = intensities[tims_view_indices]
+        if rt_unit == "minute":
+            x_ticks /= 60.0
     else: 
         x_ticks = tims_data.mobility_values[tims_view_indices]
         intensities = intensities[tims_view_indices]
