@@ -45,6 +45,8 @@ def plot_multi_psms(
     match_mode:typing.Literal["closest","highest"]="closest",
     plot_template = 'plotly_white',
     plot_height = 600,
+    query_left_margin:float = 100000.0,
+    query_right_margin:float = 100000.0,
 ):
     plot_df = make_plot_df(
         sequence, mods, mod_sites, charge,
@@ -55,8 +57,20 @@ def plot_multi_psms(
         min_frag_mz=min_frag_mz,
     )
 
+    slice_masses_list = []
+    slice_intens_list = []
+    for spec_masses, spec_intens in zip(
+        spec_masses_list, spec_intens_list
+    ):
+        _slice = (
+            (spec_masses>=plot_df.mz.min()-query_left_margin)&
+            (spec_masses<=plot_df.mz.max()+query_right_margin)
+        )
+        slice_masses_list.append(spec_masses[_slice])
+        slice_intens_list.append(spec_intens[_slice])
+
     return plot_multi_spectra(
-        spec_masses_list, spec_intens_list,
+        slice_masses_list, slice_intens_list,
         query_masses=plot_df.mz.values,
         query_ion_names=plot_df.ion_name.values,
         query_mass_tols=plot_df.mz.values*ppm*1e-6,
@@ -100,7 +114,10 @@ def plot_multi_spectra(
     layout_vlines = []
     for i in range(len(plot_dfs)):
         _plot = PeakPlot(fig, i+1)
-        _plot.plot(plot_dfs[i], plot_unmatched_peaks=plot_unmatched_peaks)
+        _plot.plot(
+            plot_dfs[i], 
+            plot_unmatched_peaks=plot_unmatched_peaks
+        )
         layout_vlines.extend(_plot.layout_vlines)
 
     fig.update_layout(
@@ -131,10 +148,10 @@ class PSM_Plot:
         peak_plot_rows = 4,
         mass_err_plot_rows = 1,
         frag_coverage_plot_rows = 1,
-        frag_coverage_at_top = True
+        frag_coverage = True
     ):
         specs = []
-        if frag_coverage_at_top:
+        if frag_coverage:
             specs.append(
                 [{
                     "rowspan": frag_coverage_plot_rows, 
@@ -165,7 +182,7 @@ class PSM_Plot:
             [[None, None, None]]*
             (mass_err_plot_rows-1)
         )
-        if not frag_coverage_at_top:
+        if not frag_coverage:
             specs.append(
                 [{
                     "rowspan": frag_coverage_plot_rows, 
@@ -177,7 +194,7 @@ class PSM_Plot:
                 (frag_coverage_plot_rows-1)
             )
 
-        if frag_coverage_at_top:
+        if frag_coverage:
             (
                 frag_cov_row,
                 peak_row, 

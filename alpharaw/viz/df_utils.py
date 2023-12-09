@@ -38,7 +38,7 @@ def make_psm_plot_df_for_peptide(
     match_mode:typing.Literal["closest","highest"]="closest"
 )->pd.DataFrame:
     
-    plot_df = make_plot_df(
+    plot_df = make_xic_plot_df_for_peptide(
         sequence, mods, mod_sites, charge,
         rt_sec=rt_sec, mobility=mobility,
         charged_frag_types=charged_frag_types,
@@ -61,19 +61,22 @@ def make_psm_plot_df_for_peptide(
         match_mode = match_mode,    
     )
 
-def make_plot_df(
+def make_xic_plot_df_for_peptide(
     sequence: str,
     mods: str,
     mod_sites: str,
     charge: int,
     rt_sec: float = 0.0,
     mobility: float = 0.0,
+    ms_level:int=2,
     charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
     include_fragments:bool=True,
     include_precursor_isotopes:bool=False,
     max_isotope:int = 6,
     min_frag_mz:float = 100.0,
-):
+)->pd.DataFrame:
+    if ms_level == 1:
+        include_fragments = False
     precursor_df, fragment_mz_df = make_precursor_fragment_df(
         sequence, mods, mod_sites, charge,
         include_fragments=include_fragments,
@@ -85,6 +88,7 @@ def make_plot_df(
         precursor_df, fragment_mz_df,
         rt_sec=rt_sec,
         mobility=mobility,
+        ms_level=ms_level,
         min_frag_mz=min_frag_mz,
     )
 
@@ -214,6 +218,7 @@ def translate_precursor_fragment_df_to_plot_df(
     fragment_intensity_df:pd.DataFrame = None,
     rt_sec:float = 0.0, 
     mobility:float = 0.0,
+    ms_level:int = 2,
     min_frag_mz:float = 100.0,
     min_frag_intensity:float = 0.001,
 )->pd.DataFrame:
@@ -284,6 +289,9 @@ def translate_precursor_fragment_df_to_plot_df(
         fragment_df["rt_sec"] = rt_sec
     if mobility:
         fragment_df["im"] = mobility
+
+    if ms_level == 2:
+        fragment_df["precursor_mz"] = precursor_df.precursor_mz.values[0]
 
     return fragment_df
     
