@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 
 from .plot_utils import plot_scatter
 from .df_utils import (
-    make_psm_plot_df, make_plot_df, 
+    make_psm_plot_df, make_xic_plot_df_for_peptide, 
 )
 
 color_map:dict = defaultdict(lambda:"brown")
@@ -48,7 +48,7 @@ def plot_multi_psms(
     query_left_margin:float = 100000.0,
     query_right_margin:float = 100000.0,
 ):
-    plot_df = make_plot_df(
+    plot_df = make_xic_plot_df_for_peptide(
         sequence, mods, mod_sites, charge,
         charged_frag_types=charged_frag_types,
         include_fragments=include_fragments,
@@ -281,9 +281,6 @@ class PSM_Plot:
 
 class MassErrPlot:
     def __init__(self, fig_subplots, row):
-        """
-        See `MS_Plot_Base` Parameters
-        """
         self.fig = fig_subplots
         self.row = row
         self.col = 1
@@ -294,24 +291,28 @@ class MassErrPlot:
         )
 
     def plot(self, plot_df:pd.DataFrame):
-        ion_types = plot_df.ion_name.str[0].unique()
-        for ion_type in ion_types:
-            if ion_type == "-": continue
-            self._plot_one_ion(
-                plot_df, ion_type, color_map[ion_type]
+        if "color" not in plot_df.columns:
+            plot_df["color"] = [
+                color_map[ion_type] for ion_type 
+                in plot_df.ion_name.str[0].values
+            ]
+
+        for color, df in plot_df.query(
+            "intensity>0 and ion_name!='-'"
+        ).groupby("color"):
+            self._plot_one_type(
+                df, color
             )
+
         self.fig.update_yaxes(
             title_text='m/z err',
             row=self.row,col=self.col
         )
         return self.fig
 
-    def _plot_one_ion(self,
-        plot_df, ion_type, color
+    def _plot_one_type(self,
+        df, color
     ):
-        df = plot_df[
-            plot_df.ion_name.str.startswith(ion_type)
-        ].query("intensity > 0")
         self.fig.add_trace(
             plot_scatter(
                 df.mz.values, 
@@ -320,7 +321,7 @@ class MassErrPlot:
                 marker_size=5,
                 hovertext=df.ion_name.values,
                 hovertemplate=self.hovertemplate,
-                name=f"{ion_type} ion_name",
+                name=color,
             ), 
             row=self.row,
             col=self.col
@@ -347,9 +348,15 @@ class PeakPlot:
         self.col = col
         
     def plot(self,
-        plot_df,
+        plot_df:pd.DataFrame,
         plot_unmatched_peaks:bool=True,
     )->go.Figure:
+        if "color" not in plot_df.columns:
+            plot_df["color"] = [
+                color_map[ion_type] for ion_type 
+                in plot_df.ion_name.str[0].values
+            ]
+        plot_df.loc[plot_df.ion_name=='-',"color"] = color_map['-']
         if plot_unmatched_peaks:
             _df = plot_df[plot_df.ion_name=="-"]
             self.fig.add_trace(
@@ -365,47 +372,30 @@ class PeakPlot:
                 row=self.row,
                 col=self.col,
             )
-        
-        for ion_type in np.unique(plot_df.ion_name.str[0].values):
-            self._plot_one_ion_type_scatter(
-                plot_df, ion_type
-            )
 
-        # self._plot_one_ion_type_scatter(
-        #     plot_df, 'b'
-        # )
-        # self._plot_one_ion_type_scatter(
-        #     plot_df, 'y'
-        # )
-        
-        # self._plot_one_ion_type_scatter(
-        #     plot_df, 'c'
-        # )
-        # self._plot_one_ion_type_scatter(
-        #     plot_df, 'z'
-        # )
+        matched_df = plot_df.query('ion_name != "-"')
+        for color, df in matched_df.groupby("color"):
+            self._plot_one_ion_type_scatter(
+                df, color
+            )
 
         self._get_peak_vlines(
             plot_df,
         )
 
-        self._plot_ion_name(
-            plot_df.query('ion_name != "-"')
-        )
+        self._plot_ion_name(matched_df)
+        
         return self.fig
 
     def _plot_one_ion_type_scatter(self, 
-        plot_df, ion_type
+        df, color
     ):
-        df_all = plot_df[
-            plot_df.ion_name.str.startswith(ion_type)
-        ]
-        _df = df_all.query('intensity>0')
+        _df = df.query('intensity>0')
         self.fig.add_trace(
             plot_scatter(
                 _df.mz,
                 _df.intensity,
-                color=color_map[ion_type], 
+                color=color, 
                 marker_size=1,
                 hovertext=_df.ion_name,
                 hovertemplate=self.hovertemplate,
@@ -414,12 +404,12 @@ class PeakPlot:
             row=self.row,
             col=self.col,
         )
-        _df = df_all.query('intensity<0')
+        _df = df.query('intensity<0')
         self.fig.add_trace(
             plot_scatter(
                 _df.mz,
                 _df.intensity,
-                color=color_map[ion_type], 
+                color=color, 
                 marker_size=1,
                 hovertext=_df.ion_name,
                 hovertemplate=self.hovertemplate,
@@ -474,7 +464,7 @@ class PeakPlot:
                 x1=plot_df.loc[i, 'mz'],
                 y1=plot_df.loc[i, 'intensity'],
                 line=dict(
-                    color=color_map[plot_df.loc[i,'ion_name'][0]],
+                    color=plot_df.loc[i, 'color'],
                     width=self.peak_line_width,
                 ),
             ) for i in plot_df.index
@@ -493,19 +483,22 @@ class PeakPlot:
 
 class FragCoveragePlot:
     def __init__(self, fig_subplots, row):
-        """
-        See `MS_Plot_Base` Parameters
-        """
         self.fig = fig_subplots
         self.row = row
         self.col = 1
         self.font_size_sequence = 14
         self.font_size_coverage = 8
+        self.mod_aa_color = "firebrick"
 
     def plot(self,
         plot_df,
         sequence,
     ):
+        if "color" not in plot_df.columns:
+            plot_df["color"] = [
+                color_map[ion_type] for ion_type 
+                in plot_df.ion_name.str[0].values
+            ]
         if len(sequence) > 0:
             d = (
                 plot_df.mz.max() - 
@@ -517,11 +510,22 @@ class FragCoveragePlot:
                 len(sequence)+1
             )
 
-            self._plot_sequence(sequence, aa_x_position_name)
+            colors = [None]*len(sequence)
+            if "mod_sites" in plot_df.columns:
+                mod_sites = plot_df.mod_sites.values[0]
+                if len(mod_sites) > 0:
+                    for site in mod_sites.split(";"):
+                        site = int(site)
+                        if site == 0 or site == -1:
+                            colors[site] = self.mod_aa_color
+                        else:
+                            colors[site-1] = self.mod_aa_color
+
+            self._plot_sequence(sequence, aa_x_position_name, colors)
             for ion_type in np.unique(plot_df.ion_name.str[0]):
                 self._plot_coverage_one_frag_type(
                     plot_df, sequence, aa_x_position_name, 
-                    ion_type, color_map[ion_type],
+                    ion_type,
                 )
             # self._plot_coverage_one_frag_type(
             #     plot_df, sequence, aa_x_position_name, 
@@ -546,6 +550,7 @@ class FragCoveragePlot:
 
     def _plot_sequence(self,
         sequence, aa_x_position_name,
+        colors,
     ):
         for i, aa in enumerate(sequence):
             self.fig.add_annotation(
@@ -554,7 +559,10 @@ class FragCoveragePlot:
                     x=aa_x_position_name[i],
                     y=0,
                     showarrow=False,
-                    font_size=self.font_size_sequence,
+                    font=dict(
+                        size=self.font_size_sequence,
+                        color=colors[i],
+                    ),
                     yshift=1, align='center'
                 ),
                 row=self.row,
@@ -565,7 +573,6 @@ class FragCoveragePlot:
         plot_df, sequence, 
         aa_x_position_name, 
         ion_type,
-        color,
     ):
         nAA = len(sequence)
         plot_df = plot_df[
@@ -577,10 +584,19 @@ class FragCoveragePlot:
             if len(plot_df)>0 else 0,
             nAA
         ), dtype=np.int64)
+        cov_colors = [""]*len(covs)
         if ion_type in 'abc':
-            covs[plot_df.fragment_idx] = 1
+            for frag_idx, color in zip(
+                plot_df.fragment_idx.values, plot_df.color.values
+            ):
+                covs[frag_idx] = 1
+                cov_colors[frag_idx] = color
         elif ion_type in 'xyz':
-            covs[plot_df.fragment_idx+1] = 1
+            for frag_idx, color in zip(
+                plot_df.fragment_idx.values, plot_df.color.values
+            ):
+                covs[frag_idx+1] = 1
+                cov_colors[frag_idx+1] = color
 
         def get_position_name(ion_type, i):
             if ion_type in 'abc':
@@ -619,7 +635,7 @@ class FragCoveragePlot:
                     ty=-1.0,
                     s=nAA-i
                 )
-        for i, cov in enumerate(covs[:nAA]):
+        for i, (cov,color) in enumerate(zip(covs[:nAA],cov_colors[:nAA])):
             if cov:
                 pos = get_position_name(ion_type, i)
                 self.fig.add_trace(

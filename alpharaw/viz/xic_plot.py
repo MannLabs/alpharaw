@@ -71,6 +71,7 @@ class XIC_Plot():
         tims_data:TimsTOF,
         query_df:pd.DataFrame,
         view_dim:typing.Literal["rt","im"]="rt",
+        title:str="",
     ):
         rt_sec = query_df['rt_sec'].values[0]
         if "im" not in query_df.columns:
@@ -88,6 +89,11 @@ class XIC_Plot():
             query_intensities = None
         ion_names = query_df.ion_name.values
 
+        if "color" not in query_df.columns:
+            marker_colors = None
+        else:
+            marker_colors = query_df.color.values
+
         return self.plot_query_masses(
             tims_data=tims_data,
             query_masses=query_masses,
@@ -95,8 +101,10 @@ class XIC_Plot():
             query_rt_sec=rt_sec,
             query_im=im,
             precursor_mz=precursor_mz,
+            marker_colors=marker_colors,
             view_dim=view_dim,
-            query_intensities=query_intensities
+            query_intensities=query_intensities,
+            title=title,
         )
 
     def _init_plot(self, rows=1, view_dim='rt'):
@@ -105,7 +113,7 @@ class XIC_Plot():
             cols=1,
             shared_xaxes=True,
             x_title=f'RT ({self.plot_rt_unit})' if view_dim == 'rt' else 'Mobility',
-            y_title='Intensity',
+            y_title='intensity',
             vertical_spacing=0.2/rows,
         )
         self.traces = [
@@ -120,19 +128,23 @@ class XIC_Plot():
         query_rt_sec:float, 
         query_im:float,
         precursor_mz:float,
+        marker_colors:list = None,
         view_dim:typing.Literal["rt","im"]="rt",
         query_intensities:np.ndarray = None,
+        title="",
     ):
         self._init_plot(rows=1, view_dim=view_dim)
         mass_tols = query_masses*1e-6*(
             self.ms1_ppm if precursor_mz == 0 else self.ms2_ppm
         )
+        if marker_colors is None:
+            marker_colors = self._get_color_set(len(query_masses))
         self.traces[0].add_traces(
             tims_data=tims_data,
             query_masses=query_masses,
             mass_tols=mass_tols,
             ion_names=query_ion_names,
-            marker_colors=self._get_color_set(len(query_masses)),
+            marker_colors=marker_colors,
             query_rt_sec=query_rt_sec,
             query_im=query_im,
             precursor_mz=precursor_mz,
@@ -144,6 +156,10 @@ class XIC_Plot():
         )
         self.fig.update_layout(
             template=self.theme_template,
+            title=dict(
+                text=title,
+                yanchor='bottom'
+            ),
             # width=width,
             height=self.plot_height,
             hovermode=self.hovermode,
