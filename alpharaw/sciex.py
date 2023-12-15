@@ -10,15 +10,25 @@ class SciexWiffData(MSData_Base):
     """
     Loading Sciex Wiff data as MSData_Base data structure.
     """
-    def __init__(self, centroided:bool=True, **kwargs):
+    def __init__(self, centroided:bool=True, 
+                 save_as_hdf:bool=False,
+                 **kwargs
+    ):
         """
         Parameters
         ----------
         centroided : bool, optional
             if peaks will be centroided after loading, 
             by default True
+        
+        save_as_hdf : bool, optional 
+            automatically save hdf after load raw data, by default False.
         """
-        super().__init__(centroided)
+        super().__init__(
+            centroided, 
+            save_as_hdf=save_as_hdf,
+            **kwargs
+        )
         if self.centroided:
             self.centroided = False
             warnings.warn('Centroiding for Sciex data is not well implemented yet')

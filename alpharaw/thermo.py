@@ -124,14 +124,12 @@ class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
     """
-
-    def __init__(
-        self,
-        centroided: bool = True,
-        process_count: int = 10,
-        mp_batch_size: int = 5000,
-        **kwargs
-    ):
+    def __init__(self, 
+            centroided : bool = True,
+            process_count : int = 10,
+            mp_batch_size : int = 5000,
+            save_as_hdf: bool = False,
+            **kwargs):
         """
         Parameters
         ----------
@@ -144,9 +142,15 @@ class ThermoRawData(MSData_Base):
 
         mp_batch_size : int, default = 10000
             number of spectra to load in each batch
+
+        save_as_hdf : bool, default = False
+            automatically save hdf after load raw data.
         """
-        super().__init__(centroided, **kwargs)
-        self.file_type = "thermo"
+        super().__init__(
+            centroided, save_as_hdf=save_as_hdf,
+            **kwargs
+        )
+        self.file_type = 'thermo'
         self.process_count = process_count
         self.mp_batch_size = mp_batch_size
 
