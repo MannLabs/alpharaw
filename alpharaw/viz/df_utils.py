@@ -35,8 +35,31 @@ def make_psm_plot_df_for_peptide(
     include_precursor_isotopes:bool=False,
     max_isotope:int = 6,
     min_frag_mz:float = 100.0,
-    match_mode:typing.Literal["closest","highest"]="closest"
+    match_mode:typing.Literal["closest","highest"]="closest",
 )->pd.DataFrame:
+    """
+
+    Args:
+        spec_masses (np.ndarray): _description_
+        spec_intensities (np.ndarray): _description_
+        sequence (str): _description_
+        mods (str): _description_
+        mod_sites (str): _description_
+        charge (int): _description_
+        rt_sec (float, optional): _description_. Defaults to 0.0.
+        mobility (float, optional): _description_. Defaults to 0.0.
+        ppm (float, optional): _description_. Defaults to 20.0.
+        charged_frag_types (list, optional): _description_. Defaults to ["b_z1","b_z2","y_z1","y_z2"].
+        include_fragments (bool, optional): _description_. Defaults to True.
+        include_precursor_isotopes (bool, optional): _description_. Defaults to False.
+        max_isotope (int, optional): _description_. Defaults to 6.
+        min_frag_mz (float, optional): _description_. Defaults to 100.0.
+        match_mode (typing.Literal[&quot;closest&quot;,&quot;highest&quot;], optional): _description_. Defaults to "closest".
+        model_mgr (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        pd.DataFrame: _description_
+    """
     
     plot_df = make_xic_plot_df_for_peptide(
         sequence, mods, mod_sites, charge,
@@ -54,7 +77,7 @@ def make_psm_plot_df_for_peptide(
         query_masses=plot_df.mz.values,
         query_ion_names = plot_df.ion_name.values,
         query_mass_tols = plot_df.mz.values*ppm*1e-6,
-        query_frag_idxes = plot_df.fragment_idx.values,
+        query_frag_idxes = plot_df.fragment_site.values,
         modified_sequence = plot_df.modified_sequence.values[0],
         mod_sites=mod_sites,
         query_intensities = plot_df.intensity.values 
@@ -93,6 +116,38 @@ def make_xic_plot_df_for_peptide(
         min_frag_mz=min_frag_mz,
     )
 
+def make_psm_plot_for_dfs(
+    spec_masses:np.ndarray,
+    spec_intensities:np.ndarray,
+    precursor_df:pd.DataFrame, 
+    fragment_mz_df:pd.DataFrame,
+    fragment_intensity_df:pd.DataFrame = None,
+    ppm:float = 20.0,
+    min_frag_mz: float = 100.0,
+    min_frag_intensity: float = 0.001,
+    match_mode:typing.Literal["closest","highest"]="closest",
+):
+    plot_df = translate_precursor_fragment_df_to_plot_df(
+        precursor_df, 
+        fragment_mz_df,
+        fragment_intensity_df=fragment_intensity_df,
+        min_frag_mz = min_frag_mz,
+        min_frag_intensity=min_frag_intensity
+    )
+
+    return make_psm_plot_df(
+        spec_masses=spec_masses,
+        spec_intensities=spec_intensities,
+        query_masses=plot_df.mz.values,
+        query_ion_names = plot_df.ion_name.values,
+        query_mass_tols = plot_df.mz.values*ppm*1e-6,
+        query_frag_idxes = plot_df.fragment_site.values,
+        modified_sequence = plot_df.modified_sequence.values[0],
+        mod_sites="",
+        query_intensities = plot_df.intensity.values 
+            if "intensity" in plot_df.columns else None,
+        match_mode = match_mode,    
+    )
 
 def make_xic_plot_df(
     query_masses:np.ndarray,
@@ -153,7 +208,7 @@ def make_psm_plot_df(
         modified_sequence=modified_sequence,
         mz=spec_masses,
         intensity=spec_intensities,
-        fragment_idx=-1,
+        fragment_site=-1,
         ppm_err=0,
         mass_err=0,
         ion_name="-",
@@ -162,7 +217,7 @@ def make_psm_plot_df(
         modified_sequence=modified_sequence,
         mz=matched_query_masses,
         intensity=matched_spec_intens,
-        fragment_idx=matched_frag_idxes,
+        fragment_site=matched_frag_idxes,
         ppm_err=ppm_mass_errs,
         mass_err=matched_mass_errs,
         ion_name=matched_ion_names,
@@ -179,7 +234,7 @@ def make_psm_plot_df(
             modified_sequence=modified_sequence,
             mz=query_masses,
             intensity=query_intensities,
-            fragment_idx=-1,
+            fragment_site=-1,
             ppm_err=0,
             mass_err=0,
             ion_name=query_ion_names,
@@ -244,7 +299,7 @@ def translate_precursor_fragment_df_to_plot_df(
     )
 
     fragment_df.rename(
-        columns={"position":"fragment_idx"},
+        columns={"position":"fragment_site"},
         inplace=True
     )
 
@@ -280,6 +335,7 @@ def translate_precursor_fragment_df_to_plot_df(
                 fragment_intensity_df.values.dtype
             )
         isotope_df["ion_name"] = ion_names
+        isotope_df["fragment_site"] = -1
         fragment_df = pd.concat((fragment_df, isotope_df), ignore_index=True)
 
     fragment_df["sequence"] = precursor_df.sequence.values[0]

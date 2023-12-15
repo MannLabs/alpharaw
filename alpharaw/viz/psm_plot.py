@@ -580,20 +580,20 @@ class FragCoveragePlot:
         ].query("intensity>0")
 
         covs = np.zeros(max(
-            plot_df.fragment_idx.max()+2 
+            plot_df.fragment_site.max()+2 
             if len(plot_df)>0 else 0,
             nAA
         ), dtype=np.int64)
         cov_colors = [""]*len(covs)
         if ion_type in 'abc':
             for frag_idx, color in zip(
-                plot_df.fragment_idx.values, plot_df.color.values
+                plot_df.fragment_site.values, plot_df.color.values
             ):
                 covs[frag_idx] = 1
                 cov_colors[frag_idx] = color
         elif ion_type in 'xyz':
             for frag_idx, color in zip(
-                plot_df.fragment_idx.values, plot_df.color.values
+                plot_df.fragment_site.values, plot_df.color.values
             ):
                 covs[frag_idx+1] = 1
                 cov_colors[frag_idx+1] = color
