@@ -11,44 +11,9 @@ from alphatims.bruker import (
     TimsTOF, 
 )
 
-from alpharaw.ms_data_base import MSData_Base
-from alpharaw.utils.df_processing import remove_unused_peaks
-from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
-
 from .plot_utils import (
     plot_line_fast
 )
-
-def convert_to_timstof(
-    spec_df:pd.DataFrame, 
-    peak_df:pd.DataFrame,
-)->typing.Tuple[MSData_Base,TimsTOF]:
-    """ 
-    Convert any spectrum dataframe or sliced spectrum dataframe
-    and its peak dataframe into AlphaTims' TimsTOF object (AlphaTimsWrapper).
-
-    Args:
-        spec_df (pd.DataFrame): 
-            spectrum dataframe or sliced spectrum dataframe in AlphaRaw's format
-        peak_df (pd.DataFrame): 
-            peak dataframe in AlphaRaw's format
-        remove_used_peaks (bool, optional): 
-            For sliced spectrum dataframe, this will remove peaks in `peak_df` 
-            that are not in `spec_df`.
-            Defaults to False.
-
-    Returns:
-        MSData_Base: AlphaRaw object
-        TimsTOF: AlphaTims' TimsTOF object (AlphaTimsWrapper).
-    """
-    spec_df, peak_df = remove_unused_peaks(
-        spec_df, peak_df
-    )
-    ms_data = MSData_Base()
-    ms_data.spectrum_df = spec_df
-    ms_data.peak_df = peak_df
-    
-    return ms_data, AlphaTimsWrapper(ms_data, dda=False)
 
 class XIC_Plot():
     # hovermode = "x" | "y" | "closest" | False | "x unified" | "y unified"
