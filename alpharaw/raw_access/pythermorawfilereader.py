@@ -78,47 +78,54 @@ class RawFileReader(object):
                       'PDA': 3,
                       'UV': 4}
 
-    massAnalyzerType = {'ITMS': 0,
-                        'TQMS': 1,
-                        'SQMS': 2,
-                        'TOFMS': 3,
-                        'FTMS': 4,
-                        'Sector': 5,
-                        0: 'ITMS',
-                        1: 'TQMS',
-                        2: 'SQMS',
-                        3: 'TOFMS',
-                        4: 'FTMS',
-                        5: 'Sector'}
-    activationType = {'CID': 0,
-                      'MPD': 1,
-                      'ECD': 2,
-                      'PQD': 3,
-                      'ETD': 4,
-                      'HCD': 5,
-                      'Any activation type': 6,
-                      'SA': 7,
-                      'PTR': 8,
-                      'NETD': 9,
-                      'NPTR': 10,
-                      'UVPD': 11,
-                      'ETHCD': 12, # not Thermo's build-in activation types
-                      'ETCID': 13, # not Thermo's build-in activation types
-                      0: 'CID',
-                      1: 'MPD',
-                      2: 'ECD',
-                      3: 'PQD',
-                      4: 'ETD',
-                      5: 'HCD',
-                      6: 'Any activation type',
-                      7: 'SA',
-                      8: 'PTR',
-                      9: 'NETD',
-                      10: 'NPTR',
-                      11: 'UVPD',
-                      12: 'ETHCD', # not Thermo's build-in activation types
-                      13: 'ETCID', # not Thermo's build-in activation types
-                     }
+    massAnalyzerType = defaultdict(lambda: '?', 
+        {
+            'ITMS': 0,
+            'TQMS': 1,
+            'SQMS': 2,
+            'TOFMS': 3,
+            'FTMS': 4,
+            'Sector': 5,
+            'Astral': 7,
+            0: 'ITMS',
+            1: 'TQMS',
+            2: 'SQMS',
+            3: 'TOFMS',
+            4: 'FTMS',
+            5: 'Sector',
+            7: 'Astral',
+        })
+    activationType = defaultdict(lambda: '?',
+        {
+            'CID': 0,
+            'MPD': 1,
+            'ECD': 2,
+            'PQD': 3,
+            'ETD': 4,
+            'HCD': 5,
+            'Any activation type': 6,
+            'SA': 7,
+            'PTR': 8,
+            'NETD': 9,
+            'NPTR': 10,
+            'UVPD': 11,
+            'ETHCD': 1001, # not Thermo's build-in activation types
+            'ETCID': 1002, # not Thermo's build-in activation types
+            0: 'CID',
+            1: 'MPD',
+            2: 'ECD',
+            3: 'PQD',
+            4: 'ETD',
+            5: 'HCD',
+            6: 'Any activation type',
+            7: 'SA',
+            8: 'PTR',
+            9: 'NETD',
+            10: 'NPTR',
+            11: 'UVPD',
+            1001: 'ETHCD', # not Thermo's build-in activation types
+            1002: 'ETCID', # not Thermo's build-in activation types
+        })
 
     detectorType = {'Valid': 0,
                     'Any': 1,
@@ -515,8 +522,9 @@ class RawFileReader(object):
         NOTE : XCALIBUR INTERFACE "View/Scan header", lower part
         """
         trailerData = self.source.GetTrailerExtraInformation(scanNumber)
-        ret_dict = defaultdict(lambda: 0)
-        ret_dict.update(zip(trailerData.Labels, trailerData.Values))
+        ret_dict = defaultdict(
+            lambda: 0, zip(trailerData.Labels, trailerData.Values)
+        )
         return ret_dict
 
     def GetMS2MonoMzAndChargeFromScanNum(self, scanNumber):
