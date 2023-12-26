@@ -10,6 +10,18 @@ class MSData_Base:
     The base data structure for MS Data, other MSData loader inherit
     """
 
+    column_dtypes = {
+        "rt": np.float64,
+        "ms_level": np.int8,
+        "precursor_mz": np.float64,
+        "isolation_lower_mz": np.float64,
+        "isolation_upper_mz": np.float64,
+        "precursor_charge": np.int8,
+        "nce": np.float32,
+        "injection_time": np.float32,
+        "activation": "U",
+    }
+
     spectrum_df: pd.DataFrame
     """
     Spectrum dataframe containing the following columns:
@@ -152,41 +164,12 @@ class MSData_Base:
             raw_data['peak_indices'][:-1],
             raw_data['peak_indices'][1:],
         )
-        self.spectrum_df["rt"] = raw_data['rt']
-        self.spectrum_df["ms_level"] = np.array(
-            raw_data['ms_level'], dtype=np.int8
-        )
-        self.spectrum_df["precursor_mz"] = np.array(
-            raw_data['precursor_mz'], dtype=np.float64
-        )
-        
-        self.spectrum_df["charge"] = np.array(
-            raw_data['precursor_charge'],
-            dtype=np.int8
-        )
-        self.spectrum_df["isolation_lower_mz"] = np.array(
-            raw_data['isolation_lower_mz'], dtype=np.float64
-        )
-        self.spectrum_df["isolation_upper_mz"] = np.array(
-            raw_data['isolation_upper_mz'], dtype=np.float64
-        )
-        if "nce" in raw_data:
-            self.spectrum_df["nce"] = np.array(
-                raw_data["nce"],
-                dtype=np.float32,
-            )
-        if "fragmentation" in raw_data:
-            self.spectrum_df["fragmentation"] = np.array(
-                raw_data["fragmentation"]
-            )
-        if "detector" in raw_data:
-            self.spectrum_df["detector"] = np.array(
-                raw_data["detector"]
-            )
-        if "injection_time" in raw_data:
-            self.spectrum_df["injection_time"] = np.array(
-                raw_data["injection_time"]
-            )
+
+        for col, val in raw_data.items():
+            if col in self.column_dtypes:
+                self.spectrum_df[col] = np.array(
+                    val, dtype=self.column_dtypes[col]
+                )
 
     def _read_creation_time(self, raw_data):
         pass
