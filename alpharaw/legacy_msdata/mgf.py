@@ -135,6 +135,10 @@ class MGFReader(MSData_Base):
             raw_data['peak_intensity'],
             start_idxes,end_idxes
         )
-        self.add_column_in_spec_df_by_spec_idxes('rt', raw_data['rt'], spec_idxes, na_value=0)
-        self.spectrum_df['ms_level'] = 2
+        self.add_column_in_spec_df_by_spec_idxes(
+            'rt', raw_data['rt'], spec_idxes, na_value=0
+        )
+        self.add_column_in_spec_df_by_spec_idxes(
+            'ms_level', 2, spec_idxes, dtype=np.int8, na_value=1
+        )
 ms_reader_provider.register_reader('mgf', MGFReader)

@@ -96,7 +96,14 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
             "rt", hdf.Raw.MS2_scans.rt_list_ms2.values, 
             spec_idxes, dtype=np.float64, na_value=0
         )
-        self.spectrum_df['ms_level'] = 2
+        self.add_column_in_spec_df_by_spec_idxes(
+            "ms_level", 2, spec_idxes, dtype=np.int8, na_value=1
+        )
+
+        self.add_column_in_spec_df_by_spec_idxes(
+            "charge", hdf.Raw.MS2_scans.charge2.values,
+            spec_idxes, dtype=np.int8, na_value=0,
+        )
 
         if hasattr(hdf.Raw.MS2_scans, 'mobility2'):
             self.add_column_in_spec_df_by_spec_idxes(
@@ -108,7 +115,7 @@ class AlphaPept_HDF_MS2_Reader(MSData_Base):
         if hasattr(hdf.Raw.MS2_scans, 'mono_mzs2'):
             self.add_column_in_spec_df_by_spec_idxes(
                 "precursor_mz", hdf.Raw.MS2_scans.mono_mzs2.values,
-                spec_idxes
+                spec_idxes, na_value=-1.0,
             )
             # self.set_isolation_mz_windows(
             #     precursor_mzs-1.5, precursor_mzs+1.5
