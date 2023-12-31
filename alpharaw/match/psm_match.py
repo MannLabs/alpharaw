@@ -555,8 +555,8 @@ def get_dia_spec_idxes(
                 idx_list.append(ispec)
         if len(idx_list) > max_spec_per_query:
             spec_idxes[iquery,:] = idx_list[
-                len(idx_list)/2-max_spec_per_query//2:
-                len(idx_list)/2+max_spec_per_query//2+1
+                len(idx_list)//2-max_spec_per_query//2:
+                len(idx_list)//2+max_spec_per_query//2+1
             ]
         else:
             spec_idxes[iquery,:len(idx_list)] = idx_list
@@ -666,14 +666,6 @@ class PepSpecMatch_DIA(PepSpecMatch):
         super().match_ms2_multi_raw(
             psm_df, ms_files, ms_file_type,
             process_num
-        )
-
-        self.psm_df["score"] = get_ion_count_scores(
-            self.fragment_mz_df.values,
-            self.matched_intensity_df.values,
-            self.psm_df.frag_start_idx.values,
-            self.psm_df.frag_stop_idx.values,
-            self.min_frag_mz,
         )
 
         return (
