@@ -86,3 +86,4 @@ class NormalDIAGrouper():
                 isolation_lower, isolation_upper = self.dia_isolation_dict[dia_group]
                 if mz >= isolation_lower and mz <= isolation_upper:
                     dia_precursor_groups[dia_group].append(i)
+        return dia_precursor_groups
