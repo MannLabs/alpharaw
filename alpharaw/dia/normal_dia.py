@@ -67,7 +67,7 @@ class NormalDIAGrouper():
 
     def assign_dia_groups(self, 
         precursor_mzs
-    )->typing.DefaultDict[typing.List]:
+    )->typing.DefaultDict[typing.List, typing.List]:
         dia_precursor_groups = defaultdict(list)
         for i, mz in enumerate(precursor_mzs):
             i_group = np.searchsorted(self.dia_groups, int(mz))
