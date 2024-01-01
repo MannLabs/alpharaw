@@ -1,6 +1,8 @@
 import pandas as pd
-
+import numpy as np
 import typing
+
+from collections import defaultdict
 
 from alpharaw.ms_data_base import MSData_Base
 
@@ -15,7 +17,17 @@ class NormalDIAGrouper():
             "dia_group"
         ] = ms_data.spectrum_df.precursor_mz.astype(int)
 
-    def get_grouped_ms_data(self, 
+        self.dia_group_dfs = self.ms_data.spectrum_df.groupby("dia_group")
+        self.dia_isolation_dict = {}
+        for dia_group, df in self.dia_group_dfs:
+            if dia_group == -1: continue
+            self.dia_isolation_dict[dia_group] = (
+                df.isolation_lower_mz.values[0],
+                df.isolation_upper_mz.values[0]
+            )
+        self.dia_groups = np.sort(list(self.dia_isolation_dict.keys()))
+
+    def get_ms_data_for_a_group(self, 
         dia_group:int=-1, 
         return_alpharaw_data: bool=True,
         return_alphatims_data: bool=True,
@@ -32,7 +44,7 @@ class NormalDIAGrouper():
             TimsTOF: Alphatims object for the window, if `return_alphatims_data==True`
         """
 
-        spec_df = self.ms_data.spectrum_df.query(f"dia_group == {dia_group}")
+        spec_df = self.dia_group_dfs.get_group(dia_group)
 
         if return_alphatims_data:
             ms_data, ms_tims = convert_to_alphatims(
@@ -52,4 +64,25 @@ class NormalDIAGrouper():
             ms_data.spectrum_df = spec_df
             ms_data.peak_df = peak_df
             return ms_data
-        
+
+    def assign_dia_groups(self, 
+        precursor_mzs
+    )->typing.DefaultDict[typing.List]:
+        dia_precursor_groups = defaultdict(list)
+        for i, mz in enumerate(precursor_mzs):
+            i_group = np.searchsorted(self.dia_groups, int(mz))
+            if i_group == 0:
+                i_group = 1
+            elif i_group == len(self.dia_groups):
+                i_group -= 1
+            dia_group = self.dia_groups[i_group]
+            if dia_group in self.dia_isolation_dict:
+                isolation_lower, isolation_upper = self.dia_isolation_dict[dia_group]
+                if mz >= isolation_lower and mz <= isolation_upper:
+                    dia_precursor_groups[dia_group].append(i)
+                    continue
+            dia_group = self.dia_groups[i_group-1]
+            if dia_group in self.dia_isolation_dict:
+                isolation_lower, isolation_upper = self.dia_isolation_dict[dia_group]
+                if mz >= isolation_lower and mz <= isolation_upper:
+                    dia_precursor_groups[dia_group].append(i)
