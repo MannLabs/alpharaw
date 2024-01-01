@@ -467,7 +467,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
             )
 
             for dia_group, group_df in grouper.dia_group_dfs:
-                psm_idxes = np.array(psm_groups[dia_group])
+                psm_idxes = np.array(psm_groups[dia_group], dtype=np.int32)
                 spec_idxes = get_dia_spec_idxes(
                     group_df.rt.values,
                     psm_df_one_raw.rt.values[psm_idxes],
