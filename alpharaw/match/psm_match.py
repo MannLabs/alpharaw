@@ -410,6 +410,10 @@ class PepSpecMatch_DIA(PepSpecMatch):
             [fragment_mz_df]*self.max_spec_per_query,
             ignore_index=True
         )
+        if self.use_ppm:
+            self.all_frag_mz_tols = fragment_mz_df.values*self.tolerance*1e-6
+        else:
+            self.all_frag_mz_tols = np.full_like(fragment_mz_df.values, self.tolerance)
 
         psm_df_list = []
         len_frags = len(fragment_mz_df)//self.max_spec_per_query
@@ -447,11 +451,6 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 process_count=self.ms_loader_thread_num
             )
 
-            if self.use_ppm:
-                all_frag_mz_tols = self.fragment_mz_df.values*self.tolerance*1e-6
-            else:
-                all_frag_mz_tols = np.full_like(self.fragment_mz_df.values, self.tolerance)
-
             psm_origin_len = len(psm_df_one_raw)//self.max_spec_per_query
             
             grouper = NormalDIAGrouper(raw_data)
@@ -463,11 +462,13 @@ class PepSpecMatch_DIA(PepSpecMatch):
             )
             
             all_spec_idxes = np.full(
-                len(psm_df_one_raw), -1, dtype=int
+                len(psm_df_one_raw), -1, dtype=np.int32
             )
 
             for dia_group, group_df in grouper.dia_group_dfs:
-                psm_idxes = np.array(psm_groups[dia_group], dtype=np.int32)
+                psm_idxes = psm_groups[dia_group]
+                if len(psm_idxes) == 0: continue
+                psm_idxes = np.array(psm_idxes, dtype=np.int32)
                 spec_idxes = get_dia_spec_idxes(
                     group_df.rt.values,
                     psm_df_one_raw.rt.values[psm_idxes],
@@ -478,20 +479,20 @@ class PepSpecMatch_DIA(PepSpecMatch):
                         psm_idxes+psm_origin_len*i
                     ] = spec_idxes[:,i]
 
-            match_one_raw_with_numba(
-                all_spec_idxes,
-                psm_df_one_raw.frag_start_idx.values,
-                psm_df_one_raw.frag_stop_idx.values,
-                self.fragment_mz_df.values,
-                all_frag_mz_tols, 
-                raw_data.peak_df.mz.values, 
-                raw_data.peak_df.intensity.values,
-                raw_data.spectrum_df.peak_start_idx.values,
-                raw_data.spectrum_df.peak_stop_idx.values,
-                self.matched_intensity_df.values,
-                self.matched_mz_err_df.values,
-                self.match_closest
-            )
+                match_one_raw_with_numba(
+                    all_spec_idxes,
+                    psm_df_one_raw.frag_start_idx.values,
+                    psm_df_one_raw.frag_stop_idx.values,
+                    self.fragment_mz_df.values,
+                    self.all_frag_mz_tols, 
+                    raw_data.peak_df.mz.values, 
+                    raw_data.peak_df.intensity.values,
+                    group_df.peak_start_idx.values,
+                    group_df.peak_stop_idx.values,
+                    self.matched_intensity_df.values,
+                    self.matched_mz_err_df.values,
+                    self.match_closest
+                )
         else:
             print(f"`{raw_name}` is not found in ms_file_dict.")
             
@@ -662,7 +663,8 @@ def get_dia_spec_idxes(
             spec_idxes[iquery,:] = np.arange(0, max_spec_per_query)
         else:
             spec_idxes[iquery,:] = np.arange(
-                rt_idxes[iquery]-n, rt_idxes[iquery]+n+1
+                rt_idxes[iquery]-n, 
+                rt_idxes[iquery]-n+max_spec_per_query
             )
     return spec_idxes
 
