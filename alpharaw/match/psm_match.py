@@ -243,7 +243,7 @@ class PepSpecMatch:
         self.psm_df = psm_df_one_raw
 
         psm_df_one_raw = self._add_missing_columns_to_psm_df(
-            psm_df_one_raw
+            psm_df_one_raw, self.raw_data
         )
 
         (
@@ -313,6 +313,7 @@ class PepSpecMatch:
             )
         else:
             print(f"`{raw_name}` is not found in ms_file_dict.")
+        return psm_df_one_raw
     
     def match_ms2_multi_raw(self,
         psm_df: pd.DataFrame,
@@ -371,10 +372,11 @@ class PepSpecMatch:
 
         self.ms_loader_thread_num = process_num
         # if process_num <= 1 or len(self._ms_file_dict) <= 1:
+        psm_df_list = []
         for raw_name, df_group in tqdm.tqdm(
             self.psm_df.groupby('raw_name')
         ):
-            self._match_ms2_one_raw_numba(raw_name, df_group)
+            psm_df_list.append(self._match_ms2_one_raw_numba(raw_name, df_group))
         # else:
         #     with mp.get_context("spawn").Pool(processes=process_num) as p:
         #         df_groupby = self.psm_df.groupby('raw_name')
@@ -387,7 +389,8 @@ class PepSpecMatch:
         #                 gen_group_df(df_groupby)
         #             ), df_groupby.ngroups
         #         )
-                    
+
+        self.psm_df = pd.concat(psm_df_list, ignore_index=True)     
         return (
             self.psm_df, self.fragment_mz_df, 
             self.matched_intensity_df, self.matched_mz_err_df
@@ -495,7 +498,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 )
         else:
             print(f"`{raw_name}` is not found in ms_file_dict.")
-            
+        return psm_df_one_raw
 
     def match_ms2_multi_raw(self, 
         psm_df: pd.DataFrame, 
