@@ -225,6 +225,9 @@ class PSM_Plot:
     def plot(self, plot_df, sequence, title, 
         plot_unmatched_peaks=False
     ):
+        
+        if "pcc" in plot_df.columns and len(plot_df) > 0:
+            title = f"{title} (R={plot_df.pcc.values[0]:.3f})"
         self._init_plot(title)
 
         self.peak_plot.plot(

@@ -240,10 +240,21 @@ def make_psm_plot_df(
             ion_name=query_ion_names,
         ))
 
+        def PCC_sim(x, y):
+            x = x-np.mean(x)
+            y = y-np.mean(y)
+            return np.dot(x, y)/(np.linalg.norm(x)*np.linalg.norm(y)+1e-8)
+        PCC = PCC_sim(
+            -query_intensities[matched_bools],
+            matched_spec_intens
+        )
+
     df = pd.concat([
         spec_df, matched_df, mirror_df
     ], ignore_index=True)
     df["mod_sites"] = mod_sites
+    if len(mirror_df) > 0:
+        df["pcc"] = PCC
     return df
 
 def get_modified_sequence(
