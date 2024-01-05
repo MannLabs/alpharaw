@@ -32,40 +32,19 @@ def make_psm_plot_df_for_peptide(
     ppm:float = 20.0,
     charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
     include_fragments:bool=True,
+    fragment_intensity_df:pd.DataFrame=None,
     include_precursor_isotopes:bool=False,
     max_isotope:int = 6,
     min_frag_mz:float = 100.0,
     match_mode:typing.Literal["closest","highest"]="closest",
 )->pd.DataFrame:
-    """
-
-    Args:
-        spec_masses (np.ndarray): _description_
-        spec_intensities (np.ndarray): _description_
-        sequence (str): _description_
-        mods (str): _description_
-        mod_sites (str): _description_
-        charge (int): _description_
-        rt_sec (float, optional): _description_. Defaults to 0.0.
-        mobility (float, optional): _description_. Defaults to 0.0.
-        ppm (float, optional): _description_. Defaults to 20.0.
-        charged_frag_types (list, optional): _description_. Defaults to ["b_z1","b_z2","y_z1","y_z2"].
-        include_fragments (bool, optional): _description_. Defaults to True.
-        include_precursor_isotopes (bool, optional): _description_. Defaults to False.
-        max_isotope (int, optional): _description_. Defaults to 6.
-        min_frag_mz (float, optional): _description_. Defaults to 100.0.
-        match_mode (typing.Literal[&quot;closest&quot;,&quot;highest&quot;], optional): _description_. Defaults to "closest".
-        model_mgr (_type_, optional): _description_. Defaults to None.
-
-    Returns:
-        pd.DataFrame: _description_
-    """
     
     plot_df = make_xic_plot_df_for_peptide(
         sequence, mods, mod_sites, charge,
         rt_sec=rt_sec, mobility=mobility,
         charged_frag_types=charged_frag_types,
         include_fragments=include_fragments,
+        fragment_intensity_df=fragment_intensity_df,
         include_precursor_isotopes=include_precursor_isotopes,
         max_isotope=max_isotope,
         min_frag_mz=min_frag_mz,
@@ -95,6 +74,7 @@ def make_xic_plot_df_for_peptide(
     ms_level:int=2,
     charged_frag_types: list = ["b_z1","b_z2","y_z1","y_z2"],
     include_fragments:bool=True,
+    fragment_intensity_df:pd.DataFrame = None,
     include_precursor_isotopes:bool=False,
     max_isotope:int = 6,
     min_frag_mz:float = 100.0,
@@ -108,8 +88,17 @@ def make_xic_plot_df_for_peptide(
         include_precursor_isotopes=include_precursor_isotopes,
         max_isotope=max_isotope,
     )
+    if fragment_intensity_df is not None:
+        columns = np.intersect1d(
+            fragment_mz_df.columns.values,
+            fragment_intensity_df.columns.values,
+        )
+        fragment_mz_df = fragment_mz_df[columns]
+        fragment_intensity_df = fragment_intensity_df[columns]
+        
     return translate_precursor_fragment_df_to_plot_df(
         precursor_df, fragment_mz_df,
+        fragment_intensity_df=fragment_intensity_df,
         rt_sec=rt_sec,
         mobility=mobility,
         ms_level=ms_level,
@@ -143,7 +132,7 @@ def make_psm_plot_for_dfs(
         query_mass_tols = plot_df.mz.values*ppm*1e-6,
         query_frag_idxes = plot_df.fragment_site.values,
         modified_sequence = plot_df.modified_sequence.values[0],
-        mod_sites="",
+        mod_sites=precursor_df.mod_sites.values[0],
         query_intensities = plot_df.intensity.values 
             if "intensity" in plot_df.columns else None,
         match_mode = match_mode,    
