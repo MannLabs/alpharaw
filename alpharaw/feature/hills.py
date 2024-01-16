@@ -1,4 +1,74 @@
 import numpy as np
+from alphatims.utils import threadpool
+from numba import njit
+
+@threadpool
+def path_finder(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, forward:np.ndarray, backward:np.ndarray):
+    """Extracts path information and writes to path matrix.
+
+    Args:
+        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
+        from_idx (np.ndarray): Array containing from indices.
+        to_idx (np.ndarray): Array containing to indices.
+        forward (np.ndarray): Array to report forward connection.
+        backward (np.ndarray): Array to report backward connection.
+    """
+
+    fr = from_idx[x]
+    to =  to_idx[x]
+
+    forward[fr] = to
+    backward[to] = fr
+
+@threadpool
+def find_path_start(x:np.ndarray, forward:np.ndarray, backward:np.ndarray, path_starts:np.ndarray):
+    """Function to find the start of a path.
+
+    Args:
+        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
+        forward (np.ndarray):  Array to report forward connection.
+        backward (np.ndarray):  Array to report backward connection.
+        path_starts (np.ndarray): Array to report path starts.
+    """
+    if forward[x] > -1 and backward[x] == -1:
+        path_starts[x] = 0
+
+@threadpool
+def find_path_length(x:np.ndarray, path_starts:np.ndarray, forward:np.ndarray, path_cnt:np.ndarray):
+    """Function to extract the length of a path.
+
+    Args:
+        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
+        path_starts (np.ndarray): Array that stores the starts of the paths.
+        forward (np.ndarray): Array that stores forward information.
+        path_cnt (np.ndarray): Reporting array to count the paths.
+    """    
+    ctr = 1
+    idx = path_starts[x]
+    while forward[idx] > -1:
+        ctr += 1
+        idx = forward[idx]
+    path_cnt[x] = ctr
+
+@threadpool
+def fill_path_matrix(x:np.ndarray, path_start:np.ndarray, forwards:np.ndarray, out_hill_data:np.ndarray, out_hill_ptr:np.ndarray):
+    """Function to fill the path matrix.
+
+    Args:
+        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
+        path_starts (np.ndarray): Array that stores the starts of the paths.
+        forwards (np.ndarray): Forward array.
+        out_hill_data (np.ndarray): Array containing the indices to hills.
+        out_hill_ptr (np.ndarray): Array containing the bounds to out_hill_data.
+    """
+    path_position = 0
+    idx = path_start[x]
+    while idx > -1:
+        out_hill_data[out_hill_ptr[x] + path_position] = idx
+        idx = forwards[idx]
+        path_position += 1
+
+
 
 def get_hills(centroids:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, hill_length_min:int=3)-> (np.ndarray, np.ndarray, int):
     """Function to get hills from centroid connections.
@@ -77,7 +147,6 @@ def extract_hills(query_data:dict, max_gap:int, centroid_tol:float)-> (np.ndarra
 
     return hill_ptrs, hill_data, path_node_cnt, score_median, score_std
 
-from numba import njit
 @njit
 def remove_duplicate_hills(hill_ptrs, hill_data, path_node_cnt):
     """
@@ -112,8 +181,7 @@ def remove_duplicate_hills(hill_ptrs, hill_data, path_node_cnt):
 
     return hill_ptrs_new, hill_data_new
 
-# %% ../nbs/04_feature_finding.ipynb 13
-@alphapept.performance.compile_function(compilation_mode="numba")
+@njit
 def fast_minima(y:np.ndarray)->np.ndarray:
     """Function to calculate the local minimas of an array.
 
@@ -141,7 +209,7 @@ def fast_minima(y:np.ndarray)->np.ndarray:
     return minima
 
 # %% ../nbs/04_feature_finding.ipynb 15
-@alphapept.performance.performance_function(compilation_mode="numba-multithread")
+@threadpool
 def split(k:np.ndarray, hill_ptrs:np.ndarray, int_data:np.ndarray, hill_data:np.ndarray, splits:np.ndarray, hill_split_level:float, window:int):
     """Function to split hills.
 
@@ -225,7 +293,7 @@ def split_hills(hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray,
     return hill_ptrs
 
 # %% ../nbs/04_feature_finding.ipynb 17
-@alphapept.performance.performance_function(compilation_mode="numba-multithread")
+@threadpool
 def check_large_hills(idx:np.ndarray, large_peaks:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, to_remove:np.ndarray, large_peak:int = 40, hill_peak_factor:float = 2, window:int=1):
     """Function to check large hills and flag them for removal.
 
@@ -307,7 +375,7 @@ def filter_hills(hill_data:np.ndarray, hill_ptrs:np.ndarray, int_data:np.ndarray
     return hill_data_, hill_ptrs_
 
 # %% ../nbs/04_feature_finding.ipynb 20
-@alphapept.performance.performance_function(compilation_mode="numba-multithread")
+@threadpool
 def hill_stats(idx:np.ndarray, hill_range:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, mass_data:np.ndarray, rt_:np.ndarray, rt_idx:np.ndarray, stats:np.ndarray, hill_nboot_max:int, hill_nboot:int):
     """Function to calculate hill stats.
 

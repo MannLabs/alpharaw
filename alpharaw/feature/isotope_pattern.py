@@ -1,11 +1,18 @@
+from numba import njit
+from numba.typed import List
+import numpy as np
+from alphatims.utils import threadpool
+import networkx as nx 
+from typing import Callable, Union
+import pandas as pd
+from numba.typed import Dict
+
 #TODO: Move hardcoded constants
+#TODO: REmove netowrkx dependency
 
-DELTA_M = 1.00286864
-DELTA_S = 0.0109135
+from alpharaw.feature.chem import maximum_offset, DELTA_M, DELTA_S, M_PROTON, averagine_aa, isotopes, Isotope
 
-maximum_offset = DELTA_M + DELTA_S
-
-@nb.njit
+@njit
 def check_isotope_pattern(mass1:float, mass2:float, delta_mass1:float, delta_mass2:float, charge:int, iso_mass_range:int = 5)-> bool:
     """Check if two masses could belong to the same isotope pattern.
 
@@ -30,8 +37,7 @@ def check_isotope_pattern(mass1:float, mass2:float, delta_mass1:float, delta_mas
 
     return left_side <= right_side
 
-# %% ../nbs/04_feature_finding.ipynb 27
-@nb.njit
+@njit
 def correlate(scans_:np.ndarray, scans_2:np.ndarray, int_:np.ndarray, int_2:np.ndarray)->float:
     """Correlate two scans.
 
@@ -69,7 +75,7 @@ def correlate(scans_:np.ndarray, scans_2:np.ndarray, int_:np.ndarray, int_2:np.n
     return corr
 
 # %% ../nbs/04_feature_finding.ipynb 29
-@nb.njit
+@njit
 def extract_edge(stats:np.ndarray, idxs_upper:np.ndarray, runner:int, max_index:int, maximum_offset:float,  iso_charge_min:int = 1, iso_charge_max:int = 6, iso_mass_range:int=5)->list:
     """Extract edges.
 
@@ -102,7 +108,7 @@ def extract_edge(stats:np.ndarray, idxs_upper:np.ndarray, runner:int, max_index:
 
     return edges
 
-@alphapept.performance.performance_function(compilation_mode="numba-multithread")
+@threadpool
 def edge_correlation(idx:np.ndarray, to_keep:np.ndarray, sortindex_:np.ndarray, pre_edges:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, cc_cutoff:float):
     """Correlates two edges and flag them it they should be kept.
 
@@ -135,9 +141,6 @@ def edge_correlation(idx:np.ndarray, to_keep:np.ndarray, sortindex_:np.ndarray, 
 
     if correlate(scans_, scans_2, int_, int_2) > cc_cutoff:
         to_keep[idx] = 1
-
-# %% ../nbs/04_feature_finding.ipynb 30
-import networkx as nx
 
 def get_pre_isotope_patterns(stats:np.ndarray, idxs_upper:np.ndarray, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, maximum_offset:float, iso_charge_min:int=1, iso_charge_max:int=6, iso_mass_range:float=5, cc_cutoff:float=0.6)->list:
     """Function to extract pre isotope patterns.
@@ -181,10 +184,7 @@ def get_pre_isotope_patterns(stats:np.ndarray, idxs_upper:np.ndarray, sortindex_
 
     return pre_isotope_patterns
 
-# %% ../nbs/04_feature_finding.ipynb 32
-from numba.typed import List
-
-@nb.njit
+@njit
 def check_isotope_pattern_directed(mass1:float, mass2:float, delta_mass1:float, delta_mass2:float, charge:int, index:int, iso_mass_range:float)->bool:
     """Check if two masses could belong to the same isotope pattern.
 
@@ -208,7 +208,7 @@ def check_isotope_pattern_directed(mass1:float, mass2:float, delta_mass1:float, 
     return left_side <= right_side
 
 
-@nb.njit
+@njit
 def grow(trail:List, seed:int, direction:int, relative_pos:int, index:int, stats:np.ndarray, pattern:np.ndarray, charge:int, iso_mass_range:float, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, cc_cutoff:float)->List:
     """Grows isotope pattern based on a seed and direction.
 
@@ -287,7 +287,7 @@ def grow(trail:List, seed:int, direction:int, relative_pos:int, index:int, stats
 
     return trail
 
-@nb.njit
+@njit
 def grow_trail(seed:int, pattern:np.ndarray, stats:np.ndarray, charge:int, iso_mass_range:float, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, cc_cutoff:float)->List:
     """Wrapper to grow an isotope pattern to the left and right side.
 
@@ -316,7 +316,7 @@ def grow_trail(seed:int, pattern:np.ndarray, stats:np.ndarray, charge:int, iso_m
     return trail
 
 
-@nb.njit
+@njit
 def get_trails(seed:int, pattern:np.ndarray, stats:np.ndarray, charge_range:List, iso_mass_range:float, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, cc_cutoff:float)->List:
     """Wrapper to extract trails for a given charge range.
 
@@ -378,8 +378,7 @@ def plot_pattern(pattern:np.ndarray, sorted_hills:np.ndarray, centroids:np.ndarr
 
     plt.show()
 
-# %% ../nbs/04_feature_finding.ipynb 34
-@nb.njit
+@njit
 def get_minpos(y:np.ndarray, iso_split_level:float)->List:
     """Function to get a list of minima in a trace.
     A minimum is returned if the ratio of lower of the surrounding maxima to the minimum is larger than the splitting factor.
@@ -408,7 +407,7 @@ def get_minpos(y:np.ndarray, iso_split_level:float)->List:
 
     return minima_list
 
-@nb.njit
+@njit
 def get_local_minima(y:np.ndarray)->List:
     """Function to return all local minima of a array
 
@@ -425,7 +424,7 @@ def get_local_minima(y:np.ndarray)->List:
     return minima
 
 
-@nb.njit
+@njit
 def is_local_minima(y:np.ndarray, i:int)->bool:
     """Check if position is a local minima. 
 
@@ -439,7 +438,7 @@ def is_local_minima(y:np.ndarray, i:int)->bool:
     return (y[i - 1] > y[i]) & (y[i + 1] > y[i])
 
 
-@nb.njit
+@njit
 def truncate(array:np.ndarray, intensity_profile:np.ndarray, seedpos:int, iso_split_level:float)->np.ndarray:
     """Function to truncate an intensity profile around its seedposition.
 
@@ -473,12 +472,7 @@ def truncate(array:np.ndarray, intensity_profile:np.ndarray, seedpos:int, iso_sp
 
     return array
 
-# %% ../nbs/04_feature_finding.ipynb 37
-from .chem import mass_to_dist
-from .constants import averagine_aa, isotopes, Isotope
-from numba.typed import Dict
-
-@nb.njit
+@njit
 def check_averagine(stats:np.ndarray, pattern:np.ndarray, charge:int, averagine_aa:Dict, isotopes:Dict)->float:
     """Function to compare a pattern to an averagine model.
 
@@ -503,7 +497,7 @@ def check_averagine(stats:np.ndarray, pattern:np.ndarray, charge:int, averagine_
 
     return cosine_averagine(int_one, int_two, spec_one, spec_two)
 
-@nb.njit
+@njit
 def pattern_to_mz(stats:np.ndarray, pattern:np.ndarray, charge:int)-> (np.ndarray, np.ndarray):
     """Function to calculate masses and intensities from pattern for a given charge.
 
@@ -532,7 +526,7 @@ def pattern_to_mz(stats:np.ndarray, pattern:np.ndarray, charge:int)-> (np.ndarra
 
     return masses, intensity
 
-@nb.njit
+@njit
 def cosine_averagine(int_one:np.ndarray, int_two:np.ndarray, spec_one:np.ndarray, spec_two:np.ndarray)-> float:
     """Calculate the cosine correlation of two hills. 
 
@@ -566,7 +560,7 @@ def cosine_averagine(int_one:np.ndarray, int_two:np.ndarray, spec_one:np.ndarray
 
 
 
-@nb.njit
+@njit
 def int_list_to_array(numba_list:List)->np.ndarray:
     """Numba compatbilte function to convert a numba list with integers to a numpy array
 
@@ -584,9 +578,8 @@ def int_list_to_array(numba_list:List)->np.ndarray:
 
     return array
 
-M_PROTON = mass_dict['Proton']
 
-@nb.njit
+@njit
 def mz_to_mass(mz:float, charge:int)->float:
     """Function to calculate the mass from a mz value.
 
@@ -607,8 +600,7 @@ def mz_to_mass(mz:float, charge:int)->float:
 
     return mass
 
-# %% ../nbs/04_feature_finding.ipynb 40
-@nb.njit
+@njit
 def isolate_isotope_pattern(pre_pattern:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, stats:np.ndarray, sortindex_:np.ndarray, iso_mass_range:float, charge_range:List, averagine_aa:Dict, isotopes:Dict, iso_n_seeds:int, cc_cutoff:float, iso_split_level:float)->(np.ndarray, int):
     """Isolate isotope patterns.
 
@@ -679,8 +671,6 @@ def isolate_isotope_pattern(pre_pattern:np.ndarray, hill_ptrs:np.ndarray, hill_d
 
     return champion_trace, champion_charge
 
-# %% ../nbs/04_feature_finding.ipynb 42
-from numba.typed import List
 from typing import Callable, Union
 
 def get_isotope_patterns(pre_isotope_patterns:list, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, stats:np.ndarray, sortindex_:np.ndarray,  averagine_aa:Dict, isotopes:Dict, iso_charge_min:int = 1, iso_charge_max:int = 6, iso_mass_range:float = 5, iso_n_seeds:int = 100, cc_cutoff:float=0.6, iso_split_level:float = 1.3, callback:Union[Callable, None]=None) -> (np.ndarray, np.ndarray, np.ndarray):
@@ -760,8 +750,7 @@ def get_isotope_patterns(pre_isotope_patterns:list, hill_ptrs:np.ndarray, hill_d
 
     return iso_patterns, iso_idx, np.array(isotope_charges)
 
-# %% ../nbs/04_feature_finding.ipynb 43
-@alphapept.performance.performance_function(compilation_mode="numba-multithread")
+@threadpool
 def report_(idx:np.ndarray, isotope_charges:list, isotope_patterns:list, iso_idx:np.ndarray, stats:np.ndarray, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, rt_:np.ndarray, rt_idx:np.ndarray, results:np.ndarray, lookup_idx:np.ndarray):
     """Function to extract summary statstics from a list of isotope patterns and charges.
     
@@ -891,8 +880,6 @@ def report_(idx:np.ndarray, isotope_charges:list, isotope_patterns:list, iso_idx
 
     results[idx,:] = np.array([mz, mz_std, mz_most_abundant, charge, rt_start, rt_apex, rt_end, fwhm, n_isotopes, mass, ms1_int_sum_apex, ms1_int_sum_area, ms1_int_max_apex, ms1_int_max_area])
 
-# %% ../nbs/04_feature_finding.ipynb 44
-import pandas as pd
 
 def feature_finder_report(query_data:dict, isotope_patterns:list, isotope_charges:list, iso_idx:np.ndarray, stats:np.ndarray, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray)->pd.DataFrame:
     """Creates a report dataframe with summary statistics of the found isotope patterns.

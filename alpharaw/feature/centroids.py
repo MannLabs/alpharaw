@@ -1,13 +1,13 @@
 
 import numpy as np
-from alpharaw.feature.performance import performance_function
+from alphatims.utils import threadpool
 
-@performance_function
+@threadpool
 def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connections:np.ndarray, scores:np.ndarray, centroids:np.ndarray, max_gap:int, centroid_tol:float):
     """Connect centroids.
 
     Args:
-        x (np.ndarray): Index to datapoint. Note that this using the performance_function, so one passes an ndarray.
+        x (np.ndarray): Index to datapoint. Note that this using the threadpool, so one passes an ndarray.
         row_borders (np.ndarray): Row borders of the centroids array.
         connections (np.ndarray): Connections matrix to store the connections
         scores (np.ndarray):  Score matrix to store the connections
@@ -89,7 +89,7 @@ def find_centroid_connections(rowwise_peaks:np.ndarray, row_borders:np.ndarray, 
 
     return from_r, from_c, to_r, to_c, score_median, score_std
 
-@performance_function
+@threadpool
 def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndarray, to_r:np.ndarray, to_c:np.ndarray, row_borders:np.ndarray, out_from_idx:np.ndarray, out_to_idx:np.ndarray):
     """Convert integer indices of a matrix to coordinates.
 
@@ -117,7 +117,7 @@ def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndar
         start_index_f = row_borders[row - 1]
     out_to_idx[x] = start_index_f + col
 
-@performance_function
+@threadpool
 def eliminate_overarching_vertex(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray):
     """Eliminate overacrhing vertex.
 
@@ -174,70 +174,3 @@ def connect_centroids(rowwise_peaks:np.ndarray, row_borders:np.ndarray, centroid
 
     del from_r, from_c, to_r, to_c, relavent_idx
     return from_idx, to_idx, score_median, score_std
-
-
-@performance_function
-def path_finder(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, forward:np.ndarray, backward:np.ndarray):
-    """Extracts path information and writes to path matrix.
-
-    Args:
-        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
-        from_idx (np.ndarray): Array containing from indices.
-        to_idx (np.ndarray): Array containing to indices.
-        forward (np.ndarray): Array to report forward connection.
-        backward (np.ndarray): Array to report backward connection.
-    """
-
-    fr = from_idx[x]
-    to =  to_idx[x]
-
-    forward[fr] = to
-    backward[to] = fr
-
-@performance_function
-def find_path_start(x:np.ndarray, forward:np.ndarray, backward:np.ndarray, path_starts:np.ndarray):
-    """Function to find the start of a path.
-
-    Args:
-        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
-        forward (np.ndarray):  Array to report forward connection.
-        backward (np.ndarray):  Array to report backward connection.
-        path_starts (np.ndarray): Array to report path starts.
-    """
-    if forward[x] > -1 and backward[x] == -1:
-        path_starts[x] = 0
-
-@performance_function
-def find_path_length(x:np.ndarray, path_starts:np.ndarray, forward:np.ndarray, path_cnt:np.ndarray):
-    """Function to extract the length of a path.
-
-    Args:
-        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
-        path_starts (np.ndarray): Array that stores the starts of the paths.
-        forward (np.ndarray): Array that stores forward information.
-        path_cnt (np.ndarray): Reporting array to count the paths.
-    """    
-    ctr = 1
-    idx = path_starts[x]
-    while forward[idx] > -1:
-        ctr += 1
-        idx = forward[idx]
-    path_cnt[x] = ctr
-
-@performance_function
-def fill_path_matrix(x:np.ndarray, path_start:np.ndarray, forwards:np.ndarray, out_hill_data:np.ndarray, out_hill_ptr:np.ndarray):
-    """Function to fill the path matrix.
-
-    Args:
-        x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
-        path_starts (np.ndarray): Array that stores the starts of the paths.
-        forwards (np.ndarray): Forward array.
-        out_hill_data (np.ndarray): Array containing the indices to hills.
-        out_hill_ptr (np.ndarray): Array containing the bounds to out_hill_data.
-    """
-    path_position = 0
-    idx = path_start[x]
-    while idx > -1:
-        out_hill_data[out_hill_ptr[x] + path_position] = idx
-        idx = forwards[idx]
-        path_position += 1
