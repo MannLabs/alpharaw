@@ -10,7 +10,7 @@ from numba.typed import Dict
 #TODO: Move hardcoded constants
 #TODO: REmove netowrkx dependency
 
-from alpharaw.feature.chem import maximum_offset, DELTA_M, DELTA_S, M_PROTON, averagine_aa, isotopes, Isotope
+from alpharaw.feature.chem import mass_to_dist, maximum_offset, DELTA_M, DELTA_S, M_PROTON, averagine_aa, isotopes, Isotope
 
 @njit
 def check_isotope_pattern(mass1:float, mass2:float, delta_mass1:float, delta_mass2:float, charge:int, iso_mass_range:int = 5)-> bool:
@@ -915,3 +915,25 @@ def feature_finder_report(query_data:dict, isotope_patterns:list, isotope_charge
     df.sort_values(['rt_start','mz'])
 
     return df, lookup_idx
+
+def get_stats(isotope_patterns, iso_idx, stats):
+    columns = ['mz_average','delta_m','int_sum','int_area','rt_min','rt_max']
+    
+    stats_idx = np.zeros(iso_idx[-1], dtype=np.int64)
+    stats_map = np.zeros(iso_idx[-1], dtype=np.int64)
+
+    start_ = 0
+    end_ = 0 
+    
+    for idx in range(len(iso_idx)-1):
+        k = isotope_patterns[iso_idx[idx]:iso_idx[idx+1]]
+        end_ += len(k)
+        stats_idx[start_:end_] = k
+        stats_map[start_:end_] = idx
+        start_ = end_
+        
+    k = pd.DataFrame(stats[stats_idx], columns=columns)
+
+    k['feature_id'] = stats_map
+        
+    return k 

@@ -1,6 +1,7 @@
 import numpy as np
 from alphatims.utils import threadpool
 from numba import njit
+from alpharaw.feature.centroids import connect_centroids
 
 @threadpool
 def path_finder(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, forward:np.ndarray, backward:np.ndarray):
@@ -137,7 +138,7 @@ def extract_hills(query_data:dict, max_gap:int, centroid_tol:float)-> (np.ndarra
 
     rowwise_peaks = indices[1:] - indices[:-1]
     row_borders = indices[1:]
-
+    
     from_idx, to_idx, score_median, score_std = connect_centroids(rowwise_peaks, row_borders, mass_data, max_gap, centroid_tol)
 
     hill_ptrs, hill_data, path_node_cnt = get_hills(mass_data, from_idx, to_idx)

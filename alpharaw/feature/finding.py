@@ -2,17 +2,20 @@ import pandas as pd
 import numpy as np
 import numba
 
-from alphapept.settings import load_settings
-from alphapept.paths import DEFAULT_SETTINGS_PATH
-from alphapept.constants import averagine_aa, isotopes
+from alpharaw.feature.chem import averagine_aa, isotopes, maximum_offset
+from alpharaw.feature.hills import extract_hills, remove_duplicate_hills, split_hills, filter_hills, get_hill_data
+from alpharaw.feature.isotope_pattern import get_pre_isotope_patterns, get_isotope_patterns, feature_finder_report, get_stats
 
 import logging
+
+
 
 def find(spectrum_df, peak_df, centroid_tol=8, max_gap=2,
           hill_length_min=3, hill_split_level=1.3, iso_split_level=1.3,
             hill_smoothing=1, hill_check_large=40, iso_charge_min=1, iso_charge_max=6,
               iso_n_seeds=100, hill_nboot_max=300, hill_nboot=150, iso_mass_range=5,
                 iso_corr_min=0.6)->pd.DataFrame:
+    
     logging.info("FF started")
     query_data = df_to_ap_query_data(spectrum_df, peak_df)
 
