@@ -19,6 +19,9 @@ from alphabase.peptide.fragment import (
 
 from alphabase.constants.modification import MOD_MASS
 from alphabase.constants.atom import MASS_ISOTOPE
+from alphabase.constants._const import (
+    PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
+)
 
 def make_psm_plot_df_for_peptide(
     spec_masses:np.ndarray,
@@ -291,25 +294,32 @@ def translate_precursor_fragment_df_to_plot_df(
     flat_columns = [
         'type','number','loss_type','charge'
     ]
-    precursor_df, fragment_df = flatten_fragments(
-        precursor_df, fragment_mz_df, 
-        fragment_intensity_df,
-        min_fragment_intensity=min_frag_intensity,
-        custom_columns=flat_columns+["position"],
-    )
+    if len(fragment_mz_df) > 0:
+        precursor_df, fragment_df = flatten_fragments(
+            precursor_df, fragment_mz_df, 
+            fragment_intensity_df,
+            min_fragment_intensity=min_frag_intensity,
+            custom_columns=flat_columns+["position"],
+        )
 
-    fragment_df.rename(
-        columns={"position":"fragment_site"},
-        inplace=True
-    )
+        fragment_df.rename(
+            columns={"position":"fragment_site"},
+            inplace=True
+        )
 
-    fragment_df["ion_name"] = fragment_df[flat_columns].apply(
-        lambda x: 
-            chr(x[0])+str(x[1])
-            +(f"{-x[2]:+}" if x[2]!=0 else "")
-            +"+"*x[3],
-        axis=1
-    )
+        fragment_df["ion_name"] = fragment_df[flat_columns].apply(
+            lambda x: 
+                chr(x[0])+str(x[1])
+                +(f"{-x[2]:+}" if x[2]!=0 else "")
+                +"+"*x[3],
+            axis=1
+        )
+    else:
+        fragment_df = pd.DataFrame(
+            columns = [
+                "mz","intensity","type","fragment_site","ion_name"
+            ]+flat_columns
+        )
 
     isotope_names = [col for col in precursor_df.columns if col.startswith("i_")]
     if len(isotope_names) > 0:
@@ -328,12 +338,12 @@ def translate_precursor_fragment_df_to_plot_df(
             )
             ion_names.append(f"M{i-mono_idx}")
         isotope_df["mz"] = np.array(
-            isotope_mzs, dtype=fragment_mz_df.values.dtype
+            isotope_mzs, dtype=PEAK_MZ_DTYPE
         )
         if "intensity" in fragment_df.columns:
             isotope_df["intensity"] = precursor_df[isotope_names].values.astype(
-                fragment_intensity_df.values.dtype
-            )
+                PEAK_INTENSITY_DTYPE
+            )[0,:]
         isotope_df["ion_name"] = ion_names
         isotope_df["fragment_site"] = -1
         fragment_df = pd.concat((fragment_df, isotope_df), ignore_index=True)
