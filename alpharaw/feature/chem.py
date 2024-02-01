@@ -73,8 +73,7 @@ def test_isotope():
     assert np.allclose(isotopes["C"].intensities[1], 0.0107)
     assert np.allclose(isotopes["C"].intensities[2], 0)
     
-test_isotope()
-
+#test_isotope()
 
 
 spec = [
@@ -247,7 +246,7 @@ def test_dict_to_dist():
     
     assert rmse < 0.05
     
-test_dict_to_dist()
+#test_dict_to_dist()
      
 
 
@@ -299,7 +298,7 @@ def test_get_average_formula():
         )
         assert np.abs(mass - molecule_mass) < isotopes["H"].m0
         
-test_get_average_formula()
+#test_get_average_formula()
      
 ISOTOPE_MASS = DELTA_M
 @njit
