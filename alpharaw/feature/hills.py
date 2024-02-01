@@ -3,7 +3,8 @@ from alphatims.utils import threadpool
 from numba import njit
 from alpharaw.feature.centroids import connect_centroids
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def path_finder(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, forward:np.ndarray, backward:np.ndarray):
     """Extracts path information and writes to path matrix.
 
@@ -21,7 +22,8 @@ def path_finder(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray, forward:np
     forward[fr] = to
     backward[to] = fr
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def find_path_start(x:np.ndarray, forward:np.ndarray, backward:np.ndarray, path_starts:np.ndarray):
     """Function to find the start of a path.
 
@@ -34,7 +36,8 @@ def find_path_start(x:np.ndarray, forward:np.ndarray, backward:np.ndarray, path_
     if forward[x] > -1 and backward[x] == -1:
         path_starts[x] = 0
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def find_path_length(x:np.ndarray, path_starts:np.ndarray, forward:np.ndarray, path_cnt:np.ndarray):
     """Function to extract the length of a path.
 
@@ -51,7 +54,8 @@ def find_path_length(x:np.ndarray, path_starts:np.ndarray, forward:np.ndarray, p
         idx = forward[idx]
     path_cnt[x] = ctr
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def fill_path_matrix(x:np.ndarray, path_start:np.ndarray, forwards:np.ndarray, out_hill_data:np.ndarray, out_hill_ptr:np.ndarray):
     """Function to fill the path matrix.
 
@@ -211,6 +215,7 @@ def fast_minima(y:np.ndarray)->np.ndarray:
 
 # %% ../nbs/04_feature_finding.ipynb 15
 @threadpool
+@njit
 def split(k:np.ndarray, hill_ptrs:np.ndarray, int_data:np.ndarray, hill_data:np.ndarray, splits:np.ndarray, hill_split_level:float, window:int):
     """Function to split hills.
 
@@ -295,6 +300,7 @@ def split_hills(hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray,
 
 # %% ../nbs/04_feature_finding.ipynb 17
 @threadpool
+@njit
 def check_large_hills(idx:np.ndarray, large_peaks:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, to_remove:np.ndarray, large_peak:int = 40, hill_peak_factor:float = 2, window:int=1):
     """Function to check large hills and flag them for removal.
 
@@ -377,6 +383,7 @@ def filter_hills(hill_data:np.ndarray, hill_ptrs:np.ndarray, int_data:np.ndarray
 
 # %% ../nbs/04_feature_finding.ipynb 20
 @threadpool
+@njit
 def hill_stats(idx:np.ndarray, hill_range:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, mass_data:np.ndarray, rt_:np.ndarray, rt_idx:np.ndarray, stats:np.ndarray, hill_nboot_max:int, hill_nboot:int):
     """Function to calculate hill stats.
 

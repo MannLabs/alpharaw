@@ -324,5 +324,5 @@ def mass_to_dist(molecule_mass: float, averagine_aa:Dict, isotopes:Dict)-> (np.n
 
     return masses, ints
     
-print(mass_to_dist(300, averagine_aa, isotopes))
+#print(mass_to_dist(300, averagine_aa, isotopes))
      

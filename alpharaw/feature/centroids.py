@@ -1,8 +1,10 @@
 
 import numpy as np
+from numba import njit
 from alphatims.utils import threadpool
 
 @threadpool
+@njit
 def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connections:np.ndarray, scores:np.ndarray, centroids:np.ndarray, max_gap:int, centroid_tol:float):
     """Connect centroids.
 
@@ -89,7 +91,8 @@ def find_centroid_connections(rowwise_peaks:np.ndarray, row_borders:np.ndarray, 
 
     return from_r, from_c, to_r, to_c, score_median, score_std
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndarray, to_r:np.ndarray, to_c:np.ndarray, row_borders:np.ndarray, out_from_idx:np.ndarray, out_to_idx:np.ndarray):
     """Convert integer indices of a matrix to coordinates.
 
@@ -117,7 +120,8 @@ def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndar
         start_index_f = row_borders[row - 1]
     out_to_idx[x] = start_index_f + col
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def eliminate_overarching_vertex(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray):
     """Eliminate overacrhing vertex.
 

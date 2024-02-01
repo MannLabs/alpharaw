@@ -108,7 +108,8 @@ def extract_edge(stats:np.ndarray, idxs_upper:np.ndarray, runner:int, max_index:
 
     return edges
 
-@threadpool
+@threadpool(include_progress_callback=False)
+@njit
 def edge_correlation(idx:np.ndarray, to_keep:np.ndarray, sortindex_:np.ndarray, pre_edges:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, scan_idx:np.ndarray, cc_cutoff:float):
     """Correlates two edges and flag them it they should be kept.
 
@@ -751,6 +752,7 @@ def get_isotope_patterns(pre_isotope_patterns:list, hill_ptrs:np.ndarray, hill_d
     return iso_patterns, iso_idx, np.array(isotope_charges)
 
 @threadpool
+@njit
 def report_(idx:np.ndarray, isotope_charges:list, isotope_patterns:list, iso_idx:np.ndarray, stats:np.ndarray, sortindex_:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, rt_:np.ndarray, rt_idx:np.ndarray, results:np.ndarray, lookup_idx:np.ndarray):
     """Function to extract summary statstics from a list of isotope patterns and charges.
     
