@@ -214,7 +214,7 @@ def fast_minima(y:np.ndarray)->np.ndarray:
     return minima
 
 # %% ../nbs/04_feature_finding.ipynb 15
-@threadpool
+@threadpool(include_progress_callback=False)
 @njit
 def split(k:np.ndarray, hill_ptrs:np.ndarray, int_data:np.ndarray, hill_data:np.ndarray, splits:np.ndarray, hill_split_level:float, window:int):
     """Function to split hills.
@@ -299,7 +299,7 @@ def split_hills(hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray,
     return hill_ptrs
 
 # %% ../nbs/04_feature_finding.ipynb 17
-@threadpool
+@threadpool(include_progress_callback=False)
 @njit
 def check_large_hills(idx:np.ndarray, large_peaks:np.ndarray, hill_ptrs:np.ndarray, hill_data:np.ndarray, int_data:np.ndarray, to_remove:np.ndarray, large_peak:int = 40, hill_peak_factor:float = 2, window:int=1):
     """Function to check large hills and flag them for removal.

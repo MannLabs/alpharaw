@@ -2,15 +2,49 @@ from numba import njit
 from numba.typed import List
 import numpy as np
 from alphatims.utils import threadpool
-import networkx as nx 
 from typing import Callable, Union
 import pandas as pd
 from numba.typed import Dict
 
 #TODO: Move hardcoded constants
-#TODO: REmove netowrkx dependency
 
 from alpharaw.feature.chem import mass_to_dist, maximum_offset, DELTA_M, DELTA_S, M_PROTON, averagine_aa, isotopes, Isotope
+
+def find_connected_components(edges, min_size=2):
+    num_nodes = np.max(edges) + 1
+    parent = np.arange(num_nodes)
+
+    def find(x):
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(x, y):
+        rootX = find(x)
+        rootY = find(y)
+        if rootX != rootY:
+            parent[rootY] = rootX
+
+    for edge in edges:
+        union(edge[0], edge[1])
+
+    for i in range(num_nodes):
+        find(i)
+
+    components = {}
+    for node in range(num_nodes):
+        root = find(node)
+        if root in components:
+            components[root].append(node)
+        else:
+            components[root] = [node]
+
+    pre_isotope_patterns = sorted(
+        [sorted(component) for component in components.values() if len(component) >= min_size],
+        key=len, reverse=True
+    )
+
+    return pre_isotope_patterns
 
 @njit
 def check_isotope_pattern(mass1:float, mass2:float, delta_mass1:float, delta_mass2:float, charge:int, iso_mass_range:int = 5)-> bool:
@@ -174,14 +208,7 @@ def get_pre_isotope_patterns(stats:np.ndarray, idxs_upper:np.ndarray, sortindex_
     edge_correlation(range(len(to_keep)), to_keep, sortindex_, pre_edges, hill_ptrs, hill_data, int_data, scan_idx, cc_cutoff)
     edges = pre_edges[to_keep.nonzero()]
 
-    G2 = nx.Graph()
-    for i in range(len(edges)):
-        G2.add_edge(edges[i][0], edges[i][1])
-
-    pre_isotope_patterns = [
-        sorted(list(c))
-        for c in sorted(nx.connected_components(G2), key=len, reverse=True)
-    ]
+    pre_isotope_patterns = find_connected_components(edges)
 
     return pre_isotope_patterns
 
