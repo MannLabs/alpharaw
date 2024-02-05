@@ -333,7 +333,7 @@ class ThermoRawData(MSData_Base):
             )
             peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
             peak_indices[0] = 0
-            peak_indices[1:] = output_dict["_peak_indices"]
+            peak_indices[1:] = np.cumsum(output_dict["_peak_indices"])
             output_dict["peak_indices"] = peak_indices
         rawfile.Close()
 
