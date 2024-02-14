@@ -149,11 +149,13 @@ def _import_batch(
             )
         if "activation" in auxiliary_dict:
             auxiliary_dict["activation"].append(
-                rawfile.GetActivationTypeForScanNum(i)
+                rawfile.GetActivationTypeForScanNum(i) 
+                if ms_order > 1 else "MS1"
             )
         if "activation_id" in auxiliary_dict:
             auxiliary_dict["activation_id"].append(
                 rawfile.GetActivationIDForScanNum(i)
+                if ms_order > 1 else 255
             )
         if "analyzer" in auxiliary_dict:
             auxiliary_dict["analyzer"].append(

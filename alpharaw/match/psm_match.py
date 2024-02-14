@@ -287,6 +287,7 @@ class PepSpecMatch:
                 self._ms_file_dict[raw_name], self._ms_file_type,
                 process_count=self.ms_loader_thread_num,
             )
+            if raw_data is None: return
 
             psm_df_one_raw = self._add_missing_columns_to_psm_df(
                 psm_df_one_raw, raw_data
@@ -313,6 +314,7 @@ class PepSpecMatch:
             )
         else:
             print(f"`{raw_name}` is not found in ms_file_dict.")
+            return
         return psm_df_one_raw
     
     def match_ms2_multi_raw(self,
@@ -376,7 +378,8 @@ class PepSpecMatch:
         for raw_name, df_group in tqdm.tqdm(
             self.psm_df.groupby('raw_name')
         ):
-            psm_df_list.append(self._match_ms2_one_raw_numba(raw_name, df_group))
+            _df = self._match_ms2_one_raw_numba(raw_name, df_group)
+            if _df is not None: psm_df_list.append(_df)
         # else:
         #     with mp.get_context("spawn").Pool(processes=process_num) as p:
         #         df_groupby = self.psm_df.groupby('raw_name')
@@ -453,6 +456,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 self._ms_file_dict[raw_name], self._ms_file_type,
                 process_count=self.ms_loader_thread_num
             )
+            if raw_data is None: return
 
             psm_origin_len = len(psm_df_one_raw)//self.max_spec_per_query
             
@@ -498,6 +502,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 )
         else:
             print(f"`{raw_name}` is not found in ms_file_dict.")
+            return
         return psm_df_one_raw
 
     def match_ms2_multi_raw(self, 
@@ -602,6 +607,9 @@ def load_ms_data(
         raw_data = ms_reader_provider.get_reader(
             ms_file_type, process_count=process_count
         )
+        if raw_data is None:
+            print(f"Raw file type '{ms_file_type}' is not registered in 'ms_reader_provider'")
+            return
         raw_data.import_raw(ms_file)
         return raw_data
 
