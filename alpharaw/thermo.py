@@ -17,6 +17,7 @@ __trailer_extra_list__ = [
     "funnel_rf_level", "faims_cv",
     "activation", "analyzer",
     "activation_id", "analyzer_id",
+    "scan_event_string",
 ]
 __auxiliary_item_dtypes__ = {
     "injection_time": np.float32, 
@@ -33,6 +34,7 @@ __auxiliary_item_dtypes__ = {
     "detector_id": np.uint8, 
     "activation_id": np.uint8, 
     "analyzer_id": np.uint8,
+    "scan_event_string": "U",
 }
 
 def _import_batch(
@@ -164,6 +166,10 @@ def _import_batch(
         if "analyzer_id" in auxiliary_dict:
             auxiliary_dict["analyzer_id"].append(
                 rawfile.GetMassAnalyzerIDForScanNum(i)
+            )
+        if "scan_event_string" in auxiliary_dict:
+            auxiliary_dict["scan_event_string"].append(
+                rawfile.GetScanEventStringForScanNum(i)
             )
 
         if ms_order == 1:
