@@ -109,8 +109,9 @@ class RawFileReader(object):
             'NETD': 9,
             'NPTR': 10,
             'UVPD': 11,
-            'ETHCD': 1001, # not Thermo's build-in activation types
-            'ETCID': 1002, # not Thermo's build-in activation types
+            'ETHCD': 201, # not Thermo's build-in activation types
+            'ETCID': 202, # not Thermo's build-in activation types
+            'MS1': 255,
             0: 'CID',
             1: 'MPD',
             2: 'ECD',
@@ -123,8 +124,9 @@ class RawFileReader(object):
             9: 'NETD',
             10: 'NPTR',
             11: 'UVPD',
-            1001: 'ETHCD', # not Thermo's build-in activation types
-            1002: 'ETCID', # not Thermo's build-in activation types
+            201: 'ETHCD', # not Thermo's build-in activation types
+            202: 'ETCID', # not Thermo's build-in activation types
+            255: 'MS1',
         })
 
     detectorType = {'Valid': 0,

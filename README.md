@@ -48,13 +48,15 @@ Pythonnet must be installed to access Thermo or Sciex raw data.
 
 Pythonnet will be automatically installed via pip.
 
-#### For Linux
+#### For Linux (or MacOS without M1/M2/M3/..., not tested yet)
 
-1.  Install Mono from mono-project website [Mono
-    Linux](https://www.mono-project.com/download/stable/#download-lin).
-    NOTE, the installed mono version should be at least 6.10, which
-    requires you to add the ppa to your trusted sources!
+1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
+
+If `conda install mono` does not work, we can install Mono from mono-project website [Mono
+Linux](https://www.mono-project.com/download/stable/#download-lin).
+NOTE, the installed mono version should be at least 6.10, which
+requires you to add the ppa to your trusted sources!
 
 #### For MacOS including M1/M2 platform
 

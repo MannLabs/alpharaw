@@ -17,6 +17,7 @@ __trailer_extra_list__ = [
     "funnel_rf_level", "faims_cv",
     "activation", "analyzer",
     "activation_id", "analyzer_id",
+    "scan_event_string",
 ]
 __auxiliary_item_dtypes__ = {
     "injection_time": np.float32, 
@@ -33,6 +34,7 @@ __auxiliary_item_dtypes__ = {
     "detector_id": np.uint8, 
     "activation_id": np.uint8, 
     "analyzer_id": np.uint8,
+    "scan_event_string": "U",
 }
 
 def _import_batch(
@@ -149,11 +151,13 @@ def _import_batch(
             )
         if "activation" in auxiliary_dict:
             auxiliary_dict["activation"].append(
-                rawfile.GetActivationTypeForScanNum(i)
+                rawfile.GetActivationTypeForScanNum(i) 
+                if ms_order > 1 else "MS1"
             )
         if "activation_id" in auxiliary_dict:
             auxiliary_dict["activation_id"].append(
                 rawfile.GetActivationIDForScanNum(i)
+                if ms_order > 1 else 255
             )
         if "analyzer" in auxiliary_dict:
             auxiliary_dict["analyzer"].append(
@@ -162,6 +166,10 @@ def _import_batch(
         if "analyzer_id" in auxiliary_dict:
             auxiliary_dict["analyzer_id"].append(
                 rawfile.GetMassAnalyzerIDForScanNum(i)
+            )
+        if "scan_event_string" in auxiliary_dict:
+            auxiliary_dict["scan_event_string"].append(
+                rawfile.GetScanEventStringForScanNum(i)
             )
 
         if ms_order == 1:
@@ -333,7 +341,7 @@ class ThermoRawData(MSData_Base):
             )
             peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
             peak_indices[0] = 0
-            peak_indices[1:] = output_dict["_peak_indices"]
+            peak_indices[1:] = np.cumsum(output_dict["_peak_indices"])
             output_dict["peak_indices"] = peak_indices
         rawfile.Close()
 
