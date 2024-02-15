@@ -4,6 +4,9 @@ import pandas as pd
 import tqdm
 from typing import Union, Tuple
 
+from alpharaw import register_readers
+register_readers()
+
 from alphabase.peptide.fragment import (
     create_fragment_mz_dataframe, 
     get_charged_frag_types,
