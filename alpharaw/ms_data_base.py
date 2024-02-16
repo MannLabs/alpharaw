@@ -71,7 +71,7 @@ class MSData_Base:
         self.peak_df:pd.DataFrame = pd.DataFrame()
         self._raw_file_path = ''
         self.centroided = centroided
-        self.save_as_hdf = save_as_hdf
+        self._save_as_hdf = save_as_hdf
         self.creation_time = ''
         self.file_type = ''
         self.instrument = 'none'
@@ -99,7 +99,7 @@ class MSData_Base:
         self._set_dataframes(raw_data)
         self._check_df()
 
-        if self.save_as_hdf:
+        if self._save_as_hdf:
             self.save_hdf(_path+'.hdf')
 
     def load_raw(self, _path:str):
