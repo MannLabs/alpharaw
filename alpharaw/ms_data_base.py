@@ -167,9 +167,12 @@ class MSData_Base:
 
         for col, val in raw_data.items():
             if col in self.column_dtypes:
-                self.spectrum_df[col] = np.array(
-                    val, dtype=self.column_dtypes[col]
-                )
+                if self.column_dtypes[col] == "O":
+                    self.spectrum_df[col] = list(val)
+                else:
+                    self.spectrum_df[col] = np.array(
+                        val, dtype=self.column_dtypes[col]
+                    )
 
     def _read_creation_time(self, raw_data):
         pass

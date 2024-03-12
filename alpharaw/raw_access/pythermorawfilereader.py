@@ -292,6 +292,11 @@ class RawFileReader(object):
     def GetStatusLogForScanNum(self, scan):
         return self.GetStatusLogForRetentionTime(self.RTFromScanNum(scan))
 
+    def GetScanEventForScanNum(self, scanNumber):
+        return IScanEventBase(
+            self.source.GetScanEventForScanNumber(scanNumber)
+        )
+    
     def GetNumberOfMassRangesFromScanNum(self, scanNumber):
         """This function gets the number of MassRange data items in the scan."""
         return IScanEventBase(
