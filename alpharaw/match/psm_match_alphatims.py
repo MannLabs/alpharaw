@@ -98,7 +98,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
 
     def get_peak_df(self,
         precursor_mz:float,
-        rt:float,
+        rt_sec:float,
         im:float=0.0,
     )->pd.DataFrame:
         """
@@ -106,8 +106,8 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         ----------
         precursor_mz : float
             Precursor m/z value
-        rt : float
-            RT value in minutes
+        rt_sec : float
+            RT value in seconds
         im : float, optional
             Ion mobility, by default 0.0
 
@@ -116,7 +116,6 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         pd.DataFrame
             peak_df in alphatims DF format
         """
-        rt_sec = rt*60
         rt_slice = slice(
             rt_sec-self.rt_sec_tol_to_slice_ms2,
             rt_sec+self.rt_sec_tol_to_slice_ms2,
@@ -176,7 +175,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     def get_peaks(
         self,
         precursor_mz:float,
-        rt:float,
+        rt_sec:float,
         im:float=0.0,
     )->tuple:
         """
@@ -184,8 +183,8 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         ----------
         precursor_mz : float
             Precursor m/z value
-        rt : float
-            RT value in minutes
+        rt_sec : float
+            RT value in seconds
         im : float, optional
             Ion mobility, by default 0.0
 
@@ -195,7 +194,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             np.ndarray: peak m/z values
             np.ndarray: peak intensity values
         """
-        spec_df = self.get_peak_df(precursor_mz, rt, im)
+        spec_df = self.get_peak_df(precursor_mz, rt_sec, im)
         spec_df = spec_df.sort_values('mz_values').reset_index(drop=True)
         return (
             spec_df.mz_values.values, 
