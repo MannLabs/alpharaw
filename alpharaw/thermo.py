@@ -134,7 +134,13 @@ def _import_batch(
                     float(energy_ev)
                 )
             else:
-                auxiliary_dict["energy_ev"].append(0)
+                energy_ev = trailer_data["HCD Energy eV:"]
+                if energy_ev:
+                    auxiliary_dict["energy_ev"].append(
+                            float(energy_ev)
+                    )
+                else:
+                    auxiliary_dict["energy_ev"].append(0)
         if "injection_optics_settling_time" in auxiliary_dict:
             auxiliary_dict["injection_optics_settling_time"].append(
                 float(trailer_data[
