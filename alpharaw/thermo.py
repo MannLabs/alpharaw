@@ -241,12 +241,13 @@ def _import_batch(
             )
         if "energy_ev" in auxiliary_dict:
             energy_ev = trailer_data["HCD Energy V:"]
-            if energy_ev:
-                auxiliary_dict["energy_ev"].append(
-                    float(energy_ev)
-                )
-            else:
-                auxiliary_dict["energy_ev"].append(0)
+            if not energy_ev:
+                energy_ev = trailer_data["HCD Energy eV:"]
+            if not energy_ev:
+                energy_ev = 0
+            auxiliary_dict["energy_ev"].append(
+                float(energy_ev)
+            )
         if "injection_optics_settling_time" in auxiliary_dict:
             auxiliary_dict["injection_optics_settling_time"].append(
                 float(trailer_data[
@@ -365,9 +366,9 @@ def _import_batch(
     return spec_dict
 
 def _get_mono_and_charge(trailer_data, scan_event):
-        mono = float(trailer_data['Monoisotopic M/Z:'].strip())
-        charge = int(trailer_data['Charge State:'].strip())
-        return mono, charge
+    mono = float(trailer_data['Monoisotopic M/Z:'].strip())
+    charge = int(trailer_data['Charge State:'].strip())
+    return mono, charge
 
 ms_reader_provider.register_reader("thermo", ThermoRawData)
 ms_reader_provider.register_reader("thermo_raw", ThermoRawData)
