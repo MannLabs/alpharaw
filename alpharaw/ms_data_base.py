@@ -71,7 +71,7 @@ class MSData_Base:
         self.peak_df:pd.DataFrame = pd.DataFrame()
         self._raw_file_path = ''
         self.centroided = centroided
-        self.save_as_hdf = save_as_hdf
+        self._save_as_hdf = save_as_hdf
         self.creation_time = ''
         self.file_type = ''
         self.instrument = 'none'
@@ -99,7 +99,7 @@ class MSData_Base:
         self._set_dataframes(raw_data)
         self._check_df()
 
-        if self.save_as_hdf:
+        if self._save_as_hdf:
             self.save_hdf(_path+'.hdf')
 
     def load_raw(self, _path:str):
@@ -167,9 +167,12 @@ class MSData_Base:
 
         for col, val in raw_data.items():
             if col in self.column_dtypes:
-                self.spectrum_df[col] = np.array(
-                    val, dtype=self.column_dtypes[col]
-                )
+                if self.column_dtypes[col] == "O":
+                    self.spectrum_df[col] = list(val)
+                else:
+                    self.spectrum_df[col] = np.array(
+                        val, dtype=self.column_dtypes[col]
+                    )
 
     def _read_creation_time(self, raw_data):
         pass

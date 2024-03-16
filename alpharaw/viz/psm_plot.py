@@ -375,6 +375,8 @@ class PeakPlot:
                 row=self.row,
                 col=self.col,
             )
+        else:
+            plot_df = plot_df.query('ion_name != "-"')
 
         matched_df = plot_df.query('ion_name != "-"')
         for color, df in matched_df.groupby("color"):

@@ -42,10 +42,10 @@ r'''
     if ctx.invoked_subcommand is None:
         click.echo(run.get_help(ctx))
 
-@run.command("parse", help="Convert raw files into alpharaw_hdf format.")
+@run.command("parse", help="Convert raw files into alpharaw hdf5 (.hdf) format.")
 @click.option(
     "--raw_type", type=str, default="thermo_raw",
-    show_default=True, help=f"Only `thermo_raw` is supported currently.",
+    show_default=True, help=f"Only `thermo_raw`, `sciex_wiff` is supported currently.",
 )
 @click.option(
     "--raw", multiple=True, default=[],
