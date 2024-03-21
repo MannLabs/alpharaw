@@ -42,7 +42,7 @@ def make_psm_plot_df_for_peptide(
     match_mode:typing.Literal["closest","highest"]="closest",
 )->pd.DataFrame:
     
-    plot_df = make_xic_plot_df_for_peptide(
+    plot_df = make_query_plot_df_for_peptide(
         sequence, mods, mod_sites, charge,
         rt_sec=rt_sec, mobility=mobility,
         charged_frag_types=charged_frag_types,
@@ -67,7 +67,7 @@ def make_psm_plot_df_for_peptide(
         match_mode = match_mode,    
     )
 
-def make_xic_plot_df_for_peptide(
+def make_query_plot_df_for_peptide(
     sequence: str,
     mods: str,
     mod_sites: str,
@@ -366,6 +366,10 @@ def translate_precursor_fragment_df_to_plot_df(
 
     if ms_level == 2:
         fragment_df["precursor_mz"] = precursor_df.precursor_mz.values[0]
+        for iso in isotope_names:
+            fragment_df[f"precursor_{iso}"] = precursor_df[iso].values[0]
+        if len(isotope_names) > 0:
+            fragment_df[f"precursor_mono_idx"] = precursor_df.mono_isotope_idx.values[0]
 
     return fragment_df
     
