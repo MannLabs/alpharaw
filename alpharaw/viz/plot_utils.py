@@ -33,6 +33,59 @@ alphatims_labels = {
     'im': "mobility_values",
 }
 
+
+def plot_line_raw(
+    tims_data:TimsTOF,
+    tims_raw_indices: np.ndarray,
+    tims_view_indices: np.array,
+    name: str,
+    legend_group:str,
+    marker_color: str,
+    view_dim:typing.Literal['rt','im']='rt', # or 'im'
+    intensity_scale:float=1.0,
+    rt_unit:str = "minute"
+):
+    """Plot an XIC as a lineplot.
+
+    Parameters
+    ----------
+    tims_data : alphatims.bruker.TimsTOF
+        An alphatims.bruker.TimsTOF data object.
+    selected_indices : np.ndarray
+        The raw indices of tims_data that are selected for this plot.
+    label : str
+        The label for the line plot.
+    remove_zeros : bool
+        If True, zeros are removed. Default: False.
+    trim : bool
+        If True, zeros on the left and right are trimmed. Default: True.
+
+    Returns
+    -------
+    go.Figure
+        the XIC line plot.
+    """
+
+    x_dimension = alphatims_labels[view_dim]
+
+    intensities = tims_data.bin_intensities(tims_raw_indices, [x_dimension])
+    if view_dim == 'rt': 
+        x_ticks = tims_data.rt_values[tims_view_indices]
+        intensities = intensities[tims_view_indices]
+        if rt_unit == "minute":
+            x_ticks /= 60.0
+    else: 
+        x_ticks = tims_data.mobility_values[tims_view_indices]
+        intensities = intensities[tims_view_indices]
+
+    return plot_line(
+        x_ticks, intensities*intensity_scale,
+        name=name, 
+        marker_color=marker_color,
+        legend_group=legend_group,
+        x_text=view_dim.upper(),
+    )
+
 def plot_line_fast(
     tims_data:TimsTOF,
     tims_raw_indices: np.ndarray,
@@ -91,7 +144,7 @@ def plot_line(
     name: str,
     marker_color: str,
     legend_group:str,
-    x_text: str = "RT (Sec)",
+    x_text: str = "RT",
     hovertemplate: str='%{text} <br><b>Intensity:</b> %{y}',
 ):
     return go.Scatter(
