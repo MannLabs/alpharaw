@@ -7,6 +7,59 @@ import os
 from typing import Tuple
 
 @numba.njit
+def match_batch_spec(
+    spec_idxes: np.ndarray,
+    peak_mzs: np.ndarray,
+    peak_intens: np.ndarray,
+    peak_start_idxes: np.ndarray,
+    peak_stop_idxes: np.ndarray,
+    query_mzs: np.ndarray,
+    query_mz_tols: np.ndarray,
+):
+    matched_mzs = np.zeros(
+        (len(spec_idxes), len(query_mzs)), dtype=peak_mzs.dtype
+    )
+    matched_intens = np.zeros(
+        (len(spec_idxes), len(query_mzs)), dtype=peak_intens.dtype
+    )
+
+    for i_spec,spec_idx in enumerate(spec_idxes):
+        cur_peak_mzs = peak_mzs[
+            peak_start_idxes[spec_idx]:peak_stop_idxes[spec_idx]
+        ]
+        cur_peak_intens = peak_intens[
+            peak_start_idxes[spec_idx]:peak_stop_idxes[spec_idx]
+        ]
+
+        idxes = np.searchsorted(cur_peak_mzs, query_mzs)
+
+        for i, idx in enumerate(idxes):
+            if idx == 0: 
+                if abs(query_mzs[i]-cur_peak_mzs[idx]) <= query_mz_tols[i]:
+                    matched_mzs[i_spec,i] = cur_peak_mzs[idx]
+                    matched_intens[i_spec,i] = cur_peak_intens[idx]
+            elif idx == len(cur_peak_mzs): 
+                if abs(query_mzs[i]-cur_peak_mzs[idx-1]) <= query_mz_tols[i]:
+                    matched_mzs[i_spec,i] = cur_peak_mzs[idx-1]
+                    matched_intens[i_spec,i] = cur_peak_intens[idx-1]
+            else:
+                left_dist = abs(query_mzs[i]-cur_peak_mzs[idx-1])
+                right_dist = abs(query_mzs[i]-cur_peak_mzs[idx])
+                if right_dist <= query_mz_tols[i] and left_dist <= query_mz_tols[i]:
+                    matched_mzs[i_spec,i] = (
+                        cur_peak_mzs[idx]*cur_peak_intens[idx] +
+                        cur_peak_mzs[idx-1]*cur_peak_intens[idx-1]
+                    )/(cur_peak_intens[idx]+cur_peak_intens[idx-1])
+                    matched_intens[i_spec,i] = cur_peak_intens[idx]+cur_peak_intens[idx-1]
+                elif left_dist <= query_mz_tols[i]:
+                    matched_mzs[i_spec,i] = cur_peak_mzs[idx-1]
+                    matched_intens[i_spec,i] = cur_peak_intens[idx-1]
+                elif right_dist <= query_mz_tols[i]:
+                    matched_mzs[i_spec,i] = cur_peak_mzs[idx]
+                    matched_intens[i_spec,i] = cur_peak_intens[idx]
+    return matched_mzs, matched_intens
+
+@numba.njit
 def match_closest_peaks(
     spec_mzs:np.ndarray,
     spec_intens:np.ndarray,
@@ -55,7 +108,6 @@ def match_closest_peaks(
                 closest_idx = _idx
         ret_indices[i] = closest_idx
     return ret_indices.reshape(query_mzs.shape)
-
 
 @numba.njit
 def match_highest_peaks(
@@ -146,10 +198,10 @@ def match_profile_peaks(
     query_left_mzs = mzs-query_mz_tols
     query_right_mzs = mzs+query_mz_tols
     idxes = np.searchsorted(spec_mzs, query_left_mzs)
-    first_indices = np.full_like(
+    match_start_indices = np.full_like(
         mzs, -1, dtype=np.int32
     )
-    last_indices = np.full_like(
+    match_stop_indices = np.full_like(
         mzs, -1, dtype=np.int32
     )
     for i,idx in enumerate(idxes):
@@ -159,17 +211,15 @@ def match_profile_peaks(
             elif spec_mzs[first_idx]>query_right_mzs[i]:
                 break
             else:
-                first_indices[i] = first_idx
-                if first_idx == len(spec_mzs)-1:
-                    last_indices[i] = first_idx
-                else:
-                    for last_idx in range(first_idx+1, len(spec_mzs)):
-                        if spec_mzs[last_idx]>query_right_mzs[i]:
-                            break
-                    last_indices[i] = last_idx-1
-                    break
+                match_start_indices[i] = first_idx
+                for last_idx in np.arange(first_idx+1, len(spec_mzs)):
+                    if spec_mzs[last_idx]>query_right_mzs[i]:
+                        match_stop_indices[i] = last_idx
+                        break
+                if match_stop_indices[i] == -1: 
+                    match_stop_indices[i] = len(spec_mzs)
+                break
     return (
-        first_indices.reshape(query_mzs.shape), 
-        last_indices.reshape(query_mzs.shape),
+        match_start_indices.reshape(query_mzs.shape), 
+        match_stop_indices.reshape(query_mzs.shape),
     )
-

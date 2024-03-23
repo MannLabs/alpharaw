@@ -29,7 +29,7 @@ class XIC_Plot():
     im_win = 0.05
     fig:go.Figure = None
 
-    "list of XIC_Trace objects"
+    #list of XIC_Trace objects
     traces:list = []
 
     def plot(self, 
@@ -145,7 +145,6 @@ class XIC_Plot():
                 samplepoints=n_query
             )
         return color_set
-
 
 class XIC_Trace():
     label_format = '{ion_name} {mz:.3f}'
@@ -269,7 +268,7 @@ class XIC_Trace():
             ),
             'raw'
         ]
-        if len(frag_indices) == 0: return self.fig
+        if len(frag_indices) == 0: return
         self.fig.add_trace(
             plot_line_fast(
                 tims_data, 

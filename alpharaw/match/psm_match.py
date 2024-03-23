@@ -21,6 +21,9 @@ from alpharaw.ms_data_base import (
 from alpharaw.match.match_utils import (
     match_closest_peaks, match_highest_peaks, 
 )
+from alpharaw.match.spec_finder import (
+    find_dia_spec_idxes_same_window
+)
 from alpharaw.utils.ms_path_utils import parse_ms_files_to_dict
 
 from alpharaw.dia.normal_dia import NormalDIAGrouper
@@ -479,7 +482,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
                 psm_idxes = psm_groups[dia_group]
                 if len(psm_idxes) == 0: continue
                 psm_idxes = np.array(psm_idxes, dtype=np.int32)
-                spec_idxes = query_dia_spec_idxes_same_window(
+                spec_idxes = find_dia_spec_idxes_same_window(
                     group_df.rt.values,
                     psm_df_one_raw.rt.values[psm_idxes],
                     max_spec_per_query=self.max_spec_per_query
@@ -657,62 +660,3 @@ def get_ion_count_scores(
             ]
         ))
     return np.array(scores,np.int32)
-
-@numba.njit    
-def query_dia_spec_idxes_same_window(
-    spec_rt_values:np.ndarray, 
-    query_rt_values:np.ndarray, 
-    max_spec_per_query:int,
-):
-    rt_idxes = np.searchsorted(spec_rt_values, query_rt_values)
-    
-    spec_idxes = np.full(
-        (len(rt_idxes),max_spec_per_query),
-        -1, dtype=np.int32
-    )
-    n = max_spec_per_query // 2
-
-    for iquery in range(len(rt_idxes)):
-        if rt_idxes[iquery] < n:
-            spec_idxes[iquery,:] = np.arange(0, max_spec_per_query)
-        else:
-            spec_idxes[iquery,:] = np.arange(
-                rt_idxes[iquery]-n, 
-                rt_idxes[iquery]-n+max_spec_per_query
-            )
-    return spec_idxes
-
-@numba.njit    
-def query_spec_idxes(
-    spec_rts:np.ndarray, 
-    spec_isolation_lower_mzs:np.ndarray, 
-    spec_isolation_upper_mzs:np.ndarray,
-    query_start_rts:np.ndarray, 
-    query_stop_rts:np.ndarray,
-    query_mzs:np.ndarray,
-    max_spec_per_query:int,
-):
-    rt_start_idxes = np.searchsorted(spec_rts, query_start_rts)
-    rt_stop_idxes = np.searchsorted(spec_rts, query_stop_rts)+1
-    
-    spec_idxes = np.full(
-        (len(query_mzs),max_spec_per_query),
-        -1, dtype=np.int32
-    )
-    for iquery in range(len(rt_start_idxes)):
-        idx_list = []
-        for ispec in range(rt_start_idxes[iquery], rt_stop_idxes[iquery]):
-            if (
-                query_mzs[iquery]>=spec_isolation_lower_mzs[ispec] and
-                query_mzs[iquery]<=spec_isolation_upper_mzs[ispec]
-            ):
-                idx_list.append(ispec)
-        if len(idx_list) > max_spec_per_query:
-            spec_idxes[iquery,:] = idx_list[
-                len(idx_list)/2-max_spec_per_query//2:
-                len(idx_list)/2+max_spec_per_query//2+1
-            ]
-        else:
-            spec_idxes[iquery,:len(idx_list)] = idx_list
-    return spec_idxes
-

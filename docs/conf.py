@@ -23,7 +23,7 @@ project = 'alpharaw'
 copyright = '2022, Mann Labs, MPIB'
 author = 'Mann Labs, MPIB'
 
-release = "0.4.3"
+release = "0.4.4"
 
 # -- General configuration ---------------------------------------------------
 
