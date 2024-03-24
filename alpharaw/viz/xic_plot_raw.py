@@ -49,25 +49,10 @@ class XIC_Plot_Raw():
             rt_sec = query_df.rt_sec.values[0]
         else:
             rt_sec = query_df.rt.values[0]*60
-        if "precursor_mz" not in query_df.columns:
-            precursor_left_mz = -1.0
-            precursor_right_mz = -1.0
-        else:
-            precursor_left_mz = query_df.precursor_mz.values[0]*(1-self.ms1_ppm*1e-6)
-            precursor_right_mz = query_df.precursor_mz.values[0]*(1+self.ms1_ppm*1e-6)
         
-            for iso in range(10):
-                if f"precursor_i_{iso}" not in query_df.columns:
-                    break
-            if iso > 0:
-                mono_idx = query_df.precursor_mono_idx.values[0]
-                charge = query_df.precursor_charge.values[0]
-                precursor_mz = query_df.precursor_mz.values[0]
-                precursor_left_mz = precursor_mz-mono_idx*MASS_ISOTOPE/charge
-                for i in range(iso-1,-1,-1):
-                    if query_df[f"precursor_i_{i}"].values[0] >= self.isotope_min_abundance:
-                        precursor_right_mz = precursor_mz+(i-mono_idx)*MASS_ISOTOPE/charge
-                        break
+        (
+            precursor_left_mz, precursor_right_mz
+        ) = self._get_precursor_mz_range(query_df)
         
         query_masses = query_df.mz.values
         if "intensity" in query_df.columns:
@@ -93,6 +78,63 @@ class XIC_Plot_Raw():
             query_intensities=query_intensities,
             title=title,
         )
+    
+    def _get_precursor_mz_range(
+        self, query_df,
+    ):
+        if "precursor_mz" not in query_df.columns:
+            precursor_left_mz = -1.0
+            precursor_right_mz = -1.0
+        else:
+            precursor_left_mz = query_df.precursor_mz.values[0]*(1-self.ms1_ppm*1e-6)
+            precursor_right_mz = query_df.precursor_mz.values[0]*(1+self.ms1_ppm*1e-6)
+        
+            for iso in range(10):
+                if f"precursor_i_{iso}" not in query_df.columns:
+                    break
+            if iso > 0:
+                mono_idx = query_df.precursor_mono_idx.values[0]
+                charge = query_df.precursor_charge.values[0]
+                precursor_mz = query_df.precursor_mz.values[0]
+                precursor_left_mz = precursor_mz-mono_idx*MASS_ISOTOPE/charge
+                for i in range(iso-1,-1,-1):
+                    if query_df[f"precursor_i_{i}"].values[0] >= self.isotope_min_abundance:
+                        precursor_right_mz = precursor_mz+(i-mono_idx)*MASS_ISOTOPE/charge
+                        break
+        return precursor_left_mz, precursor_right_mz
+    
+    def get_peak_area(self, 
+        spectrum_df:pd.DataFrame,
+        peak_df:pd.DataFrame,
+        query_df:pd.DataFrame,
+        query_start_rt_sec:float=None,
+        query_stop_rt_sec:float=None,
+        precursor_left_mz:float=None,
+        precursor_right_mz:float=None,
+    ):
+        if query_start_rt_sec is None:
+            query_start_rt_sec = query_df.rt_sec.values[0] - self.rt_sec_win/2
+            query_stop_rt_sec = query_df.rt_sec.values[0] + self.rt_sec_win/2
+        if precursor_left_mz is None:
+            (
+                precursor_left_mz, precursor_right_mz
+            ) = self._get_precursor_mz_range(query_df)
+
+        mass_tols = query_df.mz.values*1e-6*(
+            self.ms1_ppm if precursor_left_mz<=0 else self.ms2_ppm
+        )
+
+        query_df["peak_area"] = get_peak_area(
+            spectrum_df=spectrum_df,
+            peak_df=peak_df,
+            query_masses=query_df.mz.values,
+            mass_tols=mass_tols,
+            query_start_rt_sec=query_start_rt_sec,
+            query_stop_rt_sec=query_stop_rt_sec,
+            precursor_left_mz=precursor_left_mz,
+            precursor_right_mz=precursor_right_mz,
+        )
+        return query_df
 
     def plot_query_masses(self,
         spectrum_df:pd.DataFrame,
@@ -109,7 +151,7 @@ class XIC_Plot_Raw():
     ):
         self._init_plot(rows=1)
         mass_tols = query_masses*1e-6*(
-            self.ms1_ppm if precursor_left_mz==-1 else self.ms2_ppm
+            self.ms1_ppm if precursor_left_mz<0 else self.ms2_ppm
         )
         if marker_colors is None:
             marker_colors = self._get_color_set(len(query_masses))
@@ -120,10 +162,10 @@ class XIC_Plot_Raw():
             mass_tols=mass_tols,
             ion_names=query_ion_names,
             marker_colors=marker_colors,
-            query_rt_sec=query_rt_sec,
+            query_start_rt_sec=query_rt_sec-self.rt_sec_win/2,
+            query_stop_rt_sec=query_rt_sec+self.rt_sec_win/2,
             precursor_left_mz=precursor_left_mz,
             precursor_right_mz=precursor_right_mz,
-            rt_sec_win=self.rt_sec_win,
             query_intensities=query_intensities,
         )
         self.fig.update_layout(
@@ -195,17 +237,17 @@ class XIC_Trace_Raw():
         mass_tols:np.ndarray,
         ion_names:typing.List[str],
         marker_colors:typing.List,
-        query_rt_sec:float, 
-        precursor_left_mz:float = 0.0,
-        precursor_right_mz:float = 0.02,
-        rt_sec_win = 30.0,
+        query_start_rt_sec:float, 
+        query_stop_rt_sec:float, 
+        precursor_left_mz:float = -1.0,
+        precursor_right_mz:float = -1.0,
         query_intensities:np.ndarray = None,
     )->go.Figure:
 
         spec_idxes = get_spec_idxes_from_df(
             spectrum_df,
-            query_start_rt_sec=query_rt_sec-rt_sec_win/2,
-            query_stop_rt_sec=query_rt_sec+rt_sec_win/2,
+            query_start_rt_sec=query_start_rt_sec,
+            query_stop_rt_sec=query_stop_rt_sec,
             precursor_left_mz=precursor_left_mz,
             precursor_right_mz=precursor_right_mz,
         )
@@ -294,3 +336,37 @@ def get_spec_idxes_from_df(
             query_left_mz=precursor_left_mz,
             query_right_mz=precursor_right_mz
         )
+    
+def get_peak_area(
+    spectrum_df:pd.DataFrame,
+    peak_df:pd.DataFrame,
+    query_masses:np.ndarray,
+    mass_tols:np.ndarray,
+    query_start_rt_sec:float, 
+    query_stop_rt_sec:float,
+    precursor_left_mz:float = -1.0,
+    precursor_right_mz:float = -1.0,
+)->np.ndarray:
+    spec_idxes = get_spec_idxes_from_df(
+        spectrum_df,
+        query_start_rt_sec=query_start_rt_sec,
+        query_stop_rt_sec=query_stop_rt_sec,
+        precursor_left_mz=precursor_left_mz,
+        precursor_right_mz=precursor_right_mz,
+    )
+
+    rt_values = spectrum_df.rt.values[spec_idxes]
+
+    matched_mzs, matched_intens = match_batch_spec(
+        spec_idxes, 
+        peak_mzs=peak_df.mz.values,
+        peak_intens=peak_df.intensity.values,
+        peak_start_idxes=spectrum_df.peak_start_idx.values,
+        peak_stop_idxes=spectrum_df.peak_stop_idx.values,
+        query_mzs=query_masses,
+        query_mz_tols=mass_tols,
+    )
+
+    return np.trapz(
+        y=matched_intens, x=rt_values*60, axis=0
+    )
