@@ -99,7 +99,7 @@ def make_query_plot_df_for_peptide(
         fragment_mz_df = fragment_mz_df[columns]
         fragment_intensity_df = fragment_intensity_df[columns]
         
-    return translate_precursor_fragment_df_to_plot_df(
+    return translate_frag_df_to_plot_df(
         precursor_df, fragment_mz_df,
         fragment_intensity_df=fragment_intensity_df,
         rt_sec=rt_sec,
@@ -108,7 +108,7 @@ def make_query_plot_df_for_peptide(
         min_frag_mz=min_frag_mz,
     )
 
-def make_psm_plot_for_dfs(
+def make_psm_plot_for_frag_dfs(
     spec_masses:np.ndarray,
     spec_intensities:np.ndarray,
     precursor_df:pd.DataFrame, 
@@ -119,7 +119,7 @@ def make_psm_plot_for_dfs(
     min_frag_intensity: float = 0.001,
     match_mode:typing.Literal["closest","highest"]="closest",
 ):
-    plot_df = translate_precursor_fragment_df_to_plot_df(
+    plot_df = translate_frag_df_to_plot_df(
         precursor_df, 
         fragment_mz_df,
         fragment_intensity_df=fragment_intensity_df,
@@ -141,7 +141,7 @@ def make_psm_plot_for_dfs(
         match_mode = match_mode,    
     )
 
-def make_xic_plot_df(
+def make_query_plot_df(
     query_masses:np.ndarray,
     query_ion_names:typing.List[str],
     query_rt_sec:float, 
@@ -275,7 +275,7 @@ def get_modified_sequence(
     else:
         return mod_seq
 
-def translate_precursor_fragment_df_to_plot_df(
+def translate_frag_df_to_plot_df(
     precursor_df:pd.DataFrame, 
     fragment_mz_df:pd.DataFrame, 
     fragment_intensity_df:pd.DataFrame = None,
