@@ -92,7 +92,8 @@ class XIC_Plot_Tims():
         query_ion_names:typing.List[str],
         query_rt_sec:float, 
         query_im:float,
-        precursor_mz:float,
+        precursor_left_mz:float,
+        precursor_right_mz:float,
         marker_colors:list = None,
         view_dim:typing.Literal["rt","im"]="rt",
         query_intensities:np.ndarray = None,
@@ -100,7 +101,7 @@ class XIC_Plot_Tims():
     ):
         self._init_plot(rows=1, view_dim=view_dim)
         mass_tols = query_masses*1e-6*(
-            self.ms1_ppm if precursor_mz == 0 else self.ms2_ppm
+            self.ms1_ppm if precursor_left_mz <= 0 else self.ms2_ppm
         )
         if marker_colors is None:
             marker_colors = self._get_color_set(len(query_masses))
@@ -112,8 +113,8 @@ class XIC_Plot_Tims():
             marker_colors=marker_colors,
             query_rt_sec=query_rt_sec,
             query_im=query_im,
-            precursor_mz=precursor_mz,
-            precursor_mz_tol=precursor_mz*1e-6*self.ms1_ppm,
+            precursor_left_mz=precursor_left_mz,
+            precursor_right_mz=precursor_right_mz,
             view_dim=view_dim,
             rt_sec_win=self.rt_sec_win,
             im_win=self.im_win,
@@ -172,8 +173,8 @@ class XIC_Trace_Tims():
         marker_colors:typing.List,
         query_rt_sec:float, 
         query_im:float,
-        precursor_mz:float = 0.0,
-        precursor_mz_tol:float = 0.02,
+        precursor_left_mz:float = -1.0,
+        precursor_right_mz:float = -1.0,
         view_dim:typing.Literal["rt","im"]="rt",
         rt_sec_win = 30.0,
         im_win = 0.05,
@@ -201,8 +202,8 @@ class XIC_Trace_Tims():
             rt_sec=query_rt_sec, 
             rt_sec_win=rt_sec_win,
             im=query_im, im_win=im_win,
-            precursor_mz=precursor_mz, 
-            precursor_mz_tol=precursor_mz_tol,
+            precursor_left_mz=precursor_left_mz,
+            precursor_right_mz=precursor_right_mz,
             view_dim=view_dim,
         )
 
@@ -287,8 +288,8 @@ def get_plotting_slices(
     tims_data: TimsTOF,
     rt_sec:float, rt_sec_win:float=30.0,
     im:float = 0., im_win:float = 0.05,
-    precursor_mz:float = 0.0,
-    precursor_mz_tol:float = 0.02,
+    precursor_left_mz:float = -1.0,
+    precursor_right_mz:float = -1.0,
     view_dim:str = "rt",
 ):
     """
@@ -312,7 +313,7 @@ def get_plotting_slices(
         im + im_win/2
     )
 
-    if precursor_mz == 0:
+    if precursor_left_mz <= 0:
         prec_mz_slice = 0
         raw_indices = tims_data[
             rt_slice,
@@ -323,8 +324,8 @@ def get_plotting_slices(
         ]
     else:
         prec_mz_slice = slice(
-            precursor_mz - precursor_mz_tol,
-            precursor_mz + precursor_mz_tol,
+            precursor_left_mz,
+            precursor_right_mz,
         )
         raw_indices = tims_data[
             rt_slice,

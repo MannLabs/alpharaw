@@ -4,6 +4,7 @@ import numba
 def find_multinotch_spec_idxes(
     spec_rts: np.ndarray,
     spec_multinotch_wins:list,
+    spec_ms_levels: np.ndarray,
     query_start_rt: float,
     query_stop_rt: float,
     query_left_mz:float,
@@ -14,7 +15,10 @@ def find_multinotch_spec_idxes(
     spec_idxes = []
     for ispec in range(start_idx, stop_idx):
         for win_left, win_right in spec_multinotch_wins[ispec]:
-            if max(query_left_mz, win_left) <= min(query_right_mz, win_right):
+            if spec_ms_levels[ispec] == 1:
+                if query_left_mz <= 0:
+                    spec_idxes.append(ispec)
+            elif max(query_left_mz, win_left) <= min(query_right_mz, win_right):
                 spec_idxes.append(ispec)
     return np.array(spec_idxes)
 

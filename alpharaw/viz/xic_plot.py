@@ -30,7 +30,7 @@ class XIC_Plot():
     rt_sec_win = 60.0
     plot_rt_unit:str = "minute"
     fig:go.Figure = None
-    isotope_min_abundance=0.01,
+    isotope_cum_abundance=0.9,
 
     # list of XIC_Trace objects
     traces:list = []
@@ -44,7 +44,7 @@ class XIC_Plot():
         peak_df:pd.DataFrame,
         query_df:pd.DataFrame,
         title:str="",
-        peak_area_for_each_query=False,
+        add_peak_area=False,
     ):
         if "rt_sec" in query_df.columns:
             rt_sec = query_df.rt_sec.values[0]
@@ -67,7 +67,7 @@ class XIC_Plot():
         else:
             marker_colors = query_df.color.values
 
-        if peak_area_for_each_query:
+        if add_peak_area:
             self.get_peak_area(
                 spectrum_df, peak_df, query_df
             )
@@ -103,8 +103,11 @@ class XIC_Plot():
                 charge = query_df.precursor_charge.values[0]
                 precursor_mz = query_df.precursor_mz.values[0]
                 precursor_left_mz = precursor_mz-mono_idx*MASS_ISOTOPE/charge
+                isotope_cumsum = np.cumsum([
+                    query_df[f"precursor_i_{i}"].values[0] for i in range(iso)
+                ])
                 for i in range(iso-1,-1,-1):
-                    if query_df[f"precursor_i_{i}"].values[0] >= self.isotope_min_abundance:
+                    if isotope_cumsum[i] >= self.isotope_cum_abundance:
                         precursor_right_mz = precursor_mz+(i-mono_idx)*MASS_ISOTOPE/charge
                         break
         return precursor_left_mz, precursor_right_mz
@@ -327,6 +330,7 @@ def get_spec_idxes_from_df(
         return find_multinotch_spec_idxes(
             spectrum_df.rt.values,
             spectrum_df.multinotch.values,
+            spectrum_df.ms_level.values,
             query_start_rt=query_start_rt_sec/60,
             query_stop_rt=query_stop_rt_sec/60,
             query_left_mz=precursor_left_mz,
