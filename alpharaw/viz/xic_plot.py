@@ -45,6 +45,9 @@ class XIC_Plot():
         query_df:pd.DataFrame,
         title:str="",
         add_peak_area=False,
+        create_new_fig=True,
+        plot_rows = 1,
+        ith_plot_row = 0,
     ):
         if "rt_sec" in query_df.columns:
             rt_sec = query_df.rt_sec.values[0]
@@ -83,6 +86,9 @@ class XIC_Plot():
             marker_colors=marker_colors,
             query_intensities=query_intensities,
             title=title,
+            create_new_fig = create_new_fig,
+            plot_rows = plot_rows,
+            ith_plot_row = ith_plot_row,
         )
     
     def _get_precursor_mz_range(
@@ -156,15 +162,18 @@ class XIC_Plot():
         marker_colors:list = None,
         query_intensities:np.ndarray = None,
         title="",
-        ith_plot=0,
+        create_new_fig = True,
+        plot_rows = 1,
+        ith_plot_row = 0,
     ):
-        self._init_plot(rows=1)
+        if create_new_fig:
+            self._init_plot(rows=plot_rows)
         mass_tols = query_masses*1e-6*(
             self.ms1_ppm if precursor_left_mz<0 else self.ms2_ppm
         )
         if marker_colors is None:
             marker_colors = self._get_color_set(len(query_masses))
-        self.traces[ith_plot].add_traces(
+        self.traces[ith_plot_row].add_traces(
             spectrum_df=spectrum_df,
             peak_df=peak_df,
             query_masses=query_masses,
