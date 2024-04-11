@@ -532,14 +532,14 @@ class PepSpecMatch_DIA(PepSpecMatch):
             self.matched_intensity_df, self.matched_mz_err_df
         )
 
-@numba.njit
+@numba.jit(nogil=True)
 def match_one_raw_with_numba(
     spec_idxes, frag_start_idxes, frag_stop_idxes,
     all_frag_mzs, all_frag_mz_tols,
     all_spec_mzs, all_spec_intensities, 
     peak_start_idxes, peak_stop_idxes,
     matched_intensities, matched_mz_errs, 
-    matched_closest=True,
+    match_closest=True,
 ):
     """ 
     Internel function to match fragment mz values to spectrum mz values.
@@ -561,7 +561,7 @@ def match_one_raw_with_numba(
         frag_mzs = all_frag_mzs[frag_start:frag_stop,:].copy()
         frag_mz_tols = all_frag_mz_tols[frag_start:frag_stop,:].copy()
         
-        if matched_closest:
+        if match_closest:
             matched_idxes = match_closest_peaks(
                 spec_mzs, spec_intens, 
                 frag_mzs, frag_mz_tols
