@@ -34,7 +34,7 @@ alphatims_labels = {
 }
 
 
-def plot_line_raw(
+def plot_line_tims(
     tims_data:TimsTOF,
     tims_raw_indices: np.ndarray,
     tims_view_indices: np.array,
@@ -86,7 +86,7 @@ def plot_line_raw(
         x_text=view_dim.upper(),
     )
 
-def plot_line_fast(
+def plot_line_tims_fast(
     tims_data:TimsTOF,
     tims_raw_indices: np.ndarray,
     tims_view_indices: np.array,
