@@ -20,7 +20,7 @@ def find_multinotch_spec_idxes(
                     spec_idxes.append(ispec)
             elif max(query_left_mz, win_left) <= min(query_right_mz, win_right):
                 spec_idxes.append(ispec)
-    return np.array(spec_idxes)
+    return np.array(spec_idxes, dtype=np.int32)
 
 
 @numba.njit    
@@ -69,7 +69,7 @@ def find_spec_idxes(
             min(query_right_mz,spec_isolation_upper_mzs[ispec])
         ):
             spec_idxes.append(ispec)
-    return np.array(spec_idxes)
+    return np.array(spec_idxes, dtype=np.int32)
 
 @numba.njit    
 def find_batch_spec_idxes(

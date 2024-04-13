@@ -74,6 +74,12 @@ class XIC_Plot():
             self.get_peak_area(
                 spectrum_df, peak_df, query_df
             )
+            other_plot_infos = [
+                f"Area: {_area:.3e}" for _area
+                in query_df.peak_area.values
+            ]
+        else:
+            other_plot_infos = None
 
         return self.plot_query_masses(
             spectrum_df=spectrum_df,
@@ -84,6 +90,7 @@ class XIC_Plot():
             precursor_left_mz=precursor_left_mz,
             precursor_right_mz=precursor_right_mz,
             marker_colors=marker_colors,
+            other_plot_infos=other_plot_infos,
             query_intensities=query_intensities,
             title=title,
             create_new_fig = create_new_fig,
@@ -160,6 +167,7 @@ class XIC_Plot():
         precursor_left_mz:float,
         precursor_right_mz:float,
         marker_colors:list = None,
+        other_plot_infos:typing.List[str] = None,
         query_intensities:np.ndarray = None,
         title="",
         create_new_fig = True,
@@ -185,6 +193,7 @@ class XIC_Plot():
             precursor_left_mz=precursor_left_mz,
             precursor_right_mz=precursor_right_mz,
             query_intensities=query_intensities,
+            other_plot_infos=other_plot_infos,
         )
         self.fig.update_layout(
             template=self.theme_template,
@@ -260,6 +269,7 @@ class XIC_Trace():
         precursor_left_mz:float = -1.0,
         precursor_right_mz:float = -1.0,
         query_intensities:np.ndarray = None,
+        other_plot_infos:typing.List[str] = None,
     )->go.Figure:
 
         spec_idxes = get_spec_idxes_from_df(
@@ -295,12 +305,17 @@ class XIC_Trace():
             ion_names, query_masses, 
             query_intensities, marker_colors
         )):
+            if other_plot_infos is not None:
+                other_info = other_plot_infos[i_query]
+            else:
+                other_info = ""
             if (matched_intens[:,i_query]==0).all(): continue
             self._add_one_trace(
                 rt_values, matched_intens[:,i_query],
                 label=self.label_format.format(ion_name=ion_name, mz=query_mass),
                 legend_group=self.legend_group.format(ion_name=ion_name),
                 marker_color=marker_color,
+                other_info=other_info,
             )
             if query_inten > 0:
                 self._add_one_trace(
@@ -308,6 +323,7 @@ class XIC_Trace():
                     label=self.label_format.format(ion_name=ion_name, mz=query_mass),
                     legend_group=self.legend_group.format(ion_name=ion_name),
                     marker_color=marker_color,
+                    other_info=other_info,
                 )
     def _add_one_trace(self,
         rt_values:np.ndarray,
@@ -315,6 +331,7 @@ class XIC_Trace():
         label:str, 
         legend_group:str, 
         marker_color:str,
+        other_info:str = "",
     ):
         self.fig.add_trace(
             plot_line(
@@ -324,6 +341,7 @@ class XIC_Trace():
                 legend_group=legend_group,
                 marker_color=marker_color, 
                 x_text="RT",
+                other_info=other_info,
             ),
             row=self.row, col=self.col,
         )

@@ -145,7 +145,8 @@ def plot_line(
     marker_color: str,
     legend_group:str,
     x_text: str = "RT",
-    hovertemplate: str='%{text} <br><b>Intensity:</b> %{y}',
+    other_info:str = "",
+    hovertemplate: str='%{text} <br>Intensity: %{y}',
 ):
     return go.Scatter(
         x=x_values,
@@ -154,7 +155,7 @@ def plot_line(
         name=name,
         marker={"color":marker_color},
         legendgroup=legend_group,
-        text=[f"{x_text}: {_x:.3f}" for _x in x_values],
+        text=[f"{x_text}: {_x:.3f}"+(f"<br>{other_info}" if other_info else "") for _x in x_values],
         hovertemplate=hovertemplate,
     )
 
