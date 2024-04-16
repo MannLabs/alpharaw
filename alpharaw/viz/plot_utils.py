@@ -45,27 +45,6 @@ def plot_line_tims(
     intensity_scale:float=1.0,
     rt_unit:str = "minute"
 ):
-    """Plot an XIC as a lineplot.
-
-    Parameters
-    ----------
-    tims_data : alphatims.bruker.TimsTOF
-        An alphatims.bruker.TimsTOF data object.
-    selected_indices : np.ndarray
-        The raw indices of tims_data that are selected for this plot.
-    label : str
-        The label for the line plot.
-    remove_zeros : bool
-        If True, zeros are removed. Default: False.
-    trim : bool
-        If True, zeros on the left and right are trimmed. Default: True.
-
-    Returns
-    -------
-    go.Figure
-        the XIC line plot.
-    """
-
     x_dimension = alphatims_labels[view_dim]
 
     intensities = tims_data.bin_intensities(tims_raw_indices, [x_dimension])
@@ -95,29 +74,9 @@ def plot_line_tims_fast(
     marker_color: str,
     view_dim:typing.Literal['rt','im']='rt', # or 'im'
     intensity_scale:float=1.0,
-    rt_unit:str = "minute"
+    rt_unit:str = "minute",
+    add_peak_area=True,
 ):
-    """Plot an XIC as a lineplot.
-
-    Parameters
-    ----------
-    tims_data : alphatims.bruker.TimsTOF
-        An alphatims.bruker.TimsTOF data object.
-    selected_indices : np.ndarray
-        The raw indices of tims_data that are selected for this plot.
-    label : str
-        The label for the line plot.
-    remove_zeros : bool
-        If True, zeros are removed. Default: False.
-    trim : bool
-        If True, zeros on the left and right are trimmed. Default: True.
-
-    Returns
-    -------
-    go.Figure
-        the XIC line plot.
-    """
-
     x_dimension = alphatims_labels[view_dim]
 
     intensities = tims_data.bin_intensities(tims_raw_indices, [x_dimension])
@@ -130,12 +89,16 @@ def plot_line_tims_fast(
         x_ticks = tims_data.mobility_values[tims_view_indices]
         intensities = intensities[tims_view_indices]
 
+    if add_peak_area:
+        peak_area = abs(np.trapz(y=intensities, x=x_ticks))
+
     return plot_line(
         x_ticks, intensities*intensity_scale,
         name=name, 
         marker_color=marker_color,
         legend_group=legend_group,
         x_text=view_dim.upper(),
+        other_info=f"Peak area: {peak_area:.2e}" if add_peak_area else "",
     )
 
 def plot_line(
@@ -167,23 +130,6 @@ def plot_line_df(
     marker_color: str,
     view_dim: str='rt' # or 'im'
 ):
-    """Plot an XIC as a lineplot.
-
-    Parameters
-    ----------
-    tims_sliced_df : pd.DataFrame
-        TimsTOF[...] df
-    label : str
-        The label for the line plot.
-    trim : bool
-        If True, zeros on the left and right are trimmed. Default: True.
-
-    Returns
-    -------
-    go.Figure
-        the XIC line plot.
-    """
-
     if view_dim == 'rt':
         tims_sliced_df = tims_sliced_df.groupby(
             'frame_indices', as_index=False

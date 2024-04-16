@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import time
 
-from alpharaw.utils.centroiding import centroid_peaks
+from alpharaw.utils.centroiding import naive_centroid
 
 # require pythonnet, pip install pythonnet on Windows
 import clr
@@ -45,7 +45,7 @@ class WillFileReader:
 
     def load_sample(self, sample_id:int, 
         centroid:bool=True, 
-        centroid_mz_tol:float=0.06,
+        centroid_ppm:float=20.0,
         ignore_empty_scans:bool=True,
         keep_k_peaks:int=2000,
     ):
@@ -87,9 +87,9 @@ class WillFileReader:
                 int_array = DotNetArrayToNPArray(massSpectrum.GetActualYValues()).astype(np.float32)
                 if centroid:
                     (
-                        mz_array, int_array, mz_starts, mz_ends
-                    ) = centroid_peaks(
-                        mz_array, int_array, centroid_mz_tol
+                        mz_array, int_array
+                    ) = naive_centroid(
+                        mz_array, int_array, centroiding_ppm=centroid_ppm
                     )
                 if len(mz_array) > keep_k_peaks:
                     idxes = np.argsort(int_array)[-keep_k_peaks:]

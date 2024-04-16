@@ -22,21 +22,18 @@ class XIC_Plot_Tims():
     colorscale_qualitative="Alphabet"
     colorscale_sequential="Viridis"
     theme_template='plotly_white'
-    ms1_ppm = 20.0
-    ms2_ppm = 20.0
+    ppm = 20.0
     rt_sec_win = 30.0
     plot_rt_unit:str = "minute"
     im_win = 0.05
     fig:go.Figure = None
-
-    #list of XIC_Trace objects
-    traces:list = []
 
     def plot(self, 
         tims_data:TimsTOF,
         query_df:pd.DataFrame,
         view_dim:typing.Literal["rt","im"]="rt",
         title:str="",
+        add_peak_area=True,
     ):
         rt_sec = query_df['rt_sec'].values[0]
         if "im" not in query_df.columns:
@@ -70,21 +67,18 @@ class XIC_Plot_Tims():
             view_dim=view_dim,
             query_intensities=query_intensities,
             title=title,
+            add_peak_area=add_peak_area,
         )
 
-    def _init_plot(self, rows=1, view_dim='rt'):
+    def _init_plot(self, view_dim='rt'):
         self.fig = make_subplots(
-            rows=rows, 
             cols=1,
             shared_xaxes=True,
             x_title=f'RT ({self.plot_rt_unit})' if view_dim == 'rt' else 'Mobility',
             y_title='intensity',
-            vertical_spacing=0.2/rows,
+            vertical_spacing=0.2,
         )
-        self.traces = [
-            XIC_Trace_Tims(fig=self.fig, row=i+1) 
-            for i in range(rows)
-        ]
+        self.trace:XIC_Plot_Tims = XIC_Trace_Tims(fig=self.fig, row=1)
 
     def plot_query_masses(self,
         tims_data:TimsTOF,
@@ -92,20 +86,18 @@ class XIC_Plot_Tims():
         query_ion_names:typing.List[str],
         query_rt_sec:float, 
         query_im:float,
-        precursor_left_mz:float,
-        precursor_right_mz:float,
+        precursor_mz:float,
         marker_colors:list = None,
         view_dim:typing.Literal["rt","im"]="rt",
         query_intensities:np.ndarray = None,
         title="",
+        add_peak_area=True,
     ):
-        self._init_plot(rows=1, view_dim=view_dim)
-        mass_tols = query_masses*1e-6*(
-            self.ms1_ppm if precursor_left_mz <= 0 else self.ms2_ppm
-        )
+        self._init_plot(view_dim=view_dim)
+        mass_tols = query_masses*1e-6*self.ppm
         if marker_colors is None:
             marker_colors = self._get_color_set(len(query_masses))
-        self.traces[0].add_traces(
+        self.trace.add_traces(
             tims_data=tims_data,
             query_masses=query_masses,
             mass_tols=mass_tols,
@@ -113,12 +105,13 @@ class XIC_Plot_Tims():
             marker_colors=marker_colors,
             query_rt_sec=query_rt_sec,
             query_im=query_im,
-            precursor_left_mz=precursor_left_mz,
-            precursor_right_mz=precursor_right_mz,
+            precursor_left_mz=precursor_mz*(1-1e-6*self.ppm),
+            precursor_right_mz=precursor_mz*(1+1e-6*self.ppm),
             view_dim=view_dim,
             rt_sec_win=self.rt_sec_win,
             im_win=self.im_win,
             query_intensities=query_intensities,
+            add_peak_area=add_peak_area,
         )
         self.fig.update_layout(
             template=self.theme_template,
@@ -179,6 +172,7 @@ class XIC_Trace_Tims():
         rt_sec_win = 30.0,
         im_win = 0.05,
         query_intensities:np.ndarray = None,
+        add_peak_area=True,
     )->go.Figure:
         """Add traces for the query_masses.
 
@@ -230,6 +224,7 @@ class XIC_Trace_Tims():
                 label=self.label_format.format(ion_name=ion_name, mz=query_mass),
                 legend_group=self.legend_group.format(ion_name=ion_name),
                 marker_color=marker_color,
+                add_peak_area=add_peak_area,
             )
             if query_inten > 0:
                 self._add_one_trace(
@@ -244,6 +239,7 @@ class XIC_Trace_Tims():
                     legend_group=self.legend_group.format(ion_name=ion_name),
                     marker_color=marker_color,
                     intensity_scale=-query_inten,
+                    add_peak_area=add_peak_area
                 )
 
     def _add_one_trace(self,
@@ -258,6 +254,7 @@ class XIC_Trace_Tims():
         legend_group:str, 
         marker_color:str,
         intensity_scale:float=1.0,
+        add_peak_area = True,
     ):
         frag_indices = tims_data[
             rt_slice,
@@ -279,7 +276,8 @@ class XIC_Trace_Tims():
                 legend_group=legend_group,
                 marker_color=marker_color, 
                 view_dim=view_dim,
-                intensity_scale=intensity_scale
+                intensity_scale=intensity_scale,
+                add_peak_area=add_peak_area,
             ),
             row=self.row, col=self.col,
         )
