@@ -118,7 +118,10 @@ def plot_line(
         name=name,
         marker={"color":marker_color},
         legendgroup=legend_group,
-        text=[f"{x_text}: {_x:.3f}"+(f"<br>{other_info}" if other_info else "") for _x in x_values],
+        text=[
+            f"{x_text}: {_x:.3f}"+(f"<br>{other_info}" 
+            if other_info else "") for _x in x_values
+        ],
         hovertemplate=hovertemplate,
     )
 

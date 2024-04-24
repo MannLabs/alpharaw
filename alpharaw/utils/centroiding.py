@@ -2,7 +2,6 @@
 
 import numpy as np
 from numba import njit
-from numba.typed import List
 
 @njit
 def naive_centroid(

@@ -28,7 +28,7 @@ class XIC_Plot():
     ms1_ppm = 20.0
     ms2_ppm = 20.0
     rt_sec_win = 60.0
-    plot_rt_unit:str = "minute"
+    plot_rt_unit:str = "second"
     fig:go.Figure = None
     isotope_cum_abundance=0.9,
 
@@ -245,12 +245,12 @@ class XIC_Trace():
     fig:go.Figure
     row:int = 1
     col:int = 1
-    plot_rt_unit:str = "minute"
+    plot_rt_unit:str = "second"
 
     def __init__(self, 
         fig:go.Figure, 
         row:int=1, col:int=1,
-        plot_rt_unit:str = "minute",
+        plot_rt_unit:str = "second",
     ):
         self.fig = fig
         self.row = row
