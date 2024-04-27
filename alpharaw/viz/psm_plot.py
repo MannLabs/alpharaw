@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from .plot_utils import plot_scatter
 from .df_utils import (
     make_psm_plot_df,
-    make_query_plot_df_for_peptide,
+    make_query_df_for_peptide,
 )
 
 color_map: dict = defaultdict(lambda: "brown")
@@ -52,7 +52,7 @@ def plot_multi_psms(
     query_left_margin: float = 100000.0,
     query_right_margin: float = 100000.0,
 ):
-    plot_df = make_query_plot_df_for_peptide(
+    plot_df = make_query_df_for_peptide(
         sequence,
         mods,
         mod_sites,

@@ -1,5 +1,34 @@
 import numpy as np
+import pandas as pd
 import numba
+
+def find_spec_idxes_by_rt(
+    spectrum_df:pd.DataFrame,
+    query_start_rt: float,
+    query_stop_rt: float,
+    query_left_mz:float,
+    query_right_mz:float,
+):
+    if "multinotch" in spectrum_df.columns:
+        return find_multinotch_spec_idxes(
+            spec_rts=spectrum_df.rt.values,
+            spec_multinotch_wins=spectrum_df.multinotch.values,
+            spec_ms_levels=spectrum_df.ms_levels.values,
+            query_start_rt=query_start_rt,
+            query_stop_rt=query_stop_rt,
+            query_left_mz=query_left_mz,
+            query_right_mz=query_right_mz,
+        )
+    else:
+        return find_spec_idxes(
+            spec_rts=spectrum_df.rt.values,
+            spec_isolation_lower_mzs=spectrum_df.isolation_lower_mz.values,
+            spec_isolation_upper_mzs=spectrum_df.isolation_upper_mz.values,
+            query_start_rt=query_start_rt,
+            query_stop_rt=query_stop_rt,
+            query_left_mz=query_left_mz,
+            query_right_mz=query_right_mz,
+        )
 
 def find_multinotch_spec_idxes(
     spec_rts: np.ndarray,

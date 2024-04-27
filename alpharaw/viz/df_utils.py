@@ -35,7 +35,7 @@ def make_psm_plot_df_for_peptide(
     min_frag_mz: float = 100.0,
     match_mode: typing.Literal["closest", "highest"] = "closest",
 ) -> pd.DataFrame:
-    plot_df = make_query_plot_df_for_peptide(
+    plot_df = make_query_df_for_peptide(
         sequence,
         mods,
         mod_sites,
@@ -66,7 +66,7 @@ def make_psm_plot_df_for_peptide(
     )
 
 
-def make_query_plot_df_for_peptide(
+def make_query_df_for_peptide(
     sequence: str,
     mods: str,
     mod_sites: str,
@@ -146,7 +146,7 @@ def make_psm_plot_for_frag_dfs(
     )
 
 
-def make_query_plot_df(
+def make_query_df(
     query_masses: np.ndarray,
     query_ion_names: typing.List[str],
     query_rt_sec: float,
