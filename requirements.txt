@@ -7,6 +7,7 @@ pandas
 numpy
 sqlalchemy
 pyteomics
+lxml
 
 alphabase>=1.1.0
 alphatims
