@@ -6,6 +6,7 @@ numba
 pandas
 numpy
 sqlalchemy
+pyteomics
 
 alphabase>=1.1.0
 alphatims
