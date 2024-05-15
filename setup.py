@@ -13,12 +13,6 @@ def get_long_description():
         long_description = readme_file.read()
     return long_description
 
-#nbdev2
-# from configparser import ConfigParser
-# nbdev_config = ConfigParser(delimiters=['='])
-# nbdev_config.read('settings.ini')
-# nbdev_cfg = nbdev_config['DEFAULT']
-
 def get_requirements():
     extra_requirements = {}
     requirement_file_names = package2install.__extra_requirements__
