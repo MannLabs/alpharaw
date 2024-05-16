@@ -32,7 +32,7 @@ class SciexWiffData(MSData_Base):
         if self.centroided:
             self.centroided = False
             warnings.warn('Centroiding for Sciex data is not well implemented yet')
-        self.centroid_mz_tol = 0.06
+        self.centroid_ppm = 20.0
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
         self.sample_id = 0
@@ -46,7 +46,7 @@ class SciexWiffData(MSData_Base):
         )
         data_dict = wiff_reader.load_sample(self.sample_id,
             centroid = self.centroided,
-            centroid_mz_tol = self.centroid_mz_tol,
+            centroid_ppm = self.centroid_ppm,
             ignore_empty_scans=self.ignore_empty_scans,
             keep_k_peaks=self.keep_k_peaks_per_spec,
         )
