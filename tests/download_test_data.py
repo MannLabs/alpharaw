@@ -14,8 +14,9 @@ def download_file(url, local_filename):
 url_template = "https://datashare.biochem.mpg.de/s/GOiZGGOhrHzS54M/download?path=%2F&files={}"
 output_template = "../nbs_tests/test_data/{}"
 test_files = [
-    "20201215_sswath_1min_5ug_1.wiff",
-    "20201215_sswath_1min_5ug_1.wiff.scan",
+    "02112022_Zeno1_TiHe_DIAMA_HeLa_200ng_EVO5_01.wiff",
+    "02112022_Zeno1_TiHe_DIAMA_HeLa_200ng_EVO5_01.wiff2",
+    "02112022_Zeno1_TiHe_DIAMA_HeLa_200ng_EVO5_01.wiff.scan",
     "iRT.raw",
     "iRT_DIA.raw",
     "multinotch.raw",
