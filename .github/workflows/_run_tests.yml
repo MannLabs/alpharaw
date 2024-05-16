@@ -23,6 +23,9 @@ jobs:
         miniconda-version: "latest"
         auto-update-conda: true
         python-version: ${{ inputs.python-version }}
+    - name: Install mono
+      shell: bash -l {0}
+      run: conda install -y mono
     - name: Conda info
       shell: bash -l {0}
       run: conda info
