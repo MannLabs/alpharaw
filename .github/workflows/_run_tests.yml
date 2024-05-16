@@ -25,7 +25,10 @@ jobs:
         python-version: ${{ inputs.python-version }}
     - name: Install mono
       shell: bash -l {0}
-      run: conda install -y mono
+      run: |
+        if [ "$RUNNER_OS" != "Windows" ]; then
+          conda install -y mono
+        fi
     - name: Conda info
       shell: bash -l {0}
       run: conda info
