@@ -1,2 +1,4 @@
-INCLUDED_NBS=$(find ./nbdev_nbs -name "*.ipynb")
+
+
+INCLUDED_NBS=$(find ../nbs_tests -name "*.ipynb")
 python -m pytest --nbmake $(echo $INCLUDED_NBS)
