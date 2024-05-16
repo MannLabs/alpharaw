@@ -41,6 +41,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate alpharaw
+        pip install matplotlib
         pip install pytest nbmake==1.5.3
         conda deactivate
     - name: Run tests
@@ -48,5 +49,6 @@ jobs:
       run: |
         conda activate alpharaw
         cd tests
+        python download_test_data.py
         . ./run_tests.sh
         conda deactivate
