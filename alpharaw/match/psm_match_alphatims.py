@@ -239,6 +239,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             
         """
         self._preprocess_psms(psm_df_one_raw)
+        self.psm_df = psm_df_one_raw
         
         psm_df_one_raw = self._add_missing_columns_to_psm_df(
             psm_df_one_raw
@@ -248,7 +249,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             fragment_mz_df, 
             matched_intensity_df,
             matched_mz_err_df,
-        ) = self._prepare_matching_dfs(psm_df_one_raw)
+        ) = self._prepare_matching_dfs()
 
         if (
             'mobility' in psm_df_one_raw.columns and 

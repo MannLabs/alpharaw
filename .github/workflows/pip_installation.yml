@@ -19,7 +19,8 @@ jobs:
     name: Test stable pip installation on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest, macos-latest-xlarge]
+        # macos-latest is now arm64, which cannot install mono
+        os: [ubuntu-latest, macos-13, windows-latest]
     uses: ./.github/workflows/_run_tests.yml
     with:
       os: ${{ matrix.os }}
@@ -31,7 +32,8 @@ jobs:
     # runs-on: ${{ matrix.os }} # `runs-on` conflicts with `uses`, see https://github.com/orgs/community/discussions/62320
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest, macos-latest-xlarge]
+        # macos-latest is now arm64, which cannot install mono
+        os: [ubuntu-latest, macos-13, windows-latest]
     uses: ./.github/workflows/_run_tests.yml
     with:
       os: ${{ matrix.os }}

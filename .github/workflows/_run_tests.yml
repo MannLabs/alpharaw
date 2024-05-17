@@ -23,6 +23,12 @@ jobs:
         miniconda-version: "latest"
         auto-update-conda: true
         python-version: ${{ inputs.python-version }}
+    - name: Install mono
+      shell: bash -l {0}
+      run: |
+        if [ "$RUNNER_OS" != "Windows" ]; then
+          conda install -y mono
+        fi
     - name: Conda info
       shell: bash -l {0}
       run: conda info
@@ -35,6 +41,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate alpharaw
+        pip install matplotlib
         pip install pytest nbmake==1.5.3
         conda deactivate
     - name: Run tests
@@ -42,5 +49,6 @@ jobs:
       run: |
         conda activate alpharaw
         cd tests
+        python download_test_data.py
         . ./run_tests.sh
         conda deactivate
