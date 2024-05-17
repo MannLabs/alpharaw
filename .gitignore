@@ -1,7 +1,12 @@
+# thermo raw format
 *.raw
+# sciex raw format
 *.wiff
+# new sciex raw format
 *.wiff2
+# bruker raw format
 *.d
+# sciex raw data
 *.scan
 
 # Byte-compiled / optimized / DLL files
