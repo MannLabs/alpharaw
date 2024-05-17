@@ -24,3 +24,5 @@ furo
 
 alphabase>=1.1.0
 alphatims
+
+pre-commit==3.7.0
