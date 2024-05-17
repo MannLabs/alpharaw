@@ -1,12 +1,11 @@
-
 from __future__ import annotations
 import numpy as np
 from numba import int32, float32, float64, njit, types
 from numba.experimental import jitclass
 from numba.typed import Dict
 
-#Some legacy chemistry functions
-#Maybe replacd with alphabase?
+# Some legacy chemistry functions
+# Maybe replacd with alphabase?
 
 from numba.typed import Dict
 from numba import types, njit
@@ -31,14 +30,14 @@ DELTA_S = 0.0109135
 M_PROTON = 1.00727646687
 
 maximum_offset = DELTA_M + DELTA_S
-     
 
 
 spec = [
-    ('m0', float32),
-    ('dm', int32),
-    ('intensities', float32[:]),
+    ("m0", float32),
+    ("dm", int32),
+    ("intensities", float32[:]),
 ]
+
 
 @jitclass(spec)
 class Isotope:
@@ -50,21 +49,36 @@ class Isotope:
         dm0 (int): dm of pattern (number of isotopes)
         int0 (np.float32[:]): Intensities of pattern
     """
-    def __init__(self, m0:int, dm:int, intensities:np.ndarray):
+
+    def __init__(self, m0: int, dm: int, intensities: np.ndarray):
         self.m0 = m0
         self.dm = dm
         self.intensities = intensities
 
-isotopes = Dict.empty(key_type=types.unicode_type, value_type=Isotope.class_type.instance_type)
+
+isotopes = Dict.empty(
+    key_type=types.unicode_type, value_type=Isotope.class_type.instance_type
+)
 
 isotopes["C"] = Isotope(12, 3, np.array([0.9893, 0.0107, 0.0], dtype=np.float32))
-isotopes["H"] = Isotope(1.007940, 3,  np.array([0.999885, 0.000115, 0.0], dtype=np.float32))
-isotopes["O"] = Isotope(15.9949146221, 3,  np.array([0.99757, 0.00038, 0.00205], dtype=np.float32))
-isotopes["N"] = Isotope(14.0030740052, 2,  np.array([0.99636, 0.00364], dtype=np.float32))
-isotopes["S"] = Isotope(31.97207069, 4,  np.array([0.9499, 0.0075, 0.0425, 0.0001], dtype=np.float32))
+isotopes["H"] = Isotope(
+    1.007940, 3, np.array([0.999885, 0.000115, 0.0], dtype=np.float32)
+)
+isotopes["O"] = Isotope(
+    15.9949146221, 3, np.array([0.99757, 0.00038, 0.00205], dtype=np.float32)
+)
+isotopes["N"] = Isotope(
+    14.0030740052, 2, np.array([0.99636, 0.00364], dtype=np.float32)
+)
+isotopes["S"] = Isotope(
+    31.97207069, 4, np.array([0.9499, 0.0075, 0.0425, 0.0001], dtype=np.float32)
+)
 
-isotopes["I"] = Isotope(126.904473, 1,  np.array([1], dtype=np.float32))
-isotopes["K"] = Isotope(38.9637069, 3,  np.array([0.932581, 0.000117, 0.067302], dtype=np.float32))
+isotopes["I"] = Isotope(126.904473, 1, np.array([1], dtype=np.float32))
+isotopes["K"] = Isotope(
+    38.9637069, 3, np.array([0.932581, 0.000117, 0.067302], dtype=np.float32)
+)
+
 
 def test_isotope():
     assert isotopes["C"].m0 == 12
@@ -72,22 +86,23 @@ def test_isotope():
     assert np.allclose(isotopes["C"].intensities[0], 0.9893)
     assert np.allclose(isotopes["C"].intensities[1], 0.0107)
     assert np.allclose(isotopes["C"].intensities[2], 0)
-    
-#test_isotope()
+
+
+# test_isotope()
 
 
 spec = [
-    ('m0', float32),
-    ('dm', int32),
-    ('intensities', float64[:]),
+    ("m0", float32),
+    ("dm", int32),
+    ("intensities", float64[:]),
 ]
 
 
-#This class and the methods fast_add, numba_bin are tested in the wrapper function dict_to_dist
+# This class and the methods fast_add, numba_bin are tested in the wrapper function dict_to_dist
 @jitclass(spec)
 class IsotopeDistribution:
     """Class to represent isotope distributions.
-    
+
     Attributes:
         m0 (int): the mono-isotopic mass.
         dm (int): number of isotopes.
@@ -98,19 +113,19 @@ class IsotopeDistribution:
         copy: create a copy of the current isotope distribution.
         mult: multiply the current isotope distribution.
 
-    """    
+    """
 
     def __init__(self):
         self.m0 = 0
         self.dm = 1
         self.intensities = np.array([1.0])
 
-    def add(self, x:IsotopeDistribution):
+    def add(self, x: IsotopeDistribution):
         """Add another isotope distribution.
 
         Args:
             x (IsotopeDistribution): IsotopeDistribution.
-        """        
+        """
         self.m0, self.dm, self.intensities = fast_add(
             self.m0, self.dm, self.intensities, x.m0, x.dm, x.intensities
         )
@@ -120,7 +135,7 @@ class IsotopeDistribution:
 
         Returns:
             IsotopeDistribution: A copy of the current isotope distribution.
-        """   
+        """
         i = IsotopeDistribution()
         i.m0 = self.m0
         i.dm = self.dm
@@ -128,7 +143,7 @@ class IsotopeDistribution:
 
         return i
 
-    def mult(self, n:int) -> IsotopeDistribution:
+    def mult(self, n: int) -> IsotopeDistribution:
         """Multiplies the current isotope distribution.
 
         Args:
@@ -136,7 +151,7 @@ class IsotopeDistribution:
 
         Returns:
             IsotopeDistribution: A multiplied version of the current isotope distribution.
-        """        
+        """
         binary = numba_bin(n)
 
         if n == 1:
@@ -155,7 +170,15 @@ class IsotopeDistribution:
 
 
 @njit
-def fast_add(m0: int, dm0: int, int0: np.ndarray, m1: int, dm1: int, int1: np.ndarray, prune_level: float=0.000001) ->(int, int, np.ndarray):
+def fast_add(
+    m0: int,
+    dm0: int,
+    int0: np.ndarray,
+    m1: int,
+    dm1: int,
+    int1: np.ndarray,
+    prune_level: float = 0.000001,
+) -> (int, int, np.ndarray):
     """Helper function to quickly add isotope patterns.
 
     Args:
@@ -190,8 +213,9 @@ def fast_add(m0: int, dm0: int, int0: np.ndarray, m1: int, dm1: int, int1: np.nd
 
     return m0, dm0, int0
 
+
 @njit
-def numba_bin(decimal:int)->list:
+def numba_bin(decimal: int) -> list:
     """Numba compatible function to convert a decimal number to a binary (list).
 
     Args:
@@ -199,19 +223,20 @@ def numba_bin(decimal:int)->list:
 
     Returns:
         list: Number in binary.
-    """    
+    """
 
     binary = []
 
     while decimal != 0:
         bit = int(decimal % 2)
-        binary.insert(0,bit)
-        decimal = int(decimal/2)
+        binary.insert(0, bit)
+        decimal = int(decimal / 2)
 
     return binary
 
+
 @njit
-def dict_to_dist(counted_AA:Dict, isotopes:Dict)->IsotopeDistribution:
+def dict_to_dist(counted_AA: Dict, isotopes: Dict) -> IsotopeDistribution:
     """Function to convert a dictionary with counts of atoms to an isotope distribution.
 
     Args:
@@ -219,12 +244,11 @@ def dict_to_dist(counted_AA:Dict, isotopes:Dict)->IsotopeDistribution:
         isotopes (Dict): Numba-typed lookup dict with isotopes.
 
     Returns:
-        IsotopeDistribution: The calculated isotope distribution for the chemical compound. 
-    """    
+        IsotopeDistribution: The calculated isotope distribution for the chemical compound.
+    """
 
     dist = IsotopeDistribution()
     for AA in counted_AA.keys():
-
         x = IsotopeDistribution()
         x.add(isotopes[AA])
         x = x.mult(counted_AA[AA])
@@ -233,25 +257,48 @@ def dict_to_dist(counted_AA:Dict, isotopes:Dict)->IsotopeDistribution:
 
     return dist
 
-def test_dict_to_dist():    
 
-    abundances = np.array([58.83,0.18,100,0.29,81.29,0.22,42.05,0.11,15.54,0.04,4.36,0.01,0.97,0.17,0.03])/100
+def test_dict_to_dist():
+    abundances = (
+        np.array(
+            [
+                58.83,
+                0.18,
+                100,
+                0.29,
+                81.29,
+                0.22,
+                42.05,
+                0.11,
+                15.54,
+                0.04,
+                4.36,
+                0.01,
+                0.97,
+                0.17,
+                0.03,
+            ]
+        )
+        / 100
+    )
 
     counted_AA = Dict.empty(key_type=types.unicode_type, value_type=types.int64)
     counted_AA["K"] = 23
     counted_AA["I"] = 22
-    dist = dict_to_dist(counted_AA, isotopes)    
-    
+    dist = dict_to_dist(counted_AA, isotopes)
+
     rmse = np.mean(np.sqrt((dist.intensities[: len(abundances)] - abundances) ** 2))
-    
+
     assert rmse < 0.05
-    
-#test_dict_to_dist()
-     
+
+
+# test_dict_to_dist()
 
 
 @njit
-def get_average_formula(molecule_mass:float, averagine_aa:Dict, isotopes:Dict, sulphur:bool=True)->Dict:
+def get_average_formula(
+    molecule_mass: float, averagine_aa: Dict, isotopes: Dict, sulphur: bool = True
+) -> Dict:
     """Function to calculate the averagine formula for a molecule mass.
 
     Args:
@@ -265,8 +312,7 @@ def get_average_formula(molecule_mass:float, averagine_aa:Dict, isotopes:Dict, s
 
     Returns:
         Dict: Numba-typed dict with averagine composition.
-    """    
-
+    """
 
     if sulphur:
         averagine_units = molecule_mass / averagine_avg
@@ -288,6 +334,7 @@ def get_average_formula(molecule_mass:float, averagine_aa:Dict, isotopes:Dict, s
 
     return counted_AA
 
+
 def test_get_average_formula():
     for molecule_mass in [100, 200, 300, 400, 500]:
         average_formula = get_average_formula(
@@ -297,12 +344,17 @@ def test_get_average_formula():
             [average_formula[AA] * isotopes[AA].m0 for AA in average_formula.keys()]
         )
         assert np.abs(mass - molecule_mass) < isotopes["H"].m0
-        
-#test_get_average_formula()
-     
+
+
+# test_get_average_formula()
+
 ISOTOPE_MASS = DELTA_M
+
+
 @njit
-def mass_to_dist(molecule_mass: float, averagine_aa:Dict, isotopes:Dict)-> (np.ndarray, np.ndarray):
+def mass_to_dist(
+    molecule_mass: float, averagine_aa: Dict, isotopes: Dict
+) -> (np.ndarray, np.ndarray):
     """Function to calculate an isotope distribution from a molecule mass using the averagine model.
 
     Args:
@@ -313,15 +365,17 @@ def mass_to_dist(molecule_mass: float, averagine_aa:Dict, isotopes:Dict)-> (np.n
     Returns:
         np.ndarray: isotope masses.
         np.ndarray: isotope intensity.
-    """    
+    """
     counted_AA = get_average_formula(molecule_mass, averagine_aa, isotopes)
 
     dist = dict_to_dist(counted_AA, isotopes)
 
-    masses = np.array([dist.m0 + i*ISOTOPE_MASS for i in range(len(dist.intensities))])
+    masses = np.array(
+        [dist.m0 + i * ISOTOPE_MASS for i in range(len(dist.intensities))]
+    )
     ints = dist.intensities
 
     return masses, ints
-    
-#print(mass_to_dist(300, averagine_aa, isotopes))
-     
+
+
+# print(mass_to_dist(300, averagine_aa, isotopes))

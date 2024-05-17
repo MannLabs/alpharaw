@@ -11,42 +11,49 @@ from .ms_data_base import MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 from .ms_data_base import ms_reader_provider
 
 __trailer_extra_list__ = [
-    "injection_time", "cv",
-    "max_ion_time", "agc_target", "energy_ev",
-    "injection_optics_settling_time", 
-    "funnel_rf_level", "faims_cv",
+    "injection_time",
+    "cv",
+    "max_ion_time",
+    "agc_target",
+    "energy_ev",
+    "injection_optics_settling_time",
+    "funnel_rf_level",
+    "faims_cv",
 ]
 __auxiliary_item_dtypes__ = {
-    "injection_time": np.float32, 
+    "injection_time": np.float32,
     "cv": np.float32,
-    "max_ion_time": np.float32, 
-    "agc_target": np.int64, 
+    "max_ion_time": np.float32,
+    "agc_target": np.int64,
     "energy_ev": np.float32,
-    "injection_optics_settling_time": np.float32, 
-    "funnel_rf_level": np.float32, 
+    "injection_optics_settling_time": np.float32,
+    "funnel_rf_level": np.float32,
     "faims_cv": np.float32,
-    "detector": "U", 
-    "activation": "U", 
+    "detector": "U",
+    "activation": "U",
     "analyzer": "U",
-    "detector_id": np.uint8, 
-    "activation_id": np.uint8, 
+    "detector_id": np.uint8,
+    "activation_id": np.uint8,
     "analyzer_id": np.uint8,
     "scan_event_string": "U",
     "multinotch": "O",
 }
 
+
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
     """
-    def __init__(self, 
-        centroided : bool = True,
-        process_count : int = 10,
-        mp_batch_size : int = 5000,
+
+    def __init__(
+        self,
+        centroided: bool = True,
+        process_count: int = 10,
+        mp_batch_size: int = 5000,
         save_as_hdf: bool = False,
-        dda : bool = False,
-        auxiliary_items : list = [],
-        **kwargs
+        dda: bool = False,
+        auxiliary_items: list = [],
+        **kwargs,
     ):
         """
         Parameters
@@ -63,7 +70,7 @@ class ThermoRawData(MSData_Base):
 
         save_as_hdf : bool, default = False
             automatically save hdf after load raw data.
-        
+
         dda : bool, default = False
             is DDA data
 
@@ -71,16 +78,13 @@ class ThermoRawData(MSData_Base):
             Candidates are:
             "injection_time", "cv",
             "max_ion_time", "agc_target", "energy_ev",
-            "injection_optics_settling_time", 
+            "injection_optics_settling_time",
             "funnel_rf_level", "faims_cv",
             "detector", "activation", "analyzer",
             "detector_id", "activation_id", "analyzer_id",
         """
-        super().__init__(
-            centroided, save_as_hdf=save_as_hdf,
-            **kwargs
-        )
-        self.file_type = 'thermo'
+        super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
+        self.file_type = "thermo"
         self.process_count = process_count
         self.mp_batch_size = mp_batch_size
         self.dda = dda
@@ -108,17 +112,23 @@ class ThermoRawData(MSData_Base):
 
             # use multiprocessing to load batches
             _import_batch_partial = partial(
-                _import_batch, raw_file_path=raw_file_path, 
-                centroided = self.centroided, dda=self.dda,
-                auxiliary_items = self.auxiliary_items,
+                _import_batch,
+                raw_file_path=raw_file_path,
+                centroided=self.centroided,
+                dda=self.dda,
+                auxiliary_items=self.auxiliary_items,
             )
             with mp.get_context(mode).Pool(processes=self.process_count) as pool:
                 batches = list(
-                    tqdm(pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:])))
+                    tqdm(
+                        pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:]))
+                    )
                 )
 
             # collect peak indices
-            _peak_indices = np.concatenate([batch["_peak_indices"] for batch in batches])
+            _peak_indices = np.concatenate(
+                [batch["_peak_indices"] for batch in batches]
+            )
             peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
             peak_indices[0] = 0
             peak_indices[1:] = np.cumsum(_peak_indices)
@@ -132,9 +142,11 @@ class ThermoRawData(MSData_Base):
                 output_dict[key] = np.concatenate([batch[key] for batch in batches])
         else:
             output_dict = _import_batch(
-                (first_spectrum_number, last_spectrum_number+1),
-                raw_file_path, self.centroided, dda=self.dda,
-                auxiliary_items = self.auxiliary_items,
+                (first_spectrum_number, last_spectrum_number + 1),
+                raw_file_path,
+                self.centroided,
+                dda=self.dda,
+                auxiliary_items=self.auxiliary_items,
             )
             peak_indices = np.empty(rawfile.LastSpectrumNumber + 1, np.int64)
             peak_indices[0] = 0
@@ -149,8 +161,8 @@ def _import_batch(
     start_stop_tuple: tuple,
     raw_file_path: str,
     centroided: bool,
-    dda:bool,
-    auxiliary_items:list,
+    dda: bool,
+    auxiliary_items: list,
 ) -> dict:
     """Collect spectra from a batch of scans.
 
@@ -166,13 +178,13 @@ def _import_batch(
         if centroided peaks should be collected
 
     dda : bool
-        is dda data. 
+        is dda data.
 
     auxiliary_items : list
-        Candidates: 
+        Candidates:
         "injection_time", "cv",
         "max_ion_time", "agc_target", "energy_ev",
-        "injection_optics_settling_time", 
+        "injection_optics_settling_time",
         "funnel_rf_level", "faims_cv",
         "activation", "analyzer",
         "activation_id", "analyzer_id",
@@ -199,10 +211,8 @@ def _import_batch(
     ms_order_list = []
     ce_list = []
 
-    auxiliary_dict = dict(
-        (item, []) for item in auxiliary_items
-    )
-    if dda: 
+    auxiliary_dict = dict((item, []) for item in auxiliary_items)
+    if dda:
         use_trailer_extra = True
     else:
         for item in __trailer_extra_list__:
@@ -236,54 +246,40 @@ def _import_batch(
                 float(trailer_data["Max. Ion Time (ms):"])
             )
         if "agc_target" in auxiliary_dict:
-            auxiliary_dict["agc_target"].append(
-                float(trailer_data["AGC Target:"])
-            )
+            auxiliary_dict["agc_target"].append(float(trailer_data["AGC Target:"]))
         if "energy_ev" in auxiliary_dict:
             energy_ev = trailer_data["HCD Energy V:"]
             if not energy_ev:
                 energy_ev = trailer_data["HCD Energy eV:"]
             if not energy_ev:
                 energy_ev = 0
-            auxiliary_dict["energy_ev"].append(
-                float(energy_ev)
-            )
+            auxiliary_dict["energy_ev"].append(float(energy_ev))
         if "injection_optics_settling_time" in auxiliary_dict:
             auxiliary_dict["injection_optics_settling_time"].append(
-                float(trailer_data[
-                    "Injection Optics Settling Time (ms):"
-                ])
+                float(trailer_data["Injection Optics Settling Time (ms):"])
             )
         if "funnel_rf_level" in auxiliary_dict:
             auxiliary_dict["funnel_rf_level"].append(
                 float(trailer_data["Funnel RF Level:"])
             )
         if "faims_cv" in auxiliary_dict:
-            auxiliary_dict["faims_cv"].append(
-                float(trailer_data["FAIMS CV:"])
-            )
+            auxiliary_dict["faims_cv"].append(float(trailer_data["FAIMS CV:"]))
         if "activation" in auxiliary_dict:
             auxiliary_dict["activation"].append(
-                rawfile.activationType[
-                    int(scan_event.GetActivation(0))
-                ]
-                if ms_order > 1 else "MS1"
+                rawfile.activationType[int(scan_event.GetActivation(0))]
+                if ms_order > 1
+                else "MS1"
             )
         if "activation_id" in auxiliary_dict:
             auxiliary_dict["activation_id"].append(
-                int(scan_event.GetActivation(0))
-                if ms_order > 1 else 255
+                int(scan_event.GetActivation(0)) if ms_order > 1 else 255
             )
         if "analyzer" in auxiliary_dict:
             auxiliary_dict["analyzer"].append(
-                rawfile.massAnalyzerType[
-                    int(scan_event.MassAnalyzer)
-                ]
+                rawfile.massAnalyzerType[int(scan_event.MassAnalyzer)]
             )
         if "analyzer_id" in auxiliary_dict:
-            auxiliary_dict["analyzer_id"].append(
-                int(scan_event.MassAnalyzer)
-            )
+            auxiliary_dict["analyzer_id"].append(int(scan_event.MassAnalyzer))
         if "scan_event_string" in auxiliary_dict:
             auxiliary_dict["scan_event_string"].append(
                 rawfile.GetScanEventStringForScanNum(i)
@@ -293,7 +289,7 @@ def _import_batch(
             for _ in range(scan_event.MassCount):
                 _mass = scan_event.GetMass(_)
                 _width = scan_event.GetIsolationWidth(_)
-                windows.append((_mass-_width/2, _mass+_width/2))
+                windows.append((_mass - _width / 2, _mass + _width / 2))
             auxiliary_dict["multinotch"].append(np.array(windows))
 
         if ms_order == 1:
@@ -315,7 +311,6 @@ def _import_batch(
                 else:
                     auxiliary_dict["cv"].append(0)
 
-            
             isolation_center = scan_event.GetReaction(0).PrecursorMass
             isolation_width = scan_event.GetIsolationWidth(0)
             # isolation_center = rawfile.GetPrecursorMassForScanNum(i)
@@ -359,16 +354,16 @@ def _import_batch(
         "nce": np.array(ce_list, dtype=np.float32).copy(),
     }
     for key, val in list(auxiliary_dict.items()):
-        auxiliary_dict[key] = np.array(
-            val, dtype=__auxiliary_item_dtypes__[key]
-        ).copy()
+        auxiliary_dict[key] = np.array(val, dtype=__auxiliary_item_dtypes__[key]).copy()
     spec_dict.update(auxiliary_dict)
     return spec_dict
 
+
 def _get_mono_and_charge(trailer_data, scan_event):
-    mono = float(trailer_data['Monoisotopic M/Z:'].strip())
-    charge = int(trailer_data['Charge State:'].strip())
+    mono = float(trailer_data["Monoisotopic M/Z:"].strip())
+    charge = int(trailer_data["Charge State:"].strip())
     return mono, charge
+
 
 ms_reader_provider.register_reader("thermo", ThermoRawData)
 ms_reader_provider.register_reader("thermo_raw", ThermoRawData)

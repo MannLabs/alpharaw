@@ -8,34 +8,34 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 
 from alphatims.bruker import (
-    TimsTOF, 
+    TimsTOF,
 )
 
-from .plot_utils import (
-    plot_line_tims_fast
-)
+from .plot_utils import plot_line_tims_fast
 
-class XIC_Plot_Tims():
+
+class XIC_Plot_Tims:
     # hovermode = "x" | "y" | "closest" | False | "x unified" | "y unified"
-    hovermode = 'closest'
+    hovermode = "closest"
     plot_height = 550
-    colorscale_qualitative="Alphabet"
-    colorscale_sequential="Viridis"
-    theme_template='plotly_white'
+    colorscale_qualitative = "Alphabet"
+    colorscale_sequential = "Viridis"
+    theme_template = "plotly_white"
     ppm = 20.0
     rt_sec_win = 30.0
-    plot_rt_unit:str = "minute"
+    plot_rt_unit: str = "minute"
     im_win = 0.05
-    fig:go.Figure = None
+    fig: go.Figure = None
 
-    def plot(self, 
-        tims_data:TimsTOF,
-        query_df:pd.DataFrame,
-        view_dim:typing.Literal["rt","im"]="rt",
-        title:str="",
+    def plot(
+        self,
+        tims_data: TimsTOF,
+        query_df: pd.DataFrame,
+        view_dim: typing.Literal["rt", "im"] = "rt",
+        title: str = "",
         add_peak_area=True,
     ):
-        rt_sec = query_df['rt_sec'].values[0]
+        rt_sec = query_df["rt_sec"].values[0]
         if "im" not in query_df.columns:
             im = 0.0
         else:
@@ -70,31 +70,32 @@ class XIC_Plot_Tims():
             add_peak_area=add_peak_area,
         )
 
-    def _init_plot(self, view_dim='rt'):
+    def _init_plot(self, view_dim="rt"):
         self.fig = make_subplots(
             cols=1,
             shared_xaxes=True,
-            x_title=f'RT ({self.plot_rt_unit})' if view_dim == 'rt' else 'Mobility',
-            y_title='intensity',
+            x_title=f"RT ({self.plot_rt_unit})" if view_dim == "rt" else "Mobility",
+            y_title="intensity",
             vertical_spacing=0.2,
         )
-        self.trace:XIC_Plot_Tims = XIC_Trace_Tims(fig=self.fig, row=1)
+        self.trace: XIC_Plot_Tims = XIC_Trace_Tims(fig=self.fig, row=1)
 
-    def plot_query_masses(self,
-        tims_data:TimsTOF,
-        query_masses:np.ndarray,
-        query_ion_names:typing.List[str],
-        query_rt_sec:float, 
-        query_im:float,
-        precursor_mz:float,
-        marker_colors:list = None,
-        view_dim:typing.Literal["rt","im"]="rt",
-        query_intensities:np.ndarray = None,
+    def plot_query_masses(
+        self,
+        tims_data: TimsTOF,
+        query_masses: np.ndarray,
+        query_ion_names: typing.List[str],
+        query_rt_sec: float,
+        query_im: float,
+        precursor_mz: float,
+        marker_colors: list = None,
+        view_dim: typing.Literal["rt", "im"] = "rt",
+        query_intensities: np.ndarray = None,
         title="",
         add_peak_area=True,
     ):
         self._init_plot(view_dim=view_dim)
-        mass_tols = query_masses*1e-6*self.ppm
+        mass_tols = query_masses * 1e-6 * self.ppm
         if marker_colors is None:
             marker_colors = self._get_color_set(len(query_masses))
         self.trace.add_traces(
@@ -105,8 +106,8 @@ class XIC_Plot_Tims():
             marker_colors=marker_colors,
             query_rt_sec=query_rt_sec,
             query_im=query_im,
-            precursor_left_mz=precursor_mz*(1-1e-6*self.ppm),
-            precursor_right_mz=precursor_mz*(1+1e-6*self.ppm),
+            precursor_left_mz=precursor_mz * (1 - 1e-6 * self.ppm),
+            precursor_right_mz=precursor_mz * (1 + 1e-6 * self.ppm),
             view_dim=view_dim,
             rt_sec_win=self.rt_sec_win,
             im_win=self.im_win,
@@ -115,10 +116,7 @@ class XIC_Plot_Tims():
         )
         self.fig.update_layout(
             template=self.theme_template,
-            title=dict(
-                text=title,
-                yanchor='bottom'
-            ),
+            title=dict(text=title, yanchor="bottom"),
             # width=width,
             height=self.plot_height,
             hovermode=self.hovermode,
@@ -127,53 +125,52 @@ class XIC_Plot_Tims():
         return self.fig
 
     def _get_color_set(self, n_query):
-        if n_query <= len(
-            getattr(px.colors.qualitative, self.colorscale_qualitative)
-        ):
-            color_set = getattr(
-                px.colors.qualitative, self.colorscale_qualitative
-            )
+        if n_query <= len(getattr(px.colors.qualitative, self.colorscale_qualitative)):
+            color_set = getattr(px.colors.qualitative, self.colorscale_qualitative)
         else:
             color_set = px.colors.sample_colorscale(
-                self.colorscale_sequential, 
-                samplepoints=n_query
+                self.colorscale_sequential, samplepoints=n_query
             )
         return color_set
 
-class XIC_Trace_Tims():
-    label_format = '{ion_name} {mz:.3f}'
-    legend_group = '{ion_name}' # {ion_name}, {mz} or None
-    fig:go.Figure
-    row:int = 1
-    col:int = 1
-    plot_rt_unit:str = "minute"
 
-    def __init__(self, 
-        fig:go.Figure, 
-        row:int=1, col:int=1,
-        plot_rt_unit:str = "minute",
+class XIC_Trace_Tims:
+    label_format = "{ion_name} {mz:.3f}"
+    legend_group = "{ion_name}"  # {ion_name}, {mz} or None
+    fig: go.Figure
+    row: int = 1
+    col: int = 1
+    plot_rt_unit: str = "minute"
+
+    def __init__(
+        self,
+        fig: go.Figure,
+        row: int = 1,
+        col: int = 1,
+        plot_rt_unit: str = "minute",
     ):
         self.fig = fig
         self.row = row
         self.col = col
         self.plot_rt_unit = plot_rt_unit
 
-    def add_traces(self, 
-        tims_data:TimsTOF,
-        query_masses:np.ndarray,
-        mass_tols:np.ndarray,
-        ion_names:typing.List[str],
-        marker_colors:typing.List,
-        query_rt_sec:float, 
-        query_im:float,
-        precursor_left_mz:float = -1.0,
-        precursor_right_mz:float = -1.0,
-        view_dim:typing.Literal["rt","im"]="rt",
-        rt_sec_win = 30.0,
-        im_win = 0.05,
-        query_intensities:np.ndarray = None,
+    def add_traces(
+        self,
+        tims_data: TimsTOF,
+        query_masses: np.ndarray,
+        mass_tols: np.ndarray,
+        ion_names: typing.List[str],
+        marker_colors: typing.List,
+        query_rt_sec: float,
+        query_im: float,
+        precursor_left_mz: float = -1.0,
+        precursor_right_mz: float = -1.0,
+        view_dim: typing.Literal["rt", "im"] = "rt",
+        rt_sec_win=30.0,
+        im_win=0.05,
+        query_intensities: np.ndarray = None,
         add_peak_area=True,
-    )->go.Figure:
+    ) -> go.Figure:
         """Add traces for the query_masses.
 
         Args:
@@ -189,13 +186,12 @@ class XIC_Trace_Tims():
         Returns:
             go.Figure: self.fig.
         """
-        (
-            rt_slice, im_slice, prec_mz_slice, view_indices
-        ) = get_plotting_slices(
-            tims_data=tims_data, 
-            rt_sec=query_rt_sec, 
+        (rt_slice, im_slice, prec_mz_slice, view_indices) = get_plotting_slices(
+            tims_data=tims_data,
+            rt_sec=query_rt_sec,
             rt_sec_win=rt_sec_win,
-            im=query_im, im_win=im_win,
+            im=query_im,
+            im_win=im_win,
             precursor_left_mz=precursor_left_mz,
             precursor_right_mz=precursor_right_mz,
             view_dim=view_dim,
@@ -206,19 +202,16 @@ class XIC_Trace_Tims():
         else:
             query_intensities /= query_intensities.max()
 
-        for (
-            ion_name, query_mass, query_inten,
-            marker_color, mass_tol
-        ) in zip(
-            ion_names, query_masses, query_intensities,
-            marker_colors, mass_tols
+        for ion_name, query_mass, query_inten, marker_color, mass_tol in zip(
+            ion_names, query_masses, query_intensities, marker_colors, mass_tols
         ):
             self._add_one_trace(
                 tims_data=tims_data,
-                query_mass=query_mass, 
-                mass_tol=mass_tol, 
-                rt_slice=rt_slice, im_slice=im_slice,
-                prec_mz_slice=prec_mz_slice, 
+                query_mass=query_mass,
+                mass_tol=mass_tol,
+                rt_slice=rt_slice,
+                im_slice=im_slice,
+                prec_mz_slice=prec_mz_slice,
                 view_indices=view_indices,
                 view_dim=view_dim,
                 label=self.label_format.format(ion_name=ion_name, mz=query_mass),
@@ -229,66 +222,74 @@ class XIC_Trace_Tims():
             if query_inten > 0:
                 self._add_one_trace(
                     tims_data=tims_data,
-                    query_mass=query_mass, 
-                    mass_tol=mass_tol, 
-                    rt_slice=rt_slice, im_slice=im_slice,
-                    prec_mz_slice=prec_mz_slice, 
+                    query_mass=query_mass,
+                    mass_tol=mass_tol,
+                    rt_slice=rt_slice,
+                    im_slice=im_slice,
+                    prec_mz_slice=prec_mz_slice,
                     view_indices=view_indices,
                     view_dim=view_dim,
                     label=self.label_format.format(ion_name=ion_name, mz=query_mass),
                     legend_group=self.legend_group.format(ion_name=ion_name),
                     marker_color=marker_color,
                     intensity_scale=-query_inten,
-                    add_peak_area=add_peak_area
+                    add_peak_area=add_peak_area,
                 )
 
-    def _add_one_trace(self,
-        tims_data:TimsTOF,
-        query_mass:float,
-        mass_tol:float,
-        rt_slice:slice, im_slice:slice, 
-        prec_mz_slice:slice,
-        view_indices:np.ndarray,
-        view_dim:str,
-        label:str, 
-        legend_group:str, 
-        marker_color:str,
-        intensity_scale:float=1.0,
-        add_peak_area = True,
+    def _add_one_trace(
+        self,
+        tims_data: TimsTOF,
+        query_mass: float,
+        mass_tol: float,
+        rt_slice: slice,
+        im_slice: slice,
+        prec_mz_slice: slice,
+        view_indices: np.ndarray,
+        view_dim: str,
+        label: str,
+        legend_group: str,
+        marker_color: str,
+        intensity_scale: float = 1.0,
+        add_peak_area=True,
     ):
         frag_indices = tims_data[
             rt_slice,
             im_slice,
             prec_mz_slice,
             slice(
-                query_mass - mass_tol, 
+                query_mass - mass_tol,
                 query_mass + mass_tol,
             ),
-            'raw'
+            "raw",
         ]
-        if len(frag_indices) == 0: return
+        if len(frag_indices) == 0:
+            return
         self.fig.add_trace(
             plot_line_tims_fast(
-                tims_data, 
+                tims_data,
                 frag_indices,
                 view_indices,
                 name=label,
                 legend_group=legend_group,
-                marker_color=marker_color, 
+                marker_color=marker_color,
                 view_dim=view_dim,
                 intensity_scale=intensity_scale,
                 add_peak_area=add_peak_area,
             ),
-            row=self.row, col=self.col,
+            row=self.row,
+            col=self.col,
         )
+
 
 def get_plotting_slices(
     tims_data: TimsTOF,
-    rt_sec:float, rt_sec_win:float=30.0,
-    im:float = 0., im_win:float = 0.05,
-    precursor_left_mz:float = -1.0,
-    precursor_right_mz:float = -1.0,
-    view_dim:str = "rt",
+    rt_sec: float,
+    rt_sec_win: float = 30.0,
+    im: float = 0.0,
+    im_win: float = 0.05,
+    precursor_left_mz: float = -1.0,
+    precursor_right_mz: float = -1.0,
+    view_dim: str = "rt",
 ):
     """
     Get plotting slices for target queries in TimsTOF data.
@@ -302,48 +303,44 @@ def get_plotting_slices(
         ppm (float, optional): PPM tolerance for `precursor_mz`. Defaults to 20.0.
         view_dim (str, optional): View dimension, "rt" or "im". Defaults to "rt"
     """
-    rt_slice = slice(
-        rt_sec - rt_sec_win/2, 
-        rt_sec + rt_sec_win/2
-    )
-    im_slice = slice(
-        im - im_win/2, 
-        im + im_win/2
-    )
+    rt_slice = slice(rt_sec - rt_sec_win / 2, rt_sec + rt_sec_win / 2)
+    im_slice = slice(im - im_win / 2, im + im_win / 2)
 
     if precursor_left_mz <= 0:
         prec_mz_slice = 0
-        raw_indices = tims_data[
-            rt_slice,
-            im_slice,
-            0,
-            :,
-            'raw'
-        ]
+        raw_indices = tims_data[rt_slice, im_slice, 0, :, "raw"]
     else:
         prec_mz_slice = slice(
             precursor_left_mz,
             precursor_right_mz,
         )
-        raw_indices = tims_data[
-            rt_slice,
-            im_slice,
-            prec_mz_slice,
-            :,
-            'raw'
-        ]
+        raw_indices = tims_data[rt_slice, im_slice, prec_mz_slice, :, "raw"]
 
-    if view_dim == 'rt':
-        view_indices = np.sort(np.array(list(set(
-            tims_data.convert_from_indices(
-            raw_indices,
-            return_frame_indices=True
-        )['frame_indices'])), dtype=np.int64))
+    if view_dim == "rt":
+        view_indices = np.sort(
+            np.array(
+                list(
+                    set(
+                        tims_data.convert_from_indices(
+                            raw_indices, return_frame_indices=True
+                        )["frame_indices"]
+                    )
+                ),
+                dtype=np.int64,
+            )
+        )
     else:
-        view_indices = np.sort(np.array(list(set(
-            tims_data.convert_from_indices(
-            raw_indices,
-            return_scan_indices=True
-        )['scan_indices'])), dtype=np.int64))
+        view_indices = np.sort(
+            np.array(
+                list(
+                    set(
+                        tims_data.convert_from_indices(
+                            raw_indices, return_scan_indices=True
+                        )["scan_indices"]
+                    )
+                ),
+                dtype=np.int64,
+            )
+        )
 
     return rt_slice, im_slice, prec_mz_slice, view_indices

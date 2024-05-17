@@ -111,6 +111,7 @@ def make_query_df_for_peptide(
         min_frag_mz=min_frag_mz,
     )
 
+
 def make_psm_plot_for_frag_dfs(
     spec_masses: np.ndarray,
     spec_intensities: np.ndarray,
