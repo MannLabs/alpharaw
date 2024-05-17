@@ -1,23 +1,29 @@
 #!python
 
 import warnings
+
 warnings.filterwarnings("ignore")
+
 
 def register_readers():
     from .ms_data_base import ms_reader_provider
     from .legacy_msdata import mgf
     from .mzml import MzMLReader
     from .wrappers import alphapept_wrapper
+
     try:
         from .sciex import SciexWiffData
         from .thermo import ThermoRawData
     except (RuntimeError, ImportError):
         print("[WARN] pythonnet is not installed")
 
+
 __project__ = "alpharaw"
 __version__ = "0.4.5"
 __license__ = "Apache"
-__description__ = "An open-source Python package to unify raw MS data access and storage."
+__description__ = (
+    "An open-source Python package to unify raw MS data access and storage."
+)
 __author__ = "Mann Labs"
 __author_email__ = "jalew.zwf@qq.com"
 __github__ = "https://github.com/MannLabs/alpharaw"
@@ -28,7 +34,7 @@ __keywords__ = [
     "mass spectrometry",
     "raw data",
     "data access",
-    "data storage"
+    "data storage",
 ]
 __python_version__ = ">=3.8"
 __classifiers__ = [

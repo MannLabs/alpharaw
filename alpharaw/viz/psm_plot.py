@@ -244,9 +244,7 @@ class MassErrPlot:
         self.fig = fig_subplots
         self.row = row
         self.col = 1
-        self.hovertemplate = (
-            "%{hovertext}<br>" "<b>m/z:</b> %{x}<br><b>ppm:</b> %{y}"
-        )
+        self.hovertemplate = "%{hovertext}<br>" "<b>m/z:</b> %{x}<br><b>ppm:</b> %{y}"
 
     def plot(self, plot_df: pd.DataFrame):
         if "color" not in plot_df.columns:
