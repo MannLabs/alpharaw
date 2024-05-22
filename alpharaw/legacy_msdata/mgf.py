@@ -1,11 +1,11 @@
 import numpy as np
 
 from alpharaw.ms_data_base import (
-    index_ragged_list,
-    MSData_Base,
-    ms_reader_provider,
-    PEAK_MZ_DTYPE,
     PEAK_INTENSITY_DTYPE,
+    PEAK_MZ_DTYPE,
+    MSData_Base,
+    index_ragged_list,
+    ms_reader_provider,
 )
 
 
@@ -13,9 +13,7 @@ def read_until(file, until):
     lines = []
     while True:
         line = file.readline().strip()
-        if line == "":
-            break
-        elif line.startswith(until):
+        if line == "" or line.startswith(until):
             break
         else:
             lines.append(line)
@@ -66,7 +64,7 @@ class MGFReader(MSData_Base):
                 charge = 0
                 for line in lines:
                     if line[0].isdigit():
-                        mass, inten = [float(i) for i in line.strip().split()]
+                        mass, inten = (float(i) for i in line.strip().split())
                         masses.append(mass)
                         intens.append(inten)
                     elif line.startswith("SCAN="):

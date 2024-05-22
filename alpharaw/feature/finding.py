@@ -1,22 +1,22 @@
-import pandas as pd
+import logging
+
 import numpy as np
+import pandas as pd
 
 from alpharaw.feature.chem import averagine_aa, isotopes, maximum_offset
 from alpharaw.feature.hills import (
     extract_hills,
-    remove_duplicate_hills,
-    split_hills,
     filter_hills,
     get_hill_data,
+    remove_duplicate_hills,
+    split_hills,
 )
 from alpharaw.feature.isotope_pattern import (
-    get_pre_isotope_patterns,
-    get_isotope_patterns,
     feature_finder_report,
+    get_isotope_patterns,
+    get_pre_isotope_patterns,
     get_stats,
 )
-
-import logging
 
 
 def find(
@@ -109,7 +109,7 @@ def find(
         iso_mass_range=iso_mass_range,
         cc_cutoff=iso_corr_min,
     )
-    logging.info("Found {:,} pre isotope patterns.".format(len(pre_isotope_patterns)))
+    logging.info(f"Found {len(pre_isotope_patterns):,} pre isotope patterns.")
 
     isotope_patterns, iso_idx, isotope_charges = get_isotope_patterns(
         pre_isotope_patterns,
@@ -129,7 +129,7 @@ def find(
         iso_split_level=iso_split_level,
         callback=None,
     )
-    logging.info("Extracted {:,} isotope patterns.".format(len(isotope_charges)))
+    logging.info(f"Extracted {len(isotope_charges):,} isotope patterns.")
 
     feature_df, lookup_idx = feature_finder_report(
         query_data,

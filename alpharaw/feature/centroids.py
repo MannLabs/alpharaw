@@ -1,6 +1,6 @@
 import numpy as np
-from numba import njit
 from alphatims.utils import threadpool
+from numba import njit
 
 
 @threadpool

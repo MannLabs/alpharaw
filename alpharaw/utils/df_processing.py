@@ -1,9 +1,10 @@
-import pandas as pd
-
-from alphabase.peptide.fragment import compress_fragment_indices
-from alphabase.peptide.fragment import remove_unused_fragments
-
 from typing import Tuple
+
+import pandas as pd
+from alphabase.peptide.fragment import (
+    compress_fragment_indices,
+    remove_unused_fragments,
+)
 
 
 def remove_unused_peaks(

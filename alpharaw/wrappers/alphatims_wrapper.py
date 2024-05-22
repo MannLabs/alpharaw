@@ -1,7 +1,6 @@
+import alphatims
 import numpy as np
 import pandas as pd
-
-import alphatims
 from alphatims.bruker import TimsTOF
 
 from ..ms_data_base import MSData_Base

@@ -1,8 +1,8 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
-import numpy as np
 
 import clr
+import numpy as np
 
 clr.AddReference("System")
 # from System.Runtime.InteropServices import Marshal
@@ -20,8 +20,9 @@ clr.AddReference("System")
 #         len(src))
 #     return dest
 
-from System.Runtime.InteropServices import GCHandle, GCHandleType
 import ctypes
+
+from System.Runtime.InteropServices import GCHandle, GCHandleType
 
 
 def DotNetArrayToNPArray(src):

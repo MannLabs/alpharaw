@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 import numpy as np
-from numba import int32, float32, float64, njit, types
+from numba import float32, float64, int32, njit, types
 from numba.experimental import jitclass
 from numba.typed import Dict
 

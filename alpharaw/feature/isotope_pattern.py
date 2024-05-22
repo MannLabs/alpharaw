@@ -1,18 +1,17 @@
-from numba import njit
-from numba.typed import List
-import numpy as np
-from alphatims.utils import threadpool
 from typing import Callable, Union
+
+import numpy as np
 import pandas as pd
-from numba.typed import Dict
+from alphatims.utils import threadpool
+from numba import njit
+from numba.typed import Dict, List
 
 # TODO: Move hardcoded constants
-
 from alpharaw.feature.chem import (
-    mass_to_dist,
     DELTA_M,
     DELTA_S,
     M_PROTON,
+    mass_to_dist,
 )
 
 
@@ -110,9 +109,9 @@ def correlate(
     min_one, max_one = scans_[0], scans_[-1]
     min_two, max_two = scans_2[0], scans_2[-1]
 
-    if min_one + 3 > max_two:  # at least an overlap of 3 elements
-        corr = 0
-    elif min_two + 3 > max_one:
+    if (
+        min_one + 3 > max_two or min_two + 3 > max_one
+    ):  # at least an overlap of 3 elements
         corr = 0
     else:
         min_s = min(min_one, min_two)

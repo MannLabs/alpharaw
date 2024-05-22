@@ -1,15 +1,15 @@
-import pandas as pd
-import numpy as np
-import tqdm
-from typing import Union, Tuple
+from typing import Tuple, Union
 
+import numpy as np
+import pandas as pd
+import tqdm
 from alphatims.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
-
+from alpharaw.wrappers.alphapept_wrapper import (
+    AlphaPept_HDF_MS2_Reader,  # noqa: F401  # TODO remove import side effect
+)
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
-
-from alpharaw.wrappers.alphapept_wrapper import AlphaPept_HDF_MS2_Reader  # noqa: F401  # TODO remove import side effect
 
 from .psm_match import PepSpecMatch
 

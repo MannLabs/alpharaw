@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from alphatims.utils import threadpool
 from numba import njit
+
 from alpharaw.feature.centroids import connect_centroids
 
 
@@ -526,7 +527,7 @@ def hill_stats(
 
     for i in range(hill_nboot):
         boot = np.random.choice(len(int_), bootsize, replace=True)
-        boot_mz = np.sum((mz_[boot] * int_[boot])) / np.sum(int_[boot])
+        boot_mz = np.sum(mz_[boot] * int_[boot]) / np.sum(int_[boot])
         averages[i] = boot_mz
         average += boot_mz
 

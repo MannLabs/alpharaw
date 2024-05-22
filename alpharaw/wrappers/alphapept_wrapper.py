@@ -1,5 +1,4 @@
 import numpy as np
-
 from alphabase.io.hdf import HDF_File
 
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider

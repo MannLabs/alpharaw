@@ -1,33 +1,28 @@
-import numpy as np
+from typing import Tuple, Union
+
 import numba
+import numpy as np
 import pandas as pd
 import tqdm
-from typing import Union, Tuple
-
-from alpharaw import register_readers
-
-
 from alphabase.peptide.fragment import (
     create_fragment_mz_dataframe,
     get_charged_frag_types,
 )
 
-from alpharaw.ms_data_base import (
-    MSData_Base,
-    ms_reader_provider,
-    PEAK_MZ_DTYPE,
-    PEAK_INTENSITY_DTYPE,
-)
-
+from alpharaw import register_readers
+from alpharaw.dia.normal_dia import NormalDIAGrouper
 from alpharaw.match.match_utils import (
     match_closest_peaks,
     match_highest_peaks,
 )
 from alpharaw.match.spec_finder import find_dia_spec_idxes_same_window
+from alpharaw.ms_data_base import (
+    PEAK_INTENSITY_DTYPE,
+    PEAK_MZ_DTYPE,
+    MSData_Base,
+    ms_reader_provider,
+)
 from alpharaw.utils.ms_path_utils import parse_ms_files_to_dict
-
-from alpharaw.dia.normal_dia import NormalDIAGrouper
-
 
 register_readers()  # TODO remove this import side effect
 
