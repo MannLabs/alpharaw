@@ -6,7 +6,7 @@ import numpy as np
 from alpharaw.match.match_utils import match_closest_peaks, match_highest_peaks
 
 from alphabase.peptide.precursor import (
-    calc_precursor_mz,
+    update_precursor_mz,
     calc_precursor_isotope_intensity,
 )
 
@@ -368,7 +368,7 @@ def translate_frag_df_to_plot_df(
         for iso in isotope_names:
             fragment_df[f"precursor_{iso}"] = precursor_df[iso].values[0]
         if len(isotope_names) > 0:
-            fragment_df[f"precursor_mono_idx"] = precursor_df.mono_isotope_idx.values[0]
+            fragment_df["precursor_mono_idx"] = precursor_df.mono_isotope_idx.values[0]
 
     return fragment_df
 
@@ -386,7 +386,7 @@ def make_precursor_fragment_df(
     precursor_df = pd.DataFrame(
         dict(sequence=[sequence], mods=[mods], mod_sites=[mod_sites], charge=charge)
     )
-    calc_precursor_mz(precursor_df)
+    update_precursor_mz(precursor_df)
     if include_precursor_isotopes:
         calc_precursor_isotope_intensity(precursor_df, max_isotope=max_isotope)
     if include_fragments:
