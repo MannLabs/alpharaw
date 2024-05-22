@@ -1,6 +1,8 @@
-import clr
+# ruff: noqa: E402  #Module level import not at top of file
 import os
 import numpy as np
+
+import clr
 
 clr.AddReference("System")
 # from System.Runtime.InteropServices import Marshal

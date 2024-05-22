@@ -1,3 +1,4 @@
+# ruff: noqa: E402  #Module level import not at top of file
 import os
 import warnings
 
@@ -307,13 +308,6 @@ class RawFileReader(object):
     def GetScanEventStringForScanNum(self, scanNumber):
         """This function returns scan event information as a string for the specified scan number."""
         return self.source.GetScanEventStringForScanNumber(scanNumber)
-
-    def GetStatusLogForRetentionTime(self, rt):
-        logEntry = self.source.GetStatusLogForRetentionTime(rt)
-        return dict(zip(logEntry.Labels, logEntry.Values))
-
-    def GetStatusLogForScanNum(self, scan):
-        return self.GetStatusLogForRetentionTime(self.RTFromScanNum(scan))
 
     def GetScanEventForScanNum(self, scanNumber):
         return IScanEventBase(self.source.GetScanEventForScanNumber(scanNumber))

@@ -1,3 +1,4 @@
+# ruff: noqa: E402  #Module level import not at top of file
 import os
 import numpy as np
 
@@ -7,6 +8,7 @@ from alpharaw.utils.centroiding import naive_centroid
 import clr
 
 clr.AddReference("System")
+
 import System  # noqa: F401
 from System.Threading import Thread
 from System.Globalization import CultureInfo

@@ -390,13 +390,13 @@ def grow(
 
         y = pattern[seed + relative_pos]  # This is a reference peak
 
-        l = sortindex_[y]
+        ll = sortindex_[y]
 
         mass2 = stats[y, 0]
         delta_mass2 = stats[y, 1]
 
-        start = hill_ptrs[l]
-        end = hill_ptrs[l + 1]
+        start = hill_ptrs[ll]
+        end = hill_ptrs[ll + 1]
         idx_ = hill_data[start:end]
         int_2 = int_data[idx_]
         scans_2 = scan_idx[idx_]
@@ -560,7 +560,6 @@ def plot_pattern(
     pattern: np.ndarray,
     sorted_hills: np.ndarray,
     centroids: np.ndarray,
-    hill_data: np.ndarray,
 ):
     """Helper function to plot a pattern.
 
@@ -570,19 +569,17 @@ def plot_pattern(
         centroids (np.ndarray): 1D Array containing the masses of the centroids.
         hill_data (np.ndarray): Array containing the indices to hills.
     """
+    import matplotlib.pyplot as plt
+
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 10))
     centroid_dtype = [("mz", float), ("int", float), ("scan_no", int), ("rt", float)]
 
-    mzs = []
-    rts = []
-    ints = []
     for entry in pattern:
         hill = sorted_hills[entry]
         hill_data = np.array(
             [centroids[_[0]][_[1]] for _ in hill], dtype=centroid_dtype
         )
 
-        int_profile = hill_data["int"]
         ax1.plot(hill_data["rt"], hill_data["int"])
         ax2.scatter(hill_data["rt"], hill_data["mz"], s=hill_data["int"] / 5e5)
 
@@ -1101,13 +1098,6 @@ def report_(
     mass = mz_to_mass(mz, charge)
     int_max_idx = np.argmax(isotope_data[:, 2])
     mz_most_abundant = isotope_data[:, 0][int_max_idx]
-
-    int_max = isotope_data[:, 2][int_max_idx]
-
-    rt_start = isotope_data[
-        int_max_idx, 4
-    ]  # This is the start of the most abundant trace
-    rt_end = isotope_data[int_max_idx, 5]
 
     rt_min_ = min(isotope_data[:, 4])
     rt_max_ = max(isotope_data[:, 5])

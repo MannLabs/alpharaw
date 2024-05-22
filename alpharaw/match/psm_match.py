@@ -6,7 +6,6 @@ from typing import Union, Tuple
 
 from alpharaw import register_readers
 
-register_readers()
 
 from alphabase.peptide.fragment import (
     create_fragment_mz_dataframe,
@@ -28,6 +27,9 @@ from alpharaw.match.spec_finder import find_dia_spec_idxes_same_window
 from alpharaw.utils.ms_path_utils import parse_ms_files_to_dict
 
 from alpharaw.dia.normal_dia import NormalDIAGrouper
+
+
+register_readers()  # TODO remove this import side effect
 
 
 class PepSpecMatch:
