@@ -41,5 +41,5 @@ class MassCalibratorForRT_KNN:
         ).reshape(-1)
         psm_df[["frag_start_idx", "frag_stop_idx", "frag_mass_shift"]].apply(
             calibrate_one, axis=1, frag_df=mass_error_df
-        ).values
+        )
         return mass_error_df

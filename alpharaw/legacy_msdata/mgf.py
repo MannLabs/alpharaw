@@ -36,7 +36,6 @@ class MGFReader(MSData_Base):
     """MGF Reader (MS2)"""
 
     def _import(self, _path: str):
-        f = open(_path) if isinstance(_path, str) else _path
         scan_mz_dict = {}
         scan_charge_dict = {}
         masses_list = []
@@ -47,6 +46,8 @@ class MGFReader(MSData_Base):
         precursor_mz_list = []
         charge_list = []
         self._has_chimeras = False
+
+        f = open(_path) if isinstance(_path, str) else _path  # noqa: SIM115
         while True:
             line = f.readline()
             if not line:

@@ -40,9 +40,7 @@ class PepSpecMatch:
 
     def __init__(
         self,
-        charged_frag_types: list = get_charged_frag_types(
-            ["b", "y", "b_modloss", "y_modloss"], 2
-        ),
+        charged_frag_types: list = None,
         match_closest: bool = True,
         use_ppm: bool = True,
         tol_value: float = 20.0,
@@ -66,7 +64,11 @@ class PepSpecMatch:
         tol_value : float, optional
             tolerance value, by default 20.0
         """
-        self.charged_frag_types = charged_frag_types
+        self.charged_frag_types = (
+            get_charged_frag_types(["b", "y", "b_modloss", "y_modloss"], 2)
+            if charged_frag_types is None
+            else charged_frag_types
+        )
         self.match_closest = match_closest
         self.use_ppm = use_ppm
         self.tolerance = tol_value

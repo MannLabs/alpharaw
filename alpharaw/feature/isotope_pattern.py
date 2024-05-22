@@ -400,21 +400,22 @@ def grow(
         int_2 = int_data[idx_]
         scans_2 = scan_idx[idx_]
 
-        if correlate(scans_, scans_2, int_, int_2) > cc_cutoff:
-            if check_isotope_pattern_directed(
-                mass1,
-                mass2,
-                delta_mass1,
-                delta_mass2,
-                charge,
-                -direction * index,
-                iso_mass_range,
-            ):
-                if direction == 1:
-                    trail.append(y)
-                else:
-                    trail.insert(0, y)
-                index += 1  # Greedy matching: Only one edge for a specific distance, will not affect the following matches
+        if correlate(
+            scans_, scans_2, int_, int_2
+        ) > cc_cutoff and check_isotope_pattern_directed(
+            mass1,
+            mass2,
+            delta_mass1,
+            delta_mass2,
+            charge,
+            -direction * index,
+            iso_mass_range,
+        ):
+            if direction == 1:
+                trail.append(y)
+            else:
+                trail.insert(0, y)
+            index += 1  # Greedy matching: Only one edge for a specific distance, will not affect the following matches
 
         delta_mass = np.abs(mass1 - mass2)
 

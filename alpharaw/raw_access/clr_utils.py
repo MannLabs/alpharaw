@@ -40,7 +40,7 @@ def DotNetArrayToNPArray(src):
     finally:
         if src_hndl.IsAllocated:
             src_hndl.Free()
-        return dest
+        return dest  # noqa: B012
 
 
 ext_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ext")

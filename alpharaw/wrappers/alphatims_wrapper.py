@@ -19,8 +19,6 @@ class AlphaTimsReader(MSData_Base):
         self.raw_file_path = burker_d_folder
         self.file_type = "bruker"
 
-        self.spectrum_df
-
         self.spectrum_df["precursor_mz"] = tims.fragment_frames.IsolationMz.values
         isolations = tims.fragment_frames.IsolationWidth.values / 2
         self.spectrum_df["isolation_lower_mz"] = (

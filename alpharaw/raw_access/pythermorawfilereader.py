@@ -204,7 +204,7 @@ class RawFileReader:
             self.MassResolution = self.GetMassResolution()
             self.NumSpectra = self.GetNumSpectra()
         except Exception as e:
-            raise OSError(f"{e}")
+            raise OSError(f"{e}") from e
 
     def Close(self):
         """Closes a raw file and frees the associated memory."""
