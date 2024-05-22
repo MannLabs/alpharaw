@@ -7,12 +7,6 @@ from numba.typed import Dict
 # Some legacy chemistry functions
 # Maybe replacd with alphabase?
 
-from numba.typed import Dict
-from numba import types, njit
-import numpy as np
-from numba import int32, float32, float64, njit, types
-from numba.experimental import jitclass
-from numba.typed import Dict
 
 averagine_aa = Dict.empty(key_type=types.unicode_type, value_type=types.float64)
 

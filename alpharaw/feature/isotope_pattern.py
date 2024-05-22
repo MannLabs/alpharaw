@@ -10,13 +10,9 @@ from numba.typed import Dict
 
 from alpharaw.feature.chem import (
     mass_to_dist,
-    maximum_offset,
     DELTA_M,
     DELTA_S,
     M_PROTON,
-    averagine_aa,
-    isotopes,
-    Isotope,
 )
 
 
@@ -945,9 +941,6 @@ def isolate_isotope_pattern(
                         champion_intensity = intensity_profile.sum()
 
     return champion_trace, champion_charge
-
-
-from typing import Callable, Union
 
 
 def get_isotope_patterns(

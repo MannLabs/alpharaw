@@ -368,7 +368,7 @@ def translate_frag_df_to_plot_df(
         for iso in isotope_names:
             fragment_df[f"precursor_{iso}"] = precursor_df[iso].values[0]
         if len(isotope_names) > 0:
-            fragment_df[f"precursor_mono_idx"] = precursor_df.mono_isotope_idx.values[0]
+            fragment_df["precursor_mono_idx"] = precursor_df.mono_isotope_idx.values[0]
 
     return fragment_df
 
