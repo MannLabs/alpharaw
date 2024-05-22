@@ -36,10 +36,7 @@ class MGFReader(MSData_Base):
     """MGF Reader (MS2)"""
 
     def _import(self, _path: str):
-        if isinstance(_path, str):
-            f = open(_path)
-        else:
-            f = _path
+        f = open(_path) if isinstance(_path, str) else _path
         scan_mz_dict = {}
         scan_charge_dict = {}
         masses_list = []

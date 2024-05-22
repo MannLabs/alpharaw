@@ -34,10 +34,7 @@ class XIC_Plot_Tims:
         add_peak_area=True,
     ):
         rt_sec = query_df["rt_sec"].values[0]
-        if "im" not in query_df.columns:
-            im = 0.0
-        else:
-            im = query_df["im"].values[0]
+        im = 0.0 if "im" not in query_df.columns else query_df["im"].values[0]
         if "precursor_mz" not in query_df.columns:
             precursor_mz = 0.0
         else:

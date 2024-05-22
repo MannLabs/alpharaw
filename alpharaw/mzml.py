@@ -32,7 +32,7 @@ class MzMLReader(MSData_Base):
         isolation_upper_mz_list = []
         nce_list = []
 
-        for i in spec_indices:
+        for _ in spec_indices:
             spec = next(reader)
 
             (

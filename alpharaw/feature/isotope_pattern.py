@@ -677,15 +677,9 @@ def truncate(
         right_minima = minima[minima > seedpos]
 
         # If the minimum is smaller than the seed
-        if len(left_minima) > 0:
-            minpos = left_minima[-1]
-        else:
-            minpos = 0
+        minpos = left_minima[-1] if len(left_minima) > 0 else 0
 
-        if len(right_minima) > 0:
-            maxpos = right_minima[0]
-        else:
-            maxpos = len(array)
+        maxpos = right_minima[0] if len(right_minima) > 0 else len(array)
 
         array = array[minpos : maxpos + 1]
 
@@ -1012,10 +1006,7 @@ def get_isotope_patterns(
                 cc_cutoff,
                 iso_split_level,
             )
-            if isotope_pattern is None:
-                length = 0
-            else:
-                length = len(isotope_pattern)
+            length = 0 if isotope_pattern is None else len(isotope_pattern)
 
             if length > 1:
                 isotope_charges.append(isotope_charge)

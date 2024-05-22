@@ -56,7 +56,7 @@ class ThermoRawData(MSData_Base):
         mp_batch_size: int = 5000,
         save_as_hdf: bool = False,
         dda: bool = False,
-        auxiliary_items: list = [],
+        auxiliary_items: list = None,
         **kwargs,
     ):
         """
@@ -87,6 +87,8 @@ class ThermoRawData(MSData_Base):
             "detector", "activation", "analyzer",
             "detector_id", "activation_id", "analyzer_id",
         """
+        if auxiliary_items is None:
+            auxiliary_items = []
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         self.file_type = "thermo"
         self.process_count = process_count
@@ -140,7 +142,7 @@ class ThermoRawData(MSData_Base):
             output_dict = {"peak_indices": peak_indices}
 
             # concatenate other arrays
-            for key in batches[0].keys():
+            for key in batches[0]:
                 if key == "_peak_indices":
                     continue
                 output_dict[key] = np.concatenate([batch[key] for batch in batches])
