@@ -3,13 +3,13 @@ import os
 
 import alpharaw
 from alpharaw.ms_data_base import ms_reader_provider
-from alpharaw.legacy_msdata import mgf
-from alpharaw.mzml import MzMLReader
-from alpharaw.wrappers import alphapept_wrapper
+from alpharaw.legacy_msdata import mgf  # noqa: F401  # TODO remove import side effect
+from alpharaw.mzml import MzMLReader  # noqa: F401  # TODO remove import side effect
+from alpharaw.wrappers import alphapept_wrapper  # noqa: F401  # TODO remove import side effect
 
 try:
-    from alpharaw.sciex import SciexWiffData
-    from alpharaw.thermo import ThermoRawData
+    from alpharaw.sciex import SciexWiffData  # noqa: F401 # TODO remove import side effect
+    from alpharaw.thermo import ThermoRawData  # noqa: F401 # TODO remove import side effect
 except (RuntimeError, ImportError):
     print("[WARN] pythonnet is not installed")
 
@@ -51,7 +51,7 @@ def run(ctx, **kwargs):
     type=str,
     default="thermo_raw",
     show_default=True,
-    help=f"Only `thermo_raw`, `sciex_wiff` is supported currently.",
+    help="Only `thermo_raw`, `sciex_wiff` is supported currently.",
 )
 @click.option(
     "--raw",

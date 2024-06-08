@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from alphatims.utils import threadpool
 from numba import njit
 from alpharaw.feature.centroids import connect_centroids

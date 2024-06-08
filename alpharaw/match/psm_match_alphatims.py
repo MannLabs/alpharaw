@@ -9,10 +9,9 @@ from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
 
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
-from alpharaw.wrappers.alphapept_wrapper import AlphaPept_HDF_MS2_Reader
+from alpharaw.wrappers.alphapept_wrapper import AlphaPept_HDF_MS2_Reader  # noqa: F401  # TODO remove import side effect
 
 from .psm_match import PepSpecMatch
-from ..utils.ms_path_utils import parse_ms_files_to_dict
 
 alphatims_hdf_types = [
     "alphatims",

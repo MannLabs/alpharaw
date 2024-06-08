@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import numba
 
 from alpharaw.feature.chem import averagine_aa, isotopes, maximum_offset
 from alpharaw.feature.hills import (

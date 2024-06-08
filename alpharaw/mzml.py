@@ -157,7 +157,7 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
                 nce = float(filter_string.split("@cid")[1].split(" ")[0])
             else:
                 nce = np.nan
-        except:
+        except Exception:
             nce = np.nan
     return (
         rt,

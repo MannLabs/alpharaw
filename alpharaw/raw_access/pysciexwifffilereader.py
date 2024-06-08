@@ -1,7 +1,6 @@
+# ruff: noqa: E402  #Module level import not at top of file
 import os
-import sys
 import numpy as np
-import time
 
 from alpharaw.utils.centroiding import naive_centroid
 
@@ -9,7 +8,8 @@ from alpharaw.utils.centroiding import naive_centroid
 import clr
 
 clr.AddReference("System")
-import System
+
+import System  # noqa: F401
 from System.Threading import Thread
 from System.Globalization import CultureInfo
 
@@ -25,8 +25,8 @@ clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvide
 clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
 clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
 
-import Clearcore2
-import WiffOps4Python
+import Clearcore2  # noqa: F401
+import WiffOps4Python  # noqa: F401
 from WiffOps4Python import WiffOps as DotNetWiffOps
 from Clearcore2.Data.AnalystDataProvider import (
     AnalystWiffDataProvider,

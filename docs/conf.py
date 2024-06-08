@@ -49,7 +49,7 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_modidx,py"]
 
-code_url = f"https://github.com/mannlabs/alpharaw/blob/main"
+code_url = "https://github.com/mannlabs/alpharaw/blob/main"
 
 
 def linkcode_resolve(domain, info):
