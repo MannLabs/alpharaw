@@ -8,7 +8,7 @@ from alphabase.constants.modification import MOD_MASS
 from alphabase.peptide.fragment import create_fragment_mz_dataframe, flatten_fragments
 from alphabase.peptide.precursor import (
     calc_precursor_isotope_intensity,
-    calc_precursor_mz,
+    update_precursor_mz,
 )
 
 from alpharaw.match.match_utils import match_closest_peaks, match_highest_peaks
