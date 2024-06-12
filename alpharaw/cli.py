@@ -1,15 +1,22 @@
-import click
 import os
 
+import click
+
 import alpharaw
-from alpharaw.ms_data_base import ms_reader_provider
 from alpharaw.legacy_msdata import mgf  # noqa: F401  # TODO remove import side effect
+from alpharaw.ms_data_base import ms_reader_provider
 from alpharaw.mzml import MzMLReader  # noqa: F401  # TODO remove import side effect
-from alpharaw.wrappers import alphapept_wrapper  # noqa: F401  # TODO remove import side effect
+from alpharaw.wrappers import (
+    alphapept_wrapper,  # noqa: F401  # TODO remove import side effect
+)
 
 try:
-    from alpharaw.sciex import SciexWiffData  # noqa: F401 # TODO remove import side effect
-    from alpharaw.thermo import ThermoRawData  # noqa: F401 # TODO remove import side effect
+    from alpharaw.sciex import (
+        SciexWiffData,  # noqa: F401 # TODO remove import side effect
+    )
+    from alpharaw.thermo import (
+        ThermoRawData,  # noqa: F401 # TODO remove import side effect
+    )
 except (RuntimeError, ImportError):
     print("[WARN] pythonnet is not installed")
 
@@ -24,22 +31,18 @@ except (RuntimeError, ImportError):
 @click.version_option(alpharaw.__version__, "-v", "--version")
 def run(ctx, **kwargs):
     click.echo(
-        r"""
+        rf"""
    ___   __     __        ___
   / _ | / /__  / /  ___ _/ _ \___ __    __
  / __ |/ / _ \/ _ \/ _ `/ , _/ _ `/ |/|/ /
 /_/ |_/_/ .__/_//_/\_,_/_/|_|\_,_/|__,__/
        /_/
 ....................................................
-.{version}.
-.{url}.
-.{license}.
+.{alpharaw.__version__.center(50)}.
+.{alpharaw.__github__.center(50)}.
+.{alpharaw.__license__.center(50)}.
 ....................................................
-""".format(
-            version=alpharaw.__version__.center(50),
-            url=alpharaw.__github__.center(50),
-            license=alpharaw.__license__.center(50),
-        )
+"""
     )
     if ctx.invoked_subcommand is None:
         click.echo(run.get_help(ctx))

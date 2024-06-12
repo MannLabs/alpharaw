@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from alphatims.utils import threadpool
 from numba import njit
+
 from alpharaw.feature.centroids import connect_centroids
 
 
@@ -198,8 +199,8 @@ def remove_duplicate_hills(hill_ptrs, hill_data, path_node_cnt):
     hill_ptrs_new = np.zeros_like(hill_ptrs)
     hill_data_new = np.zeros_like(hill_data)
 
-    for i, _ in enumerate(np.argsort(path_node_cnt)[::-1]):
-        s, e = hill_ptrs[_], hill_ptrs[_ + 1]
+    for p in np.argsort(path_node_cnt)[::-1]:
+        s, e = hill_ptrs[p], hill_ptrs[p + 1]
 
         point_idx = hill_data[s:e]
 
@@ -516,17 +517,14 @@ def hill_stats(
     rt_min = rt_[rt_idx[idx_]].min()
     rt_max = rt_[rt_idx[idx_]].max()
 
-    if len(idx_) > hill_nboot_max:
-        bootsize = hill_nboot_max
-    else:
-        bootsize = len(idx_)
+    bootsize = hill_nboot_max if len(idx_) > hill_nboot_max else len(idx_)
 
     averages = np.zeros(hill_nboot)
     average = 0
 
     for i in range(hill_nboot):
         boot = np.random.choice(len(int_), bootsize, replace=True)
-        boot_mz = np.sum((mz_[boot] * int_[boot])) / np.sum(int_[boot])
+        boot_mz = np.sum(mz_[boot] * int_[boot]) / np.sum(int_[boot])
         averages[i] = boot_mz
         average += boot_mz
 

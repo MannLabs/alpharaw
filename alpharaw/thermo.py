@@ -1,12 +1,18 @@
-import numpy as np
-import platform
 import multiprocessing as mp
+import platform
 from functools import partial
+
+import numpy as np
 from tqdm import tqdm
 
 import alpharaw.raw_access.pythermorawfilereader as pyrawfilereader
-from .ms_data_base import MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
-from .ms_data_base import ms_reader_provider
+
+from .ms_data_base import (
+    PEAK_INTENSITY_DTYPE,
+    PEAK_MZ_DTYPE,
+    MSData_Base,
+    ms_reader_provider,
+)
 
 __trailer_extra_list__ = [
     "injection_time",
@@ -134,7 +140,7 @@ class ThermoRawData(MSData_Base):
             output_dict = {"peak_indices": peak_indices}
 
             # concatenate other arrays
-            for key in batches[0].keys():
+            for key in batches[0]:
                 if key == "_peak_indices":
                     continue
                 output_dict[key] = np.concatenate([batch[key] for batch in batches])

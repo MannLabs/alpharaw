@@ -1,13 +1,12 @@
-import numpy as np
 import typing
-
 from collections import defaultdict
 
-from alpharaw.ms_data_base import MSData_Base
+import numpy as np
+from alphatims.bruker import TimsTOF
 
+from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
 from alpharaw.utils.timstof import convert_to_alphatims
-from alphatims.bruker import TimsTOF
 
 
 class NormalDIAGrouper:

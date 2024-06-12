@@ -1,7 +1,7 @@
-import numpy as np
-import numba
-
 from typing import Tuple
+
+import numba
+import numpy as np
 
 
 @numba.njit

@@ -6,14 +6,20 @@ warnings.filterwarnings("ignore")
 
 
 def register_readers():
-    from .ms_data_base import ms_reader_provider  # noqa: F401  # TODO remove import side effect
     from .legacy_msdata import mgf  # noqa: F401  # TODO remove import side effect
+    from .ms_data_base import (
+        ms_reader_provider,  # noqa: F401  # TODO remove import side effect
+    )
     from .mzml import MzMLReader  # noqa: F401  # TODO remove import side effect
-    from .wrappers import alphapept_wrapper  # noqa: F401  # TODO remove import side effect
+    from .wrappers import (
+        alphapept_wrapper,  # noqa: F401  # TODO remove import side effect
+    )
 
     try:
         from .sciex import SciexWiffData  # noqa: F401  # TODO remove import side effect
-        from .thermo import ThermoRawData  # noqa: F401  # TODO remove import side effect
+        from .thermo import (
+            ThermoRawData,  # noqa: F401  # TODO remove import side effect
+        )
     except (RuntimeError, ImportError):
         print("[WARN] pythonnet is not installed")
 

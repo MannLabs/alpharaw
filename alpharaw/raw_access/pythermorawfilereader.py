@@ -1,7 +1,6 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
 import warnings
-
 from collections import defaultdict
 
 # require pythonnet, pip install pythonnet on Windows
@@ -9,8 +8,8 @@ import clr
 
 clr.AddReference("System")
 import System
-from System.Threading import Thread
 from System.Globalization import CultureInfo
+from System.Threading import Thread
 
 from .clr_utils import DotNetArrayToNPArray, ext_dir
 
@@ -27,7 +26,7 @@ clr.AddReference(
     os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
 )
 import ThermoFisher
-from ThermoFisher.CommonCore.Data.Interfaces import IScanEventBase, IScanEvent
+from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
 
 """C# code to read Raw data
 rawFile = ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(raw_filename)
@@ -59,7 +58,7 @@ APIs are similar to [pymsfilereader](https://github.com/frallain/pymsfilereader)
 """
 
 
-class RawFileReader(object):
+class RawFileReader:
     # static class members
     sampleType = {
         0: "Unknown",
@@ -190,10 +189,8 @@ class RawFileReader(object):
         )
 
         if not self.source.IsOpen:
-            raise IOError(
-                "RAWfile '{0}' could not be opened, is the file accessible ?".format(
-                    self.filename
-                )
+            raise OSError(
+                f"RAWfile '{self.filename}' could not be opened, is the file accessible ?"
             )
         self.source.SelectInstrument(ThermoFisher.CommonCore.Data.Business.Device.MS, 1)
 
@@ -207,7 +204,7 @@ class RawFileReader(object):
             self.MassResolution = self.GetMassResolution()
             self.NumSpectra = self.GetNumSpectra()
         except Exception as e:
-            raise IOError(f"{e}")
+            raise OSError(f"{e}") from e
 
     def Close(self):
         """Closes a raw file and frees the associated memory."""

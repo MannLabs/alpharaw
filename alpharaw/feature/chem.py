@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 import numpy as np
-from numba import int32, float32, float64, njit, types
+from numba import float32, float64, int32, njit, types
 from numba.experimental import jitclass
 from numba.typed import Dict
 
@@ -242,7 +243,7 @@ def dict_to_dist(counted_AA: Dict, isotopes: Dict) -> IsotopeDistribution:
     """
 
     dist = IsotopeDistribution()
-    for AA in counted_AA.keys():
+    for AA in counted_AA:
         x = IsotopeDistribution()
         x.add(isotopes[AA])
         x = x.mult(counted_AA[AA])
@@ -318,7 +319,7 @@ def get_average_formula(
     final_mass = 0
 
     # Calculate integral mnumbers of atoms
-    for AA in averagine_aa.keys():
+    for AA in averagine_aa:
         counted_AA[AA] = int(np.round(averagine_units * averagine_aa[AA]))
         final_mass += counted_AA[AA] * isotopes[AA].m0
 
@@ -334,9 +335,7 @@ def test_get_average_formula():
         average_formula = get_average_formula(
             molecule_mass, averagine_aa, isotopes, sulphur=True
         )
-        mass = np.sum(
-            [average_formula[AA] * isotopes[AA].m0 for AA in average_formula.keys()]
-        )
+        mass = np.sum([average_formula[AA] * isotopes[AA].m0 for AA in average_formula])
         assert np.abs(mass - molecule_mass) < isotopes["H"].m0
 
 

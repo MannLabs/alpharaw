@@ -1,10 +1,12 @@
 import numpy as np
-
 from pyteomics import mzml
 
-from .ms_data_base import MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
-
-from .ms_data_base import ms_reader_provider
+from .ms_data_base import (
+    PEAK_INTENSITY_DTYPE,
+    PEAK_MZ_DTYPE,
+    MSData_Base,
+    ms_reader_provider,
+)
 
 
 class MzMLReader(MSData_Base):
@@ -30,7 +32,7 @@ class MzMLReader(MSData_Base):
         isolation_upper_mz_list = []
         nce_list = []
 
-        for i in spec_indices:
+        for _ in spec_indices:
             spec = next(reader)
 
             (

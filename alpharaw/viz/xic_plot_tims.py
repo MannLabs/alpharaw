@@ -1,15 +1,13 @@
 import typing
 
-import pandas as pd
 import numpy as np
-
-import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
-from plotly.subplots import make_subplots
-
+import plotly.graph_objects as go
 from alphatims.bruker import (
     TimsTOF,
 )
+from plotly.subplots import make_subplots
 
 from .plot_utils import plot_line_tims_fast
 
@@ -36,10 +34,7 @@ class XIC_Plot_Tims:
         add_peak_area=True,
     ):
         rt_sec = query_df["rt_sec"].values[0]
-        if "im" not in query_df.columns:
-            im = 0.0
-        else:
-            im = query_df["im"].values[0]
+        im = 0.0 if "im" not in query_df.columns else query_df["im"].values[0]
         if "precursor_mz" not in query_df.columns:
             precursor_mz = 0.0
         else:

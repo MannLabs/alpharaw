@@ -1,7 +1,7 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from alphabase.constants._const import PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
 from alphabase.io.hdf import HDF_File
-from alphabase.constants._const import PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 
 
 class MSData_Base:

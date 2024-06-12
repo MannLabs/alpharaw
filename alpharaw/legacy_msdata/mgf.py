@@ -1,11 +1,11 @@
 import numpy as np
 
 from alpharaw.ms_data_base import (
-    index_ragged_list,
-    MSData_Base,
-    ms_reader_provider,
-    PEAK_MZ_DTYPE,
     PEAK_INTENSITY_DTYPE,
+    PEAK_MZ_DTYPE,
+    MSData_Base,
+    index_ragged_list,
+    ms_reader_provider,
 )
 
 
@@ -13,9 +13,7 @@ def read_until(file, until):
     lines = []
     while True:
         line = file.readline().strip()
-        if line == "":
-            break
-        elif line.startswith(until):
+        if line == "" or line.startswith(until):
             break
         else:
             lines.append(line)
@@ -38,10 +36,6 @@ class MGFReader(MSData_Base):
     """MGF Reader (MS2)"""
 
     def _import(self, _path: str):
-        if isinstance(_path, str):
-            f = open(_path)
-        else:
-            f = _path
         scan_mz_dict = {}
         scan_charge_dict = {}
         masses_list = []
@@ -52,6 +46,8 @@ class MGFReader(MSData_Base):
         precursor_mz_list = []
         charge_list = []
         self._has_chimeras = False
+
+        f = open(_path) if isinstance(_path, str) else _path  # noqa: SIM115
         while True:
             line = f.readline()
             if not line:
@@ -66,7 +62,7 @@ class MGFReader(MSData_Base):
                 charge = 0
                 for line in lines:
                     if line[0].isdigit():
-                        mass, inten = [float(i) for i in line.strip().split()]
+                        mass, inten = (float(i) for i in line.strip().split())
                         masses.append(mass)
                         intens.append(inten)
                     elif line.startswith("SCAN="):

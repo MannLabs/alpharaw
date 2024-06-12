@@ -1,18 +1,16 @@
-from plotly.subplots import make_subplots
+import typing
 from collections import defaultdict
 
-import pandas as pd
 import numpy as np
-
-import typing
-
+import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-from .plot_utils import plot_scatter
 from .df_utils import (
     make_psm_plot_df,
     make_query_df_for_peptide,
 )
+from .plot_utils import plot_scatter
 
 color_map: dict = defaultdict(lambda: "brown")
 color_map.update(

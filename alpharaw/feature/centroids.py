@@ -1,6 +1,6 @@
 import numpy as np
-from numba import njit
 from alphatims.utils import threadpool
+from numba import njit
 
 
 @threadpool
@@ -47,10 +47,9 @@ def connect_centroids_unidirection(
             mz_sum = mz1 + mz2
             delta = 2 * 1e6 * abs(diff) / mz_sum
 
-            if delta < centroid_tol:
-                if scores[x, i, gap] > delta:
-                    scores[x, i, gap] = delta
-                    connections[x, i, gap] = (connections.shape[1] * y) + j
+            if delta < centroid_tol and scores[x, i, gap] > delta:
+                scores[x, i, gap] = delta
+                connections[x, i, gap] = (connections.shape[1] * y) + j
 
             if diff > 0:
                 j += 1

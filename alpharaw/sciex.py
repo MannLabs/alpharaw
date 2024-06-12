@@ -1,7 +1,8 @@
 import warnings
+
 import alpharaw.raw_access.pysciexwifffilereader as pysciexwifffilereader
-from .ms_data_base import MSData_Base
-from .ms_data_base import ms_reader_provider
+
+from .ms_data_base import MSData_Base, ms_reader_provider
 
 
 class SciexWiffData(MSData_Base):

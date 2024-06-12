@@ -1,6 +1,6 @@
+import numba
 import numpy as np
 import pandas as pd
-import numba
 
 
 def find_spec_idxes_by_rt(

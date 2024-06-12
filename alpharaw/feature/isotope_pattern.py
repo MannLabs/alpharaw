@@ -1,18 +1,17 @@
-from numba import njit
-from numba.typed import List
-import numpy as np
-from alphatims.utils import threadpool
 from typing import Callable, Union
+
+import numpy as np
 import pandas as pd
-from numba.typed import Dict
+from alphatims.utils import threadpool
+from numba import njit
+from numba.typed import Dict, List
 
 # TODO: Move hardcoded constants
-
 from alpharaw.feature.chem import (
-    mass_to_dist,
     DELTA_M,
     DELTA_S,
     M_PROTON,
+    mass_to_dist,
 )
 
 
@@ -110,9 +109,9 @@ def correlate(
     min_one, max_one = scans_[0], scans_[-1]
     min_two, max_two = scans_2[0], scans_2[-1]
 
-    if min_one + 3 > max_two:  # at least an overlap of 3 elements
-        corr = 0
-    elif min_two + 3 > max_one:
+    if (
+        min_one + 3 > max_two or min_two + 3 > max_one
+    ):  # at least an overlap of 3 elements
         corr = 0
     else:
         min_s = min(min_one, min_two)
@@ -401,21 +400,22 @@ def grow(
         int_2 = int_data[idx_]
         scans_2 = scan_idx[idx_]
 
-        if correlate(scans_, scans_2, int_, int_2) > cc_cutoff:
-            if check_isotope_pattern_directed(
-                mass1,
-                mass2,
-                delta_mass1,
-                delta_mass2,
-                charge,
-                -direction * index,
-                iso_mass_range,
-            ):
-                if direction == 1:
-                    trail.append(y)
-                else:
-                    trail.insert(0, y)
-                index += 1  # Greedy matching: Only one edge for a specific distance, will not affect the following matches
+        if correlate(
+            scans_, scans_2, int_, int_2
+        ) > cc_cutoff and check_isotope_pattern_directed(
+            mass1,
+            mass2,
+            delta_mass1,
+            delta_mass2,
+            charge,
+            -direction * index,
+            iso_mass_range,
+        ):
+            if direction == 1:
+                trail.append(y)
+            else:
+                trail.insert(0, y)
+            index += 1  # Greedy matching: Only one edge for a specific distance, will not affect the following matches
 
         delta_mass = np.abs(mass1 - mass2)
 
@@ -678,15 +678,9 @@ def truncate(
         right_minima = minima[minima > seedpos]
 
         # If the minimum is smaller than the seed
-        if len(left_minima) > 0:
-            minpos = left_minima[-1]
-        else:
-            minpos = 0
+        minpos = left_minima[-1] if len(left_minima) > 0 else 0
 
-        if len(right_minima) > 0:
-            maxpos = right_minima[0]
-        else:
-            maxpos = len(array)
+        maxpos = right_minima[0] if len(right_minima) > 0 else len(array)
 
         array = array[minpos : maxpos + 1]
 
@@ -1013,10 +1007,7 @@ def get_isotope_patterns(
                 cc_cutoff,
                 iso_split_level,
             )
-            if isotope_pattern is None:
-                length = 0
-            else:
-                length = len(isotope_pattern)
+            length = 0 if isotope_pattern is None else len(isotope_pattern)
 
             if length > 1:
                 isotope_charges.append(isotope_charge)

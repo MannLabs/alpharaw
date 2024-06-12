@@ -1,7 +1,6 @@
+import alphatims
 import numpy as np
 import pandas as pd
-
-import alphatims
 from alphatims.bruker import TimsTOF
 
 from ..ms_data_base import MSData_Base
@@ -19,8 +18,6 @@ class AlphaTimsReader(MSData_Base):
 
         self.raw_file_path = burker_d_folder
         self.file_type = "bruker"
-
-        self.spectrum_df
 
         self.spectrum_df["precursor_mz"] = tims.fragment_frames.IsolationMz.values
         isolations = tims.fragment_frames.IsolationWidth.values / 2

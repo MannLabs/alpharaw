@@ -1,20 +1,19 @@
 import typing
 
-import pandas as pd
 import numpy as np
-
-import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+from alphabase.constants.atom import MASS_ISOTOPE
 from plotly.subplots import make_subplots
 
-from .plot_utils import plot_line
-
-from alphabase.constants.atom import MASS_ISOTOPE
-from alpharaw.match.spec_finder import (
-    find_spec_idxes,
-    find_multinotch_spec_idxes,
-)
 from alpharaw.match.match_utils import match_batch_spec
+from alpharaw.match.spec_finder import (
+    find_multinotch_spec_idxes,
+    find_spec_idxes,
+)
+
+from .plot_utils import plot_line
 
 
 class XIC_Plot:

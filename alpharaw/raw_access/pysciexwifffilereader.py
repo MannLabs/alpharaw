@@ -1,17 +1,17 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
+
+# require pythonnet, pip install pythonnet on Windows
+import clr
 import numpy as np
 
 from alpharaw.utils.centroiding import naive_centroid
 
-# require pythonnet, pip install pythonnet on Windows
-import clr
-
 clr.AddReference("System")
 
 import System  # noqa: F401
-from System.Threading import Thread
 from System.Globalization import CultureInfo
+from System.Threading import Thread
 
 from .clr_utils import DotNetArrayToNPArray, ext_dir
 
@@ -27,11 +27,11 @@ clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
 
 import Clearcore2  # noqa: F401
 import WiffOps4Python  # noqa: F401
-from WiffOps4Python import WiffOps as DotNetWiffOps
 from Clearcore2.Data.AnalystDataProvider import (
-    AnalystWiffDataProvider,
     AnalystDataProviderFactory,
+    AnalystWiffDataProvider,
 )
+from WiffOps4Python import WiffOps as DotNetWiffOps
 
 
 class WillFileReader:
