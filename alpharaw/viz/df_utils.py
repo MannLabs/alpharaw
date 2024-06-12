@@ -383,7 +383,7 @@ def make_precursor_fragment_df(
     precursor_df = pd.DataFrame(
         dict(sequence=[sequence], mods=[mods], mod_sites=[mod_sites], charge=charge)
     )
-    calc_precursor_mz(precursor_df)
+    update_precursor_mz(precursor_df)
     if include_precursor_isotopes:
         calc_precursor_isotope_intensity(precursor_df, max_isotope=max_isotope)
     if include_fragments:
