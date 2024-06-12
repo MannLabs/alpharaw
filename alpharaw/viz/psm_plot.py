@@ -38,7 +38,7 @@ def plot_multi_psms(
     charge: int,
     title: str = "",
     ppm: float = 20.0,
-    charged_frag_types: list = None,
+    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
     include_fragments: bool = True,
     include_precursor_isotopes: bool = False,
     max_isotope: int = 6,
@@ -50,8 +50,6 @@ def plot_multi_psms(
     query_left_margin: float = 100000.0,
     query_right_margin: float = 100000.0,
 ):
-    if charged_frag_types is None:
-        charged_frag_types = ["b_z1", "b_z2", "y_z1", "y_z2"]
     plot_df = make_query_df_for_peptide(
         sequence,
         mods,

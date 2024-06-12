@@ -56,7 +56,7 @@ class ThermoRawData(MSData_Base):
         mp_batch_size: int = 5000,
         save_as_hdf: bool = False,
         dda: bool = False,
-        auxiliary_items: list = None,
+        auxiliary_items: list = [],
         **kwargs,
     ):
         """
@@ -87,8 +87,6 @@ class ThermoRawData(MSData_Base):
             "detector", "activation", "analyzer",
             "detector_id", "activation_id", "analyzer_id",
         """
-        if auxiliary_items is None:
-            auxiliary_items = []
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         self.file_type = "thermo"
         self.process_count = process_count

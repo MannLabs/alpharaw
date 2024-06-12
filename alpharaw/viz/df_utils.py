@@ -24,7 +24,7 @@ def make_psm_plot_df_for_peptide(
     rt_sec: float = 0.0,
     mobility: float = 0.0,
     ppm: float = 20.0,
-    charged_frag_types: list = None,
+    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
     include_fragments: bool = True,
     fragment_intensity_df: pd.DataFrame = None,
     include_precursor_isotopes: bool = False,
@@ -32,8 +32,6 @@ def make_psm_plot_df_for_peptide(
     min_frag_mz: float = 100.0,
     match_mode: typing.Literal["closest", "highest"] = "closest",
 ) -> pd.DataFrame:
-    if charged_frag_types is None:
-        charged_frag_types = ["b_z1", "b_z2", "y_z1", "y_z2"]
     plot_df = make_query_df_for_peptide(
         sequence,
         mods,
@@ -73,15 +71,13 @@ def make_query_df_for_peptide(
     rt_sec: float = 0.0,
     mobility: float = 0.0,
     ms_level: int = 2,
-    charged_frag_types: list = None,
+    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
     include_fragments: bool = True,
     fragment_intensity_df: pd.DataFrame = None,
     include_precursor_isotopes: bool = False,
     max_isotope: int = 6,
     min_frag_mz: float = 100.0,
 ) -> pd.DataFrame:
-    if charged_frag_types is None:
-        charged_frag_types = ["b_z1", "b_z2", "y_z1", "y_z2"]
     if ms_level == 1:
         include_fragments = False
     precursor_df, fragment_mz_df = make_precursor_fragment_df(
@@ -380,12 +376,10 @@ def make_precursor_fragment_df(
     mod_sites: str,
     charge: int,
     include_fragments: bool = True,
-    charged_frag_types: list = None,
+    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
     include_precursor_isotopes: bool = False,
     max_isotope: int = 6,
 ):
-    if charged_frag_types is None:
-        charged_frag_types = ["b_z1", "b_z2", "y_z1", "y_z2"]
     precursor_df = pd.DataFrame(
         dict(sequence=[sequence], mods=[mods], mod_sites=[mod_sites], charge=charge)
     )
