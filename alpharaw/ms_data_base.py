@@ -6,7 +6,14 @@ from alphabase.io.hdf import HDF_File
 
 class MSData_Base:
     """
-    The base data structure for MS Data, other MSData loader inherit
+    The base data structure for MS Data, other MSData loader inherit this class.
+
+    Parameters
+    ----------
+    centroided : bool, optional
+        If centroiding the peak data, by default True
+    save_as_hdf : bool, optional
+        If automatically save the data into HDF5 format, by default False
     """
 
     column_dtypes = {
@@ -25,7 +32,7 @@ class MSData_Base:
     """
     Spectrum dataframe containing the following columns:
 
-    - `rt` (float64): in minutes
+    - `rt` (float64): in minutes. `rt_sec` will be RT in seconds.
     - `precursor_mz` (float64): mono_mz (DDA) or isolation center mz
     - `isolation_lower_mz` (float64): left of the isolation window
     - `isolation_upper_mz` (float64): right of the isolation window
@@ -62,15 +69,12 @@ class MSData_Base:
         "FT",
         "TOF",
     ]
+    """
+    Some spectrum infomation in str format that can be mapped into unique token IDs. 
+    Token IDs are better for storage in HDF5 format.
+    """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
-        """
-        Parameters
-        ----------
-        centroided : bool, optional
-            if peaks will be centroided after loading,
-            by default True
-        """
         # A spectrum contains peaks
         self.spectrum_df: pd.DataFrame = pd.DataFrame()
         # A peak contains mz, intensity, and ...
@@ -82,9 +86,19 @@ class MSData_Base:
         self.file_type = ""
         self.instrument = "none"
 
-    def _get_term_id(self, terminology: str):
+    def _get_term_id(self, terminology: str)->int:
         """
-        Get terminology id from :data:`self.vocab`, -1 if not exist.
+        Get terminology ID from :attr:`.MSData_Base.vocab`, -1 if not exist.
+
+        Parameters
+        ----------
+        terminology : str
+            The terminology name.
+
+        Returns
+        -------
+        int
+            Terminology ID, which is the index in :attr:`.MSData_Base.vocab`
         """
         try:
             return self.vocab.index(terminology)
@@ -100,15 +114,31 @@ class MSData_Base:
         self._raw_file_path = _path
 
     def import_raw(self, _path: str):
+        """
+        Import a raw file. It involves three steps:
+        ```
+        raw_data_dict = self._import(_path)
+        self._set_dataframes(raw_data_dict)
+        self._check_df()
+        ```
+
+        Parameters
+        ----------
+        _path : str
+            Raw file path
+        """
         self.raw_file_path = _path
-        raw_data = self._import(_path)
-        self._set_dataframes(raw_data)
+        raw_data_dict = self._import(_path)
+        self._set_dataframes(raw_data_dict)
         self._check_df()
 
         if self._save_as_hdf:
             self.save_hdf(_path + ".hdf")
 
     def load_raw(self, _path: str):
+        """
+        Wrapper of :func:`.MSData_Base.import_raw`
+        """
         self.import_raw(_path)
 
     def _save_meta_to_hdf(self, hdf: HDF_File):
@@ -128,6 +158,14 @@ class MSData_Base:
         self.instrument = hdf.ms_data.meta.instrument
 
     def save_hdf(self, _path: str):
+        """
+        Save data into HDF5 file
+
+        Parameters
+        ----------
+        _path : str
+            HDF5 file path
+        """
         hdf = HDF_File(_path, read_only=False, truncate=True, delete_existing=True)
 
         hdf.ms_data = {"spectrum_df": self.spectrum_df, "peak_df": self.peak_df}
@@ -135,6 +173,14 @@ class MSData_Base:
         self._save_meta_to_hdf(hdf)
 
     def load_hdf(self, _path: str):
+        """
+        Load data from HDF5 file.
+
+        Parameters
+        ----------
+        _path : str
+            HDF5 file path.
+        """
         hdf = HDF_File(_path, read_only=True, truncate=False, delete_existing=False)
 
         self.spectrum_df = hdf.ms_data.spectrum_df.values
@@ -144,6 +190,9 @@ class MSData_Base:
             self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
+        """
+        Reset spec indexes to make sure spec_idx values are continuous ranging from 0 to N.
+        """
         self.spectrum_df.reset_index(drop=True, inplace=True)
         self.spectrum_df["spec_idx"] = self.spectrum_df.index.values
 
@@ -200,6 +249,14 @@ class MSData_Base:
         self,
         spectrum_num: int,
     ):
+        """
+        Create a empty spectrum dataframe from the number of spectra.
+
+        Parameters
+        ----------
+        spectrum_num : int
+            The number of spectra.
+        """
         self.spectrum_df = pd.DataFrame(index=np.arange(spectrum_num, dtype=np.int64))
         self.spectrum_df["spec_idx"] = self.spectrum_df.index.values
 
@@ -345,6 +402,11 @@ def index_ragged_list(ragged_list: list) -> np.ndarray:
 
 
 class MSData_HDF(MSData_Base):
+    """
+    Wrapper of reader for alpharaw's HDF5 spectrum file.
+    This class regiesters as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
+    in :data:`ms_reader_provider` instance.
+    """
     def import_raw(self, _path: str):
         self.raw_file_path = _path
         self.load_hdf(_path)
@@ -356,20 +418,49 @@ class MSReaderProvider:
     def __init__(self):
         self.ms_reader_dict = {}
 
-    def register_reader(self, ms2_type: str, reader_class):
+    def register_reader(self, ms2_type: str, reader_class:type):
+        """
+        Register a new reader for `ms_type` format with `reader_class`.
+
+        Parameters
+        ----------
+        file_type : str
+            AlphaRaw supported MS file types.
+        reader_class : type
+            AlphaRaw supported MS class types.
+        """
         self.ms_reader_dict[ms2_type.lower()] = reader_class
 
     def get_reader(
         self, file_type: str, *, centroided: bool = True, **kwargs
     ) -> MSData_Base:
+        """
+        Get the MS reader.
+
+        Parameters
+        ----------
+        file_type : str
+            AlphaRaw supported MS file types.
+        centroided : bool, optional
+            If centroiding the data, by default True.
+
+        Returns
+        -------
+        MSData_Base
+            Instance of corresponding sub-class of `MSData_Base`.
+        """
         file_type = file_type.lower()
         if file_type not in self.ms_reader_dict:
             return None
         else:
             return self.ms_reader_dict[file_type](centroided=centroided, **kwargs)
 
-
 ms_reader_provider = MSReaderProvider()
+"""
+MS data register (:class:`.MSReaderProvider`) performs as a factory to 
+produce different readers for different file formats.
+"""
+
 ms_reader_provider.register_reader("alpharaw", MSData_HDF)
 ms_reader_provider.register_reader("raw.hdf", MSData_HDF)
 ms_reader_provider.register_reader("alpharaw_hdf", MSData_HDF)
