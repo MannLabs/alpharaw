@@ -65,7 +65,7 @@ class ThermoRawData(MSData_Base):
     dda : bool, optional
         _description_, by default False.
     auxiliary_items : list, optional
-        Additional spectrum items, candidates are in :data:`__auxiliary_item_dtypes__`. 
+        Additional spectrum items, candidates are in :data:`__auxiliary_item_dtypes__`.
         By default [].
     """
 

@@ -70,7 +70,7 @@ class MSData_Base:
         "TOF",
     ]
     """
-    Some spectrum infomation in str format that can be mapped into unique token IDs. 
+    Some spectrum infomation in str format that can be mapped into unique token IDs.
     Token IDs are better for storage in HDF5 format.
     """
 
@@ -86,7 +86,7 @@ class MSData_Base:
         self.file_type = ""
         self.instrument = "none"
 
-    def _get_term_id(self, terminology: str)->int:
+    def _get_term_id(self, terminology: str) -> int:
         """
         Get terminology ID from :attr:`.MSData_Base.vocab`, -1 if not exist.
 
@@ -407,6 +407,7 @@ class MSData_HDF(MSData_Base):
     This class regiesters as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
     in :data:`ms_reader_provider` instance.
     """
+
     def import_raw(self, _path: str):
         self.raw_file_path = _path
         self.load_hdf(_path)
@@ -418,7 +419,7 @@ class MSReaderProvider:
     def __init__(self):
         self.ms_reader_dict = {}
 
-    def register_reader(self, ms2_type: str, reader_class:type):
+    def register_reader(self, ms2_type: str, reader_class: type):
         """
         Register a new reader for `ms_type` format with `reader_class`.
 
@@ -455,9 +456,10 @@ class MSReaderProvider:
         else:
             return self.ms_reader_dict[file_type](centroided=centroided, **kwargs)
 
+
 ms_reader_provider = MSReaderProvider()
 """
-MS data register (:class:`.MSReaderProvider`) performs as a factory to 
+MS data register (:class:`.MSReaderProvider`) performs as a factory to
 produce different readers for different file formats.
 """
 
