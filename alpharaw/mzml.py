@@ -24,10 +24,11 @@ class MzMLReader(MSData_Base):
     dict
         Spectrum information dict.
     """
+
     def _import(
         self,
         filename: str,
-    )->dict:
+    ) -> dict:
         """
         Re-implementation of :func:`alpharaw.MSData_Base._import`.
 
