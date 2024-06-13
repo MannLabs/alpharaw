@@ -10,12 +10,14 @@ import alpharaw.raw_access.pythermorawfilereader as pyrawfilereader
 from .ms_data_base import MSData_Base, PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
 from .ms_data_base import ms_reader_provider
 
+#: These thermo spectrum items can be only accessed by trailer dict.
 __trailer_extra_list__ = [
     "injection_time", "cv",
     "max_ion_time", "agc_target", "energy_ev",
     "injection_optics_settling_time", 
     "funnel_rf_level", "faims_cv",
 ]
+#: The auxiliary items that can be accessed from thermo RawFileReader.
 __auxiliary_item_dtypes__ = {
     "injection_time": np.float32, 
     "cv": np.float32,
@@ -38,6 +40,22 @@ __auxiliary_item_dtypes__ = {
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
+
+    Parameters
+    ----------
+    centroided : bool, optional
+        If peaks will be centroided after loading. By defaults True.
+    process_count : int, optional
+        number of spectra to load in each batch, by default 10.
+    mp_batch_size : int, optional
+        automatically save hdf after load raw data, by default 5000.
+    save_as_hdf : bool, optional
+        is DDA data, by default False.
+    dda : bool, optional
+        _description_, by default False.
+    auxiliary_items : list, optional
+        Additional spectrum items, candidates are in :data:`__auxiliary_item_dtypes__`. 
+        By default [].
     """
     def __init__(self, 
         centroided : bool = True,
@@ -48,34 +66,6 @@ class ThermoRawData(MSData_Base):
         auxiliary_items : list = [],
         **kwargs
     ):
-        """
-        Parameters
-        ----------
-        centroided : bool, default = True
-            if peaks will be centroided after loading,
-            by default True
-
-        process_count : int, default = 8
-            number of processes to use for loading
-
-        mp_batch_size : int, default = 10000
-            number of spectra to load in each batch
-
-        save_as_hdf : bool, default = False
-            automatically save hdf after load raw data.
-        
-        dda : bool, default = False
-            is DDA data
-
-        auxiliary_items : list, default = []
-            Candidates are:
-            "injection_time", "cv",
-            "max_ion_time", "agc_target", "energy_ev",
-            "injection_optics_settling_time", 
-            "funnel_rf_level", "faims_cv",
-            "detector", "activation", "analyzer",
-            "detector_id", "activation_id", "analyzer_id",
-        """
         super().__init__(
             centroided, save_as_hdf=save_as_hdf,
             **kwargs
@@ -91,6 +81,19 @@ class ThermoRawData(MSData_Base):
         self,
         raw_file_path: str,
     ) -> dict:
+        """
+        Re-implementation of :func:`MSData_Base._import` to call :func:`.MSData_Base.import_raw`.
+
+        Parameters
+        ----------
+        raw_file_path : str
+            File path of the raw data.
+
+        Returns
+        -------
+        dict
+            Spectrum information in a temporary dict format.
+        """
         rawfile = pyrawfilereader.RawFileReader(raw_file_path)
         self.creation_time = rawfile.GetCreationDate()
 
@@ -169,13 +172,7 @@ def _import_batch(
         is dda data. 
 
     auxiliary_items : list
-        Candidates: 
-        "injection_time", "cv",
-        "max_ion_time", "agc_target", "energy_ev",
-        "injection_optics_settling_time", 
-        "funnel_rf_level", "faims_cv",
-        "activation", "analyzer",
-        "activation_id", "analyzer_id",
+        Candidates are in :data:`__auxiliary_item_dtypes__`.
 
     Returns
     -------
@@ -323,7 +320,7 @@ def _import_batch(
 
             if dda:
                 # GetMS2MonoMzAndChargeFromScanNum is slow
-                mono_mz, charge = _get_mono_and_charge(trailer_data, scan_event)
+                mono_mz, charge = _get_mono_and_charge(trailer_data)
                 if mono_mz <= 0:
                     mono_mz = isolation_center
             else:
@@ -365,7 +362,7 @@ def _import_batch(
     spec_dict.update(auxiliary_dict)
     return spec_dict
 
-def _get_mono_and_charge(trailer_data, scan_event):
+def _get_mono_and_charge(trailer_data):
     mono = float(trailer_data['Monoisotopic M/Z:'].strip())
     charge = int(trailer_data['Charge State:'].strip())
     return mono, charge

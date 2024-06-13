@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import typing
 from alphabase.io.hdf import HDF_File
 from alphabase.constants._const import (
     PEAK_MZ_DTYPE, PEAK_INTENSITY_DTYPE
@@ -26,7 +27,7 @@ class MSData_Base:
     """
     Spectrum dataframe containing the following columns:
 
-    - `rt` (float64): in minutes
+    - `rt` (float64): in minutes. `rt_sec` will be RT in seconds.
     - `precursor_mz` (float64): mono_mz (DDA) or isolation center mz
     - `isolation_lower_mz` (float64): left of the isolation window
     - `isolation_upper_mz` (float64): right of the isolation window
@@ -52,6 +53,9 @@ class MSData_Base:
         "ETHCD", "ETCID", "EXCID", "NETD",
         "IT", "FT", "TOF", 
     ]
+    """
+    Some spectrum infomation that can be mapped into unique token ids. 
+    """
     def __init__(
             self, 
             centroided:bool=True,
@@ -76,9 +80,19 @@ class MSData_Base:
         self.file_type = ''
         self.instrument = 'none'
 
-    def _get_term_id(self, terminology:str):
+    def _get_term_id(self, terminology:str)->int:
         """
-        Get terminology id from :data:`self.vocab`, -1 if not exist.
+        Get terminology ID from :attr:`.MSData_Base.vocab`, -1 if not exist.
+
+        Parameters
+        ----------
+        terminology : str
+            The terminology name.
+
+        Returns
+        -------
+        int
+            Terminology ID, which is the index in :attr:`.MSData_Base.vocab`
         """
         try:
             return self.vocab.index(terminology)
@@ -94,6 +108,14 @@ class MSData_Base:
         self._raw_file_path = _path
 
     def import_raw(self, _path:str):
+        """
+        Import a raw file
+
+        Parameters
+        ----------
+        _path : str
+            Raw file path
+        """
         self.raw_file_path = _path
         raw_data = self._import(_path)
         self._set_dataframes(raw_data)
@@ -103,6 +125,9 @@ class MSData_Base:
             self.save_hdf(_path+'.hdf')
 
     def load_raw(self, _path:str):
+        """
+        Wrapper of :func:`.MSData_Base.import_raw`
+        """
         self.import_raw(_path)
 
     def _save_meta_to_hdf(self, hdf:HDF_File):
@@ -122,6 +147,14 @@ class MSData_Base:
         self.instrument = hdf.ms_data.meta.instrument
 
     def save_hdf(self, _path:str):
+        """
+        Save data into HDF file
+
+        Parameters
+        ----------
+        _path : str
+            HDF file path
+        """
         hdf = HDF_File(
             _path, read_only=False,
             truncate=True, delete_existing=True
@@ -136,6 +169,14 @@ class MSData_Base:
         
 
     def load_hdf(self, _path:str):
+        """
+        Load data from HDF file.
+
+        Parameters
+        ----------
+        _path : str
+            HDF file path.
+        """
         hdf = HDF_File(
             _path, read_only=True,
             truncate=False, delete_existing=False
@@ -148,6 +189,9 @@ class MSData_Base:
             self._load_meta_from_hdf(hdf)
 
     def reset_spec_idxes(self):
+        """
+        Reset spec indexes to make sure spec_idx values are continuous ranging from 0 to N.
+        """
         self.spectrum_df.reset_index(drop=True, inplace=True)
         self.spectrum_df['spec_idx'] = self.spectrum_df.index.values
 
@@ -207,6 +251,14 @@ class MSData_Base:
     def create_spectrum_df(self,
         spectrum_num:int,
     ):
+        """
+        Create a new spectrum dataframe from the number of spectra.
+
+        Parameters
+        ----------
+        spectrum_num : int
+            The number of spectra.
+        """
         self.spectrum_df = pd.DataFrame(
             index=np.arange(spectrum_num, dtype=np.int64)
         )
@@ -337,13 +389,18 @@ class MSData_Base:
         self.spectrum_df['peak_stop_idx'] = peak_indices[1:]
 
 def index_ragged_list(ragged_list: list)  -> np.ndarray:
-    """Create lookup indices for a list of arrays for concatenation.
+    """
+    Create lookup indices for a list of arrays for concatenation.
 
-    Args:
-        value (list): Input list of arrays.
+    Parameters
+    ----------
+    ragged_list : list
+        Input list of arrays.
 
-    Returns:
-        indices: A numpy array with indices.
+    Returns
+    -------
+    np.ndarray
+        A numpy array with indices.
     """
     indices = np.zeros(len(ragged_list) + 1, np.int64)
     indices[1:] = [len(i) for i in ragged_list]
@@ -353,6 +410,9 @@ def index_ragged_list(ragged_list: list)  -> np.ndarray:
 
 
 class MSData_HDF(MSData_Base):
+    """
+    Wrapper of HDF reader for MS spectrum data.
+    """
     def import_raw(self, _path:str):
         self.raw_file_path = _path
         self.load_hdf(_path)
@@ -362,8 +422,18 @@ class MSReaderProvider:
     def __init__(self):
         self.ms_reader_dict = {}
 
-    def register_reader(self, ms2_type:str, reader_class):
-        self.ms_reader_dict[ms2_type.lower()] = reader_class
+    def register_reader(self, file_type:str, reader_class:typing.Type):
+        """
+        Register a new reader for `ms_type` format with `reader_class`.
+
+        Parameters
+        ----------
+        file_type : str
+            AlphaRaw supported MS file types.
+        reader_class : typing.Type
+            AlphaRaw supported MS class types.
+        """
+        self.ms_reader_dict[file_type.lower()] = reader_class
 
     def get_reader(
         self, file_type:str, 
@@ -371,11 +441,28 @@ class MSReaderProvider:
         centroided:bool=True,
         **kwargs
     )->MSData_Base:
+        """
+        Get the MS reader.
+
+        Parameters
+        ----------
+        file_type : str
+            AlphaRaw supported MS file types.
+        centroided : bool, optional
+            If centroiding the data, by default True.
+
+        Returns
+        -------
+        MSData_Base
+            `MSData_Base` object.
+        """
         file_type = file_type.lower()
-        if file_type not in self.ms_reader_dict: return None
-        else: return self.ms_reader_dict[file_type](
-            centroided=centroided, **kwargs
-        )
+        if file_type not in self.ms_reader_dict: 
+            return None
+        else: 
+            return self.ms_reader_dict[file_type](
+                centroided=centroided, **kwargs
+            )
 
 ms_reader_provider = MSReaderProvider()
 ms_reader_provider.register_reader('alpharaw', MSData_HDF)
