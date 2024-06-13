@@ -435,7 +435,7 @@ class MSReaderProvider:
         self, file_type: str, *, centroided: bool = True, **kwargs
     ) -> MSData_Base:
         """
-        Get the MS reader.
+        Get the MS reader for the given `file_type`.
 
         Parameters
         ----------
