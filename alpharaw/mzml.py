@@ -10,10 +10,37 @@ from .ms_data_base import (
 
 
 class MzMLReader(MSData_Base):
+    """
+    Load mzml file as `:class:`MSData_Base` structure.
+    Register "mzml" in :data:`ms_reader_provider`.
+
+    Parameters
+    ----------
+    filename : str
+        mzml file path.
+
+    Returns
+    -------
+    dict
+        Spectrum information dict.
+    """
     def _import(
         self,
         filename: str,
-    ):
+    )->dict:
+        """
+        Re-implementation of :func:`alpharaw.MSData_Base._import`.
+
+        Parameters
+        ----------
+        filename : str
+            mzml file path.
+
+        Returns
+        -------
+        dict
+            Spectrum information dict.
+        """
         self.file_type = "mzml"
         if isinstance(filename, str):
             reader = mzml.read(filename, use_index=True)
@@ -96,6 +123,19 @@ class MzMLReader(MSData_Base):
 
 
 def parse_mzml_entry(item_dict: dict) -> tuple:
+    """
+    Parse mzml entries from pyteomics extracted items.
+
+    Parameters
+    ----------
+    item_dict : dict
+        pyteomics extracted items
+
+    Returns
+    -------
+    tuple
+        items in tuple format.
+    """
     rt = float(item_dict.get("scanList").get("scan")[0].get("scan start time"))
     masses = item_dict.get("m/z array")
     intensities = item_dict.get("intensity array")

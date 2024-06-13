@@ -7,20 +7,20 @@ from .ms_data_base import MSData_Base, ms_reader_provider
 
 class SciexWiffData(MSData_Base):
     """
-    Loading Sciex Wiff data as MSData_Base data structure.
+    Load Sciex Wiff data as :class:`MSData_Base` data structure.
+    Register "sciex", "sciex_wiff", and "sciex_raw" in :data:`ms_reader_provider`.
+
+    Parameters
+    ----------
+    centroided : bool, optional
+        If peaks will be centroided after loading,
+        by default True.
+
+    save_as_hdf : bool, optional
+        Automatically save hdf after load raw data, by default False.
     """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
-        """
-        Parameters
-        ----------
-        centroided : bool, optional
-            if peaks will be centroided after loading,
-            by default True
-
-        save_as_hdf : bool, optional
-            automatically save hdf after load raw data, by default False.
-        """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         if self.centroided:
             self.centroided = False
@@ -32,6 +32,19 @@ class SciexWiffData(MSData_Base):
         self.file_type = "sciex"
 
     def _import(self, _wiff_file_path: str) -> dict:
+        """
+        Re-implementation of :func:`alpharaw.MSData_Base._import`.
+
+        Parameters
+        ----------
+        _wiff_file_path : str
+            Sciex wiff file path.
+
+        Returns
+        -------
+        dict
+            Spectrum information dict.
+        """
         wiff_reader = pysciexwifffilereader.WillFileReader(_wiff_file_path)
         data_dict = wiff_reader.load_sample(
             self.sample_id,
