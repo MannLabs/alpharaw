@@ -11,7 +11,7 @@ def find_spec_idxes_by_rt(
     query_stop_rt: float,
     query_left_mz: float,
     query_right_mz: float,
-)->np.ndarray:
+) -> np.ndarray:
     """
     Find MS2 spectrum indices (int32) from the `spectrum_df`
     by given RT window and precursor m/z window.
@@ -69,7 +69,7 @@ def find_multinotch_spec_idxes(
 ) -> np.ndarray:
     """
     Find MS2 spectrum indices (int32) from the "multinotch" `spectrum_df`
-    by given RT window and precursor m/z window. 
+    by given RT window and precursor m/z window.
     "multinotch" means there are multiple isolation windows of MS2 spectra.
 
     Parameters
@@ -112,7 +112,7 @@ def find_dia_spec_idxes_same_window(
     spec_rt_values: np.ndarray,
     query_rt_values: np.ndarray,
     max_spec_per_query: int,
-)->np.ndarray:
+) -> np.ndarray:
     """
     For given array of query RT values, find spectrum indices
     from the subset of spectra within the same normal DIA m/z window.
@@ -156,7 +156,7 @@ def find_spec_idxes(
     query_stop_rt: float,
     query_left_mz: float,
     query_right_mz: float,
-)->np.ndarray:
+) -> np.ndarray:
     """
     Find MS2 spectrum indices (int32) from the all spectra
     by given RT window and precursor m/z window.
@@ -207,7 +207,7 @@ def find_batch_spec_idxes(
     query_left_mzs: np.ndarray,
     query_right_mzs: np.ndarray,
     max_spec_per_query: int,
-)->np.ndarray:
+) -> np.ndarray:
     """
     Find MS2 spectrum indices (int32) from the all spectra
     by the given batch of RT windows and precursor m/z windows.

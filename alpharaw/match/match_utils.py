@@ -13,7 +13,7 @@ def match_batch_spec(
     peak_stop_idxes: np.ndarray,
     query_mzs: np.ndarray,
     query_mz_tols: np.ndarray,
-)->Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Extract matched mzs and intensities for query m/z values against the given batch spectra.
 
