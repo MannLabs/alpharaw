@@ -14,10 +14,23 @@ _special_ms_exts: list = [
 ]
 
 
-def get_raw_name(ms_file: str, special_ms_exts: list = _special_ms_exts):
+def get_raw_name(ms_file: str) -> str:
+    """
+    Get raw name str from the ms file path.
+
+    Parameters
+    ----------
+    ms_file : str
+        The ms file path.
+
+    Returns
+    -------
+    str
+        The raw name without extension.
+    """
     raw_name = os.path.basename(ms_file)
     lower_name = raw_name.lower()
-    for _ext in special_ms_exts:
+    for _ext in _special_ms_exts:
         if lower_name.endswith(_ext.lower()):
             raw_name = raw_name[: -len(_ext)]
             break
@@ -27,7 +40,7 @@ def get_raw_name(ms_file: str, special_ms_exts: list = _special_ms_exts):
 
 
 def parse_ms_files_to_dict(
-    ms_file_list: list, special_ms_exts: list = _special_ms_exts
+    ms_file_list: list,
 ) -> dict:
     """
     Parse spectrum file paths into a dict:
@@ -49,6 +62,6 @@ def parse_ms_files_to_dict(
 
     ms_file_dict = {}
     for ms_file in ms_file_list:
-        raw_name = get_raw_name(ms_file, special_ms_exts)
+        raw_name = get_raw_name(ms_file, _special_ms_exts)
         ms_file_dict[raw_name] = ms_file
     return ms_file_dict

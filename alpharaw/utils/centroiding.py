@@ -1,4 +1,4 @@
-# Modified from AlphaPept
+from typing import Tuple
 
 import numpy as np
 from numba import njit
@@ -6,10 +6,28 @@ from numba import njit
 
 @njit
 def naive_centroid(
-    peak_mzs,
-    peak_intens,
-    centroiding_ppm=20.0,
-):
+    peak_mzs: np.ndarray,
+    peak_intens: np.ndarray,
+    centroiding_ppm: float = 20.0,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    A naive centroiding algorithm.
+
+    Parameters
+    ----------
+    peak_mzs : np.ndarray
+        peak m/z values to centroid.
+    peak_intens : np.ndarray
+        peak intensities to centroid.
+    centroiding_ppm : float, optional
+        The centroiding ppm, by default 20.0
+
+    Returns
+    -------
+    Tuple
+        ndarray: peak m/z array
+        ndarray: peak intensity array
+    """
     mz_list = []
     inten_list = []
     start, stop = 0, 1
@@ -28,7 +46,13 @@ def naive_centroid(
 
 
 @njit
-def _find_sister_peaks(peak_mzs, centroiding_peak_tols, start):
+def _find_sister_peaks(
+    peak_mzs: np.ndarray, centroiding_peak_tols: np.ndarray, start: int
+):
+    """
+    Find sister peak stop idx for the given start idx.
+    Internal function.
+    """
     stop = start + 1
     for i in range(start + 1, len(peak_mzs)):
         if peak_mzs[i] - peak_mzs[start] <= centroiding_peak_tols[start]:
