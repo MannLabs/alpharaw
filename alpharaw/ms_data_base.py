@@ -203,12 +203,10 @@ class MSData_Base:
 
     def _import(self, _path: str) -> dict:
         """
-        _summary_
-
         Parameters
         ----------
         _path : str
-            _description_
+            Path of raw file.
 
         Returns
         -------
