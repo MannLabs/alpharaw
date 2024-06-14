@@ -70,7 +70,7 @@ class MSData_Base:
         "TOF",
     ]
     """
-    These spectrum infomation items in str format can be one-to-one mapped into 
+    These spectrum infomation items in str format can be one-to-one mapped into
     unique token IDs (indices), for exampel "CID"=0, "HCD"=1, ...
     Token IDs are better for storage in HDF5 format.
     """
@@ -167,7 +167,9 @@ class MSData_Base:
         hdf_file_path : str
             Absolute or relative path of HDF5 file.
         """
-        hdf = HDF_File(hdf_file_path, read_only=False, truncate=True, delete_existing=True)
+        hdf = HDF_File(
+            hdf_file_path, read_only=False, truncate=True, delete_existing=True
+        )
 
         hdf.ms_data = {"spectrum_df": self.spectrum_df, "peak_df": self.peak_df}
 
@@ -182,7 +184,9 @@ class MSData_Base:
         hdf_file_path : str
             Absolute or relative path of HDF5 file.
         """
-        hdf = HDF_File(hdf_file_path, read_only=True, truncate=False, delete_existing=False)
+        hdf = HDF_File(
+            hdf_file_path, read_only=True, truncate=False, delete_existing=False
+        )
 
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
