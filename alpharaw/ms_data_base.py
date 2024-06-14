@@ -201,7 +201,39 @@ class MSData_Base:
         self.spectrum_df.reset_index(drop=True, inplace=True)
         self.spectrum_df["spec_idx"] = self.spectrum_df.index.values
 
-    def _import(self, _path):
+    def _import(self, _path: str) -> dict:
+        """
+        _summary_
+
+        Parameters
+        ----------
+        _path : str
+            _description_
+
+        Returns
+        -------
+        dict
+            Example:
+            ```
+            spec_dict = {
+                "_peak_indices": _peak_indices,
+                "peak_mz": np.concatenate(mz_values).copy(),
+                "peak_intensity": np.concatenate(intensity_values).copy(),
+                "rt": np.array(rt_values).copy(),
+                "precursor_mz": np.array(precursor_mz_values).copy(),
+                "precursor_charge": np.array(precursor_charges, dtype=np.int8).copy(),
+                "isolation_lower_mz": np.array(isolation_mz_lowers).copy(),
+                "isolation_upper_mz": np.array(isolation_mz_uppers).copy(),
+                "ms_level": np.array(ms_order_list, dtype=np.int8).copy(),
+                "nce": np.array(ce_list, dtype=np.float32).copy(),
+            }
+            ```
+
+        Raises
+        ------
+        NotImplementedError
+            Sub-class of `MSData_Base` must implement this method.
+        """
         raise NotImplementedError(f"{self.__class__} must implement `_import()`")
 
     def _set_dataframes(self, raw_data: dict):
