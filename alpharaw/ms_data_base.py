@@ -6,7 +6,7 @@ from alphabase.io.hdf import HDF_File
 
 class MSData_Base:
     """
-    The base data structure for MS Data, other MSData loader inherit this class.
+    The base data structure for MS RAW Data, other MSData loaders inherit this class.
 
     Parameters
     ----------
@@ -32,7 +32,7 @@ class MSData_Base:
     """
     Spectrum dataframe containing the following columns:
 
-    - `rt` (float64): in minutes. `rt_sec` will be RT in seconds.
+    - `rt` (float64): in minutes. `rt_sec` will be RT in seconds, which is not included by default.
     - `precursor_mz` (float64): mono_mz (DDA) or isolation center mz
     - `isolation_lower_mz` (float64): left of the isolation window
     - `isolation_upper_mz` (float64): right of the isolation window
@@ -70,7 +70,8 @@ class MSData_Base:
         "TOF",
     ]
     """
-    Some spectrum infomation in str format that can be mapped into unique token IDs.
+    These spectrum infomation items in str format can be one-to-one mapped into 
+    unique token IDs (indices), for exampel "CID"=0, "HCD"=1, ...
     Token IDs are better for storage in HDF5 format.
     """
 
@@ -93,12 +94,12 @@ class MSData_Base:
         Parameters
         ----------
         terminology : str
-            The terminology name.
+            The terminology name from :attr:`.MSData_Base.vocab`, such as "CID", "HCD", ...
 
         Returns
         -------
         int
-            Terminology ID, which is the index in :attr:`.MSData_Base.vocab`
+            Terminology ID, which is the index in :attr:`.MSData_Base.vocab`.
         """
         try:
             return self.vocab.index(terminology)
@@ -110,36 +111,36 @@ class MSData_Base:
         return self._raw_file_path
 
     @raw_file_path.setter
-    def raw_file_path(self, _path: str):
-        self._raw_file_path = _path
+    def raw_file_path(self, raw_file_path: str):
+        self._raw_file_path = raw_file_path
 
-    def import_raw(self, _path: str):
+    def import_raw(self, raw_file_path: str):
         """
         Import a raw file. It involves three steps:
         ```
-        raw_data_dict = self._import(_path)
+        raw_data_dict = self._import(raw_file_path)
         self._set_dataframes(raw_data_dict)
         self._check_df()
         ```
 
         Parameters
         ----------
-        _path : str
-            Raw file path
+        raw_file_path : str
+            Absolute or relative path of the raw file.
         """
-        self.raw_file_path = _path
-        raw_data_dict = self._import(_path)
+        self.raw_file_path = raw_file_path
+        raw_data_dict = self._import(raw_file_path)
         self._set_dataframes(raw_data_dict)
         self._check_df()
 
         if self._save_as_hdf:
-            self.save_hdf(_path + ".hdf")
+            self.save_hdf(raw_file_path + ".hdf")
 
-    def load_raw(self, _path: str):
+    def load_raw(self, raw_file_path: str):
         """
         Wrapper of :func:`.MSData_Base.import_raw`
         """
-        self.import_raw(_path)
+        self.import_raw(raw_file_path)
 
     def _save_meta_to_hdf(self, hdf: HDF_File):
         hdf.ms_data.meta = {
@@ -157,31 +158,31 @@ class MSData_Base:
         self.centroided = hdf.ms_data.meta.centroided
         self.instrument = hdf.ms_data.meta.instrument
 
-    def save_hdf(self, _path: str):
+    def save_hdf(self, hdf_file_path: str):
         """
         Save data into HDF5 file
 
         Parameters
         ----------
-        _path : str
-            HDF5 file path
+        hdf_file_path : str
+            Absolute or relative path of HDF5 file.
         """
-        hdf = HDF_File(_path, read_only=False, truncate=True, delete_existing=True)
+        hdf = HDF_File(hdf_file_path, read_only=False, truncate=True, delete_existing=True)
 
         hdf.ms_data = {"spectrum_df": self.spectrum_df, "peak_df": self.peak_df}
 
         self._save_meta_to_hdf(hdf)
 
-    def load_hdf(self, _path: str):
+    def load_hdf(self, hdf_file_path: str):
         """
         Load data from HDF5 file.
 
         Parameters
         ----------
-        _path : str
-            HDF5 file path.
+        hdf_file_path : str
+            Absolute or relative path of HDF5 file.
         """
-        hdf = HDF_File(_path, read_only=True, truncate=False, delete_existing=False)
+        hdf = HDF_File(hdf_file_path, read_only=True, truncate=False, delete_existing=False)
 
         self.spectrum_df = hdf.ms_data.spectrum_df.values
         self.peak_df = hdf.ms_data.peak_df.values
@@ -404,7 +405,7 @@ def index_ragged_list(ragged_list: list) -> np.ndarray:
 class MSData_HDF(MSData_Base):
     """
     Wrapper of reader for alpharaw's HDF5 spectrum file.
-    This class regiesters as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
+    This class is registered as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
     in :data:`ms_reader_provider` instance.
     """
 
@@ -419,28 +420,28 @@ class MSReaderProvider:
     def __init__(self):
         self.ms_reader_dict = {}
 
-    def register_reader(self, ms2_type: str, reader_class: type):
+    def register_reader(self, ms_file_type: str, reader_class: type):
         """
-        Register a new reader for `ms_type` format with `reader_class`.
+        Register a new reader for `ms_file_type` format with `reader_class`.
 
         Parameters
         ----------
-        file_type : str
+        ms_file_type : str
             AlphaRaw supported MS file types.
         reader_class : type
             AlphaRaw supported MS class types.
         """
-        self.ms_reader_dict[ms2_type.lower()] = reader_class
+        self.ms_reader_dict[ms_file_type.lower()] = reader_class
 
     def get_reader(
-        self, file_type: str, *, centroided: bool = True, **kwargs
+        self, ms_file_type: str, *, centroided: bool = True, **kwargs
     ) -> MSData_Base:
         """
-        Get the MS reader for the given `file_type`.
+        Get the MS reader for the given `ms_file_type`.
 
         Parameters
         ----------
-        file_type : str
+        ms_file_type : str
             AlphaRaw supported MS file types.
         centroided : bool, optional
             If centroiding the data, by default True.
@@ -450,11 +451,11 @@ class MSReaderProvider:
         MSData_Base
             Instance of corresponding sub-class of `MSData_Base`.
         """
-        file_type = file_type.lower()
-        if file_type not in self.ms_reader_dict:
+        ms_file_type = ms_file_type.lower()
+        if ms_file_type not in self.ms_reader_dict:
             return None
         else:
-            return self.ms_reader_dict[file_type](centroided=centroided, **kwargs)
+            return self.ms_reader_dict[ms_file_type](centroided=centroided, **kwargs)
 
 
 ms_reader_provider = MSReaderProvider()

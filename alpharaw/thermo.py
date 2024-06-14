@@ -50,7 +50,7 @@ __auxiliary_item_dtypes__ = {
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
-    Register "thermo" and "thermo_raw" in :data:`ms_reader_provider`.
+    This class is registered "thermo" and "thermo_raw" in :data:`ms_reader_provider`.
 
     Parameters
     ----------
