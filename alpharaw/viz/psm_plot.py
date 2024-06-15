@@ -13,6 +13,24 @@ from .df_utils import (
 from .plot_utils import plot_scatter
 
 color_map: dict = defaultdict(lambda: "brown")
+"""
+The colors of different peak annotations. By default:
+```
+{
+    '-': 'lightgrey', # umnatched peaks
+    'a': 'darkskyblue',
+    'b': 'blue',
+    'c': 'skyblue',
+    'x': 'darkred',
+    'y': 'red',
+    'z': 'deeppink',
+    'M': 'purple', # precursor
+    'Y': 'orange',
+    'B': 'darkgreen',
+}
+```
+For other annotations, the default color is "brown".
+"""
 color_map.update(
     {
         "-": "lightgrey",  # umnatched peaks
@@ -50,6 +68,55 @@ def plot_multi_psms(
     query_left_margin: float = 100000.0,
     query_right_margin: float = 100000.0,
 ):
+    """
+    Annotate multiple spectra for a peptide in a single plotly go.Figure.
+
+    Parameters
+    ----------
+    spec_masses_list : typing.List[np.ndarray]
+        The list of peak masses of multiple spectra to be annotated
+    spec_intens_list : typing.List[np.ndarray]
+        The list of peak intensities of multiple spectra to be annotated
+    sequence : str
+        Peptide sequence
+    mods : str
+        Modifications in alphabase format
+    mod_sites : str
+        Modification sites in alphabase format
+    charge : int
+        Charge state of the precursor
+    title : str, optional
+        Plotting title, by default ""
+    ppm : float, optional
+        Matching mass tolerance in ppm, by default 20.0
+    charged_frag_types : list, optional
+        Fragment charge states, by default ["b_z1","b_z2","y_z1","y_z2"]
+    include_fragments : bool, optional
+        If annotate fragments, by default True
+    include_precursor_isotopes : bool, optional
+        If annotate precursor isotopes, by default False
+    max_isotope : int, optional
+        Maximal number of isotopes, by default 6
+    min_frag_mz : float, optional
+        Minimal fragment m/z value to annotate, by default 100.0
+    plot_unmatched_peaks : bool, optional
+        If plot unmatched peaks (ion_name='-'), by default True
+    match_mode : "closest", "highest", optional
+        Match the closest or highest peak within the matching tolerance, by default "closest"
+    plot_template : str, optional
+        Plot template, by default 'plotly_white'
+    plot_height : int, optional
+        Plot height, by default 600
+    query_left_margin : float, optional
+        Slice margin to the left mz, by default 100000.0
+    query_right_margin : float, optional
+        Slice martin to the right mz, by default 100000.0
+
+    Returns
+    -------
+    go.Figure
+        The annotation plots of multiple spectra
+    """
     plot_df = make_query_df_for_peptide(
         sequence,
         mods,
@@ -97,6 +164,37 @@ def plot_multi_spectra(
     plot_template="plotly_white",
     plot_height=600,
 ):
+    """
+    Annotate multiple spectra for given queries in a single plotly go.Figure.
+
+    Parameters
+    ----------
+    spec_masses_list : typing.List[np.ndarray]
+        The list of peak masses of multiple spectra to be annotated
+    spec_intens_list : typing.List[np.ndarray]
+        The list of peak intensities of multiple spectra to be annotated
+    query_masses : np.ndarray
+        The query m/z values
+    query_ion_names : typing.List[str]
+        The query ion names
+    query_mass_tols : np.ndarray
+        The query mass tolerance in ppm
+    title : str, optional
+        The plot title, by default ""
+    plot_unmatched_peaks : bool, optional
+        If plot unmatched peaks (ion_name='-'), by default True
+    match_mode : "closest", "highest", optional
+        Match the closest or highest peak within the matching tolerance, by default "closest"
+    plot_template : str, optional
+        Plot template, by default 'plotly_white'
+    plot_height : int, optional
+        Plot height, by default 600
+
+    Returns
+    -------
+    go.Figure
+        The annotation plots of multiple spectra
+    """
     plot_dfs = []
     for spec_masses, spec_intens in zip(spec_masses_list, spec_intens_list):
         plot_dfs.append(
@@ -138,16 +236,35 @@ def plot_multi_spectra(
 
 
 class PSM_Plot:
+    """
+    The main class for spectrum annotation of a PSM. It contains three plots:
+    1. Ladder plot (`FragCoveragePlot`) for fragment coverage of the peptide.
+    2. Peak annotation plot (`PeakPlot`) for the spectrum.
+    3. Matching mass error plot (`MassErrPlot`) for the matched peaks.
+
+
+    Parameters
+    ----------
+    peak_plot_rows : int, optional
+        The height (ratio) of peak plot, by default 4
+    mass_err_plot_rows : int, optional
+        The height (ratio) of mass error plot, by default 1
+    frag_coverage_plot_rows : int, optional
+        The height (ratio) of fragment coverage plot, by default 1
+    frag_coverage : bool, optional
+        If plot fragment coverage, by default True
+    """
+
     vertical_spacing = 0.05
     template = "plotly_white"
     plot_height = 600
 
     def __init__(
         self,
-        peak_plot_rows=4,
-        mass_err_plot_rows=1,
-        frag_coverage_plot_rows=1,
-        frag_coverage=True,
+        peak_plot_rows: int = 4,
+        mass_err_plot_rows: int = 1,
+        frag_coverage_plot_rows: int = 1,
+        frag_coverage: bool = True,
     ):
         specs = []
         if frag_coverage:
@@ -190,7 +307,35 @@ class PSM_Plot:
         self.frag_cov_row = frag_cov_row
         self.rows = peak_plot_rows + mass_err_plot_rows + frag_coverage_plot_rows
 
-    def plot(self, plot_df, sequence, title, plot_unmatched_peaks=False):
+    def plot(
+        self,
+        plot_df: pd.DataFrame,
+        sequence: str,
+        title: str,
+        plot_unmatched_peaks: bool = False,
+    ) -> go.Figure:
+        """
+        Main entry of `PSM_Plot` for peak annotation.
+
+        Parameters
+        ----------
+        plot_df : pd.DataFrame
+            The plot_df can be generated by
+            :func:`alpharaw.viz.df_utils.make_psm_plot_df_for_peptide`,
+            :func:`alpharaw.viz.df_utils.make_psm_plot_for_frag_dfs`, or
+            :func:`alpharaw.viz.df_utils.make_psm_plot_df`.
+        sequence : str
+            Peptide sequence, for fragment coverage plot
+        title : str
+            Plot title
+        plot_unmatched_peaks : bool, optional
+            If plot unmatched peaks with ion_name `-`, by default False
+
+        Returns
+        -------
+        go.Figure
+            Peak annotation plot in plotly go.Figure
+        """
         if "pcc" in plot_df.columns and len(plot_df) > 0:
             title = f"{title} (R={plot_df.pcc.values[0]:.3f})"
         self._init_plot(title)
