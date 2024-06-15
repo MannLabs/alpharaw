@@ -17,8 +17,15 @@ from .plot_utils import plot_line
 
 
 class XIC_Plot:
-    # hovermode = "x" | "y" | "closest" | False | "x unified" | "y unified"
+    """
+    Only apply for 3D-MS, i.e. without mobility
+    """
+
     hovermode = "closest"
+    """
+    hovermode = "x", "y", "closest", False, "x unified", "y unified"
+    """
+
     plot_height = 550
     colorscale_qualitative = "Alphabet"
     colorscale_sequential = "Viridis"
@@ -33,10 +40,6 @@ class XIC_Plot:
     # list of XIC_Trace objects
     traces: list = []
 
-    """
-    Only apply for 3D-MS, i.e. without mobility
-    """
-
     def plot(
         self,
         spectrum_df: pd.DataFrame,
@@ -48,6 +51,33 @@ class XIC_Plot:
         plot_rows=1,
         ith_plot_row=0,
     ):
+        """
+        _summary_
+
+        Parameters
+        ----------
+        spectrum_df : pd.DataFrame
+            _description_
+        peak_df : pd.DataFrame
+            _description_
+        query_df : pd.DataFrame
+            _description_
+        title : str, optional
+            _description_, by default ""
+        add_peak_area : bool, optional
+            _description_, by default False
+        create_new_fig : bool, optional
+            _description_, by default True
+        plot_rows : int, optional
+            _description_, by default 1
+        ith_plot_row : int, optional
+            _description_, by default 0
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         if "rt_sec" in query_df.columns:
             rt_sec = query_df.rt_sec.values[0]
         else:
@@ -391,6 +421,33 @@ def get_peak_area(
     precursor_left_mz: float = -1.0,
     precursor_right_mz: float = -1.0,
 ) -> np.ndarray:
+    """
+    Get peak area values for each of the `query_masses`
+
+    Parameters
+    ----------
+    spectrum_df : pd.DataFrame
+        The spectrum dataframe
+    peak_df : pd.DataFrame
+        The peak dataframe
+    query_masses : np.ndarray
+        The query m/z values
+    mass_tols : np.ndarray
+        The query m/z tolerance in Da
+    query_start_rt_sec : float
+        _description_
+    query_stop_rt_sec : float
+        _description_
+    precursor_left_mz : float, optional
+        _description_, by default -1.0
+    precursor_right_mz : float, optional
+        _description_, by default -1.0
+
+    Returns
+    -------
+    np.ndarray
+        _description_
+    """
     spec_idxes = get_spec_idxes_from_df(
         spectrum_df,
         query_start_rt_sec=query_start_rt_sec,
