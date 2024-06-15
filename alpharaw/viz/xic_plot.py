@@ -50,7 +50,7 @@ class XIC_Plot:
         create_new_fig=True,
         plot_rows=1,
         ith_plot_row=0,
-    )->go.Figure:
+    ) -> go.Figure:
         """
         Main entry of `XIC_Plot`.
 
@@ -73,7 +73,7 @@ class XIC_Plot:
         plot_rows : int, optional
             If create_new_fig, how many rows (subplots) to create, by default 1
         ith_plot_row : int, optional
-            If not create_new_fig, this parameter refers to the row number 
+            If not create_new_fig, this parameter refers to the row number
             in `self.fig`, by default 0
 
         Returns
@@ -211,7 +211,7 @@ class XIC_Plot:
         create_new_fig=True,
         plot_rows=1,
         ith_plot_row=0,
-    )->go.Figure:
+    ) -> go.Figure:
         """
         The other entry of `XIC_Plot`
 
@@ -244,7 +244,7 @@ class XIC_Plot:
         plot_rows : int, optional
             If create_new_fig, how many rows (subplots) to create, by default 1
         ith_plot_row : int, optional
-            If not create_new_fig, this parameter refers to the row number 
+            If not create_new_fig, this parameter refers to the row number
             in `self.fig`, by default 0
 
         Returns
