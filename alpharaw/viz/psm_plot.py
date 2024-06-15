@@ -178,7 +178,7 @@ def plot_multi_spectra(
     query_ion_names : typing.List[str]
         The query ion names
     query_mass_tols : np.ndarray
-        The query mass tolerance in ppm
+        The query mass tolerance in Da
     title : str, optional
         The plot title, by default ""
     plot_unmatched_peaks : bool, optional
