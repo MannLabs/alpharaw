@@ -32,7 +32,8 @@ def find_spec_idxes_by_rt(
     Returns
     -------
     ndarray[int32]
-        Result spectrum indices.
+        Result spectrum indices. `int32` is used here as there will be
+        no more than 2 billions of spectra in a raw file.
     """
     if "multinotch" in spectrum_df.columns:
         # if multinotch, there are multiple isolation windows of MS2 spectra.
@@ -158,7 +159,7 @@ def find_spec_idxes(
     query_right_mz: float,
 ) -> np.ndarray:
     """
-    Find MS2 spectrum indices (int32) from the all spectra
+    Find MS2 spectrum indices (int32) from all the spectra
     by given RT window and precursor m/z window.
     This function is numba accelerated.
 
@@ -209,7 +210,7 @@ def find_batch_spec_idxes(
     max_spec_per_query: int,
 ) -> np.ndarray:
     """
-    Find MS2 spectrum indices (int32) from the all spectra
+    Find MS2 spectrum indices (int32) from all the spectra
     by the given batch of RT windows and precursor m/z windows.
     This function is numba accelerated.
 

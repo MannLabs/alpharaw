@@ -1,8 +1,14 @@
-# TODO This module will be removed in the future as mass calibration has already been implemented in alphaDIA.
+import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
+
+warnings.warn(
+    "This module will be removed in the future as "
+    "mass calibration has already been implemented in alphaDIA.",
+    category=DeprecationWarning,
+)
 
 
 def get_fragment_median(start_end_idxes: tuple, frag_df: pd.DataFrame):
