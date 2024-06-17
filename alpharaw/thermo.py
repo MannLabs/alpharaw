@@ -26,7 +26,7 @@ __trailer_extra_list__ = [
     "faims_cv",
 ]
 
-auxiliary_item_dtypes:dict = {
+auxiliary_item_dtypes: dict = {
     "injection_time": np.float32,
     "cv": np.float32,
     "max_ion_time": np.float32,
@@ -52,7 +52,7 @@ The auxiliary items and types that can be accessed from thermo RawFileReader.
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
-    This class is registered "thermo" and "thermo_raw" in 
+    This class is registered "thermo" and "thermo_raw" in
     :obj:`alpharaw.ms_data_base.ms_reader_provider`.
 
     Parameters
@@ -62,7 +62,7 @@ class ThermoRawData(MSData_Base):
     process_count : int, optional
         Number of processes to load RAW data, by default 10.
     mp_batch_size : int, optional
-        Number of spectra to load in each batch, by default 5000. 
+        Number of spectra to load in each batch, by default 5000.
     save_as_hdf : bool, optional
         Automatically save hdf after load raw data, by default False.
     dda : bool, optional
