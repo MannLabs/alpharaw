@@ -8,7 +8,7 @@ from .ms_data_base import MSData_Base, ms_reader_provider
 class SciexWiffData(MSData_Base):
     """
     Load Sciex Wiff data as :class:`MSData_Base` data structure.
-    This reader will be registered as "sciex", "sciex_wiff", and "sciex_raw" 
+    This reader will be registered as "sciex", "sciex_wiff", and "sciex_raw"
     in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
 
     Parameters

@@ -12,7 +12,7 @@ from .ms_data_base import (
 class MzMLReader(MSData_Base):
     """
     Load mzml file as `:class:`MSData_Base` structure.
-    This reader will be registered as "mzml" 
+    This reader will be registered as "mzml"
     in :obj:`alphraw.ms_data_base.ms_reader_provider`.
 
 
@@ -31,14 +31,14 @@ class MzMLReader(MSData_Base):
         mzml_file_path: str,
     ) -> dict:
         """
-        Implementation of :func:`alpharaw.ms_data_base.MSData_Base._import` interface, 
+        Implementation of :func:`alpharaw.ms_data_base.MSData_Base._import` interface,
         which will be called by :func:`alpharaw.ms_data_base.MSData_Base.import_raw`,
         the main entry of :class:`alpharaw.ms_data_base.MSData_Base` sub-classes.
 
         Parameters
         ----------
         mzml_file_path : str
-            Absolute or relative path of the mzml file. 
+            Absolute or relative path of the mzml file.
             For testing purpose, this can be pyteomics `MzML` object as well.
 
         Returns
