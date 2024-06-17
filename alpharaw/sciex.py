@@ -8,7 +8,8 @@ from .ms_data_base import MSData_Base, ms_reader_provider
 class SciexWiffData(MSData_Base):
     """
     Load Sciex Wiff data as :class:`MSData_Base` data structure.
-    Register "sciex", "sciex_wiff", and "sciex_raw" in :data:`ms_reader_provider`.
+    This reader will be registered as "sciex", "sciex_wiff", and "sciex_raw" 
+    in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
 
     Parameters
     ----------
@@ -33,12 +34,12 @@ class SciexWiffData(MSData_Base):
 
     def _import(self, _wiff_file_path: str) -> dict:
         """
-        Re-implementation of :func:`alpharaw.MSData_Base._import`.
+        Implementation of :func:`alpharaw.ms_data_base.MSData_Base._import` interface.
 
         Parameters
         ----------
         _wiff_file_path : str
-            Sciex wiff file path.
+            Absolute or relative path of the sciex wiff file.
 
         Returns
         -------

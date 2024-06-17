@@ -12,30 +12,34 @@ from .ms_data_base import (
 class MzMLReader(MSData_Base):
     """
     Load mzml file as `:class:`MSData_Base` structure.
-    Register "mzml" in :data:`ms_reader_provider`.
+    This reader will be registered as "mzml" 
+    in :obj:`alphraw.ms_data_base.ms_reader_provider`.
+
 
     Parameters
     ----------
-    filename : str
-        mzml file path.
+    centroided : bool, optional
+        If peaks will be centroided after loading,
+        by default True.
 
-    Returns
-    -------
-    dict
-        Spectrum information dict.
+    save_as_hdf : bool, optional
+        Automatically save hdf after load raw data, by default False.
     """
 
     def _import(
         self,
-        filename: str,
+        mzml_file_path: str,
     ) -> dict:
         """
-        Re-implementation of :func:`alpharaw.MSData_Base._import`.
+        Implementation of :func:`alpharaw.ms_data_base.MSData_Base._import` interface, 
+        which will be called by :func:`alpharaw.ms_data_base.MSData_Base.import_raw`,
+        the main entry of :class:`alpharaw.ms_data_base.MSData_Base` sub-classes.
 
         Parameters
         ----------
-        filename : str
-            mzml file path.
+        mzml_file_path : str
+            Absolute or relative path of the mzml file. 
+            For testing purpose, this can be pyteomics `MzML` object as well.
 
         Returns
         -------
@@ -43,10 +47,10 @@ class MzMLReader(MSData_Base):
             Spectrum information dict.
         """
         self.file_type = "mzml"
-        if isinstance(filename, str):
-            reader = mzml.read(filename, use_index=True)
+        if isinstance(mzml_file_path, str):
+            reader = mzml.read(mzml_file_path, use_index=True)
         else:
-            reader = filename
+            reader = mzml_file_path
         spec_indices = np.arange(len(reader), dtype=int)
 
         rt_list = []
@@ -99,7 +103,7 @@ class MzMLReader(MSData_Base):
             isolation_lower_mz_list.append(isolation_lower_mz)
             isolation_upper_mz_list.append(isolation_upper_mz)
 
-        if isinstance(filename, str):
+        if isinstance(mzml_file_path, str):
             reader.close()
 
         peak_indices = np.empty(len(spec_indices) + 1, np.int64)
