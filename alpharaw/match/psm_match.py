@@ -448,6 +448,7 @@ class PepSpecMatch_DIA(PepSpecMatch):
     """
     Peak annotation for DIA data.
     """
+
     max_spec_per_query: int = 3
     min_frag_mz: float = 200.0
 
@@ -621,7 +622,7 @@ def match_one_raw_with_numba(
     matched_intensities: np.ndarray,
     matched_mz_errs: np.ndarray,
     match_closest: bool = True,
-)->None:
+) -> None:
     """
     Internel function to match fragment mz values to spectrum mz values.
     Matched_mz_errs[i] = np.inf if no peaks are matched.
