@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
     "sphinx.ext.viewcode",
+    # 'sphinx.ext.autodoc',
     "autodocsumm",
     "nbsphinx",
     "myst_parser",
@@ -80,7 +81,7 @@ def linkcode_resolve(domain, info):
         # e.g. object is a typing.Union
         return None
     file = os.path.relpath(file, os.path.abspath(".."))
-    if not file.startswith("peptdeep"):
+    if not file.startswith("alpharaw"):
         # e.g. object is a typing.NewType
         return None
     start, end = lines[1], lines[1] + len(lines[0]) - 1
@@ -99,6 +100,10 @@ html_theme = "furo"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+html_css_files = [
+    "css/custom.css",
+]
 
 autodoc_default_options = {
     "autosummary": True,
