@@ -14,17 +14,20 @@ class MzMLReader(MSData_Base):
     Load mzml file as `:class:`MSData_Base` structure.
     This reader will be registered as "mzml"
     in :obj:`alphraw.ms_data_base.ms_reader_provider`.
-
-
-    Parameters
-    ----------
-    centroided : bool, optional
-        If peaks will be centroided after loading,
-        by default True.
-
-    save_as_hdf : bool, optional
-        Automatically save hdf after load raw data, by default False.
     """
+
+    def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            If peaks will be centroided after loading,
+            by default True.
+
+        save_as_hdf : bool, optional
+            Automatically save hdf after load raw data, by default False.
+        """
+        super().__init__(centroided, save_as_hdf, **kwargs)
 
     def _import(
         self,

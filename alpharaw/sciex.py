@@ -10,18 +10,19 @@ class SciexWiffData(MSData_Base):
     Load Sciex Wiff data as :class:`MSData_Base` data structure.
     This reader will be registered as "sciex", "sciex_wiff", and "sciex_raw"
     in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
-
-    Parameters
-    ----------
-    centroided : bool, optional
-        If peaks will be centroided after loading,
-        by default True.
-
-    save_as_hdf : bool, optional
-        Automatically save hdf after load raw data, by default False.
     """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            If peaks will be centroided after loading,
+            by default True.
+
+        save_as_hdf : bool, optional
+            Automatically save hdf after load raw data, by default False.
+        """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         if self.centroided:
             self.centroided = False
