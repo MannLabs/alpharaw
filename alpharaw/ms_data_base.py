@@ -440,7 +440,7 @@ class MSData_HDF(MSData_Base):
     """
     Wrapper of reader for alpharaw's HDF5 spectrum file.
     This class is registered as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
-    in :data:`ms_reader_provider` instance.
+    in :obj:`ms_reader_provider` instance.
     """
 
     def import_raw(self, _path: str):

@@ -52,7 +52,8 @@ The auxiliary items and types that can be accessed from thermo RawFileReader.
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
-    This class is registered "thermo" and "thermo_raw" in :data:`alpharaw.ms_data_base.ms_reader_provider`.
+    This class is registered "thermo" and "thermo_raw" in 
+    :obj:`alpharaw.ms_data_base.ms_reader_provider`.
 
     Parameters
     ----------
