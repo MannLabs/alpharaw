@@ -241,18 +241,6 @@ class PSM_Plot:
     1. Ladder plot (`FragCoveragePlot`) for fragment coverage of the peptide.
     2. Peak annotation plot (`PeakPlot`) for the spectrum.
     3. Matching mass error plot (`MassErrPlot`) for the matched peaks.
-
-
-    Parameters
-    ----------
-    peak_plot_rows : int, optional
-        The height (ratio) of peak plot, by default 4
-    mass_err_plot_rows : int, optional
-        The height (ratio) of mass error plot, by default 1
-    frag_coverage_plot_rows : int, optional
-        The height (ratio) of fragment coverage plot, by default 1
-    frag_coverage : bool, optional
-        If plot fragment coverage, by default True
     """
 
     vertical_spacing = 0.05
@@ -266,6 +254,18 @@ class PSM_Plot:
         frag_coverage_plot_rows: int = 1,
         frag_coverage: bool = True,
     ):
+        """
+        Parameters
+        ----------
+        peak_plot_rows : int, optional
+            The height (ratio) of peak plot, by default 4
+        mass_err_plot_rows : int, optional
+            The height (ratio) of mass error plot, by default 1
+        frag_coverage_plot_rows : int, optional
+            The height (ratio) of fragment coverage plot, by default 1
+        frag_coverage : bool, optional
+            If plot fragment coverage, by default True
+        """
         specs = []
         if frag_coverage:
             specs.append(
