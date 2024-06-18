@@ -14,55 +14,6 @@ from alphabase.peptide.precursor import (
 from alpharaw.match.match_utils import match_closest_peaks, match_highest_peaks
 
 
-def make_psm_plot_df_for_peptide(
-    spec_masses: np.ndarray,
-    spec_intensities: np.ndarray,
-    sequence: str,
-    mods: str,
-    mod_sites: str,
-    charge: int,
-    rt_sec: float = 0.0,
-    mobility: float = 0.0,
-    ppm: float = 20.0,
-    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
-    include_fragments: bool = True,
-    fragment_intensity_df: pd.DataFrame = None,
-    include_precursor_isotopes: bool = False,
-    max_isotope: int = 6,
-    min_frag_mz: float = 100.0,
-    match_mode: typing.Literal["closest", "highest"] = "closest",
-) -> pd.DataFrame:
-    plot_df = make_query_df_for_peptide(
-        sequence,
-        mods,
-        mod_sites,
-        charge,
-        rt_sec=rt_sec,
-        mobility=mobility,
-        charged_frag_types=charged_frag_types,
-        include_fragments=include_fragments,
-        fragment_intensity_df=fragment_intensity_df,
-        include_precursor_isotopes=include_precursor_isotopes,
-        max_isotope=max_isotope,
-        min_frag_mz=min_frag_mz,
-    )
-
-    return make_psm_plot_df(
-        spec_masses=spec_masses,
-        spec_intensities=spec_intensities,
-        query_masses=plot_df.mz.values,
-        query_ion_names=plot_df.ion_name.values,
-        query_mass_tols=plot_df.mz.values * ppm * 1e-6,
-        query_frag_idxes=plot_df.fragment_site.values,
-        modified_sequence=plot_df.modified_sequence.values[0],
-        mod_sites=mod_sites,
-        query_intensities=plot_df.intensity.values
-        if "intensity" in plot_df.columns
-        else None,
-        match_mode=match_mode,
-    )
-
-
 def make_query_df_for_peptide(
     sequence: str,
     mods: str,
@@ -77,7 +28,53 @@ def make_query_df_for_peptide(
     include_precursor_isotopes: bool = False,
     max_isotope: int = 6,
     min_frag_mz: float = 100.0,
+    min_frag_intensity: float = 0.001,
 ) -> pd.DataFrame:
+    """
+    Create a query dataframe for a peptide that can be
+    use to generate MS2 or XIC plots.
+
+    Parameters
+    ----------
+    sequence : str
+        Peptide sequence.
+    mods : str
+        Modification names in alphabase format.
+    mod_sites : str
+        Modification sites in alphabase format.
+    charge : int
+        Charge state of the peptide.
+    rt_sec : float, optional
+        Retention time in seconds of the peptide, by default 0.0
+    mobility : float, optional
+        Ion mobility of the peptide, by default 0.0
+    ms_level : int, optional
+        MS level. If it is 1, `include_fragments` is always False. By default 2
+    charged_frag_types : list, optional
+        Charge states of fragments, by default ["b_z1", "b_z2", "y_z1", "y_z2"]
+    include_fragments : bool, optional
+        If include fragments in plot_df, by default True
+    fragment_intensity_df : pd.DataFrame, optional
+        Fragment intensity dataframe of the peptide for mirror plot, by default None
+    include_precursor_isotopes : bool, optional
+        If plot_df include precursor isotopes, by default False
+    max_isotope : int, optional
+        Maximal number of precursor isotopes, by default 6
+    min_frag_mz : float, optional
+        Minimal m/z value of fragments, by default 100.0
+    min_frag_intensity : float, optional
+        Minimal intensity of fragments to plot, by default 0.001
+
+    Returns
+    -------
+    pd.DataFrame
+        Query dataframe for plotting with possible columns:
+        'mz', 'type', 'loss_type', 'charge', 'number', 'fragment_site',
+       'ion_name', 'sequence', 'mods', 'mod_sites', 'precursor_charge',
+       'modified_sequence', 'rt_sec', 'precursor_mz', 'precursor_i_0',
+       'precursor_i_1', 'precursor_i_2', 'precursor_i_3', 'precursor_i_4',
+       'precursor_i_5', 'precursor_mono_idx'
+    """
     if ms_level == 1:
         include_fragments = False
     precursor_df, fragment_mz_df = make_precursor_fragment_df(
@@ -106,24 +103,92 @@ def make_query_df_for_peptide(
         mobility=mobility,
         ms_level=ms_level,
         min_frag_mz=min_frag_mz,
+        min_frag_intensity=min_frag_intensity,
     )
 
 
-def make_psm_plot_for_frag_dfs(
+def make_psm_plot_df_for_peptide(
     spec_masses: np.ndarray,
     spec_intensities: np.ndarray,
-    precursor_df: pd.DataFrame,
-    fragment_mz_df: pd.DataFrame,
-    fragment_intensity_df: pd.DataFrame = None,
+    sequence: str,
+    mods: str,
+    mod_sites: str,
+    charge: int,
+    rt_sec: float = 0.0,
+    mobility: float = 0.0,
     ppm: float = 20.0,
+    charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
+    include_fragments: bool = True,
+    fragment_intensity_df: pd.DataFrame = None,
+    include_precursor_isotopes: bool = False,
+    max_isotope: int = 6,
     min_frag_mz: float = 100.0,
     min_frag_intensity: float = 0.001,
     match_mode: typing.Literal["closest", "highest"] = "closest",
-):
-    plot_df = translate_frag_df_to_plot_df(
-        precursor_df,
-        fragment_mz_df,
+) -> pd.DataFrame:
+    """
+    Create a plot dataframe for a MS2 spectrum and a peptide.
+
+    Parameters
+    ----------
+    spec_masses : np.ndarray
+        Peak m/z values of a spectrum.
+    spec_intensities : np.ndarray
+        Peak intensities of a spectrum.
+    sequence : str
+        Peptide sequence.
+    mods : str
+        Modification names in alphabase format.
+    mod_sites : str
+        Modification sites in alphabase format.
+    charge : int
+        Charge state of the peptide.
+    rt_sec : float, optional
+        Retention time in seconds of the peptide, by default 0.0
+    mobility : float, optional
+        Ion mobility of the peptide, by default 0.0
+    ppm : float, optional
+        Matching mass tolerance in ppm, by default 20.0
+    charged_frag_types : list, optional
+        Charge states of fragments, by default ["b_z1", "b_z2", "y_z1", "y_z2"]
+    include_fragments : bool, optional
+        If include fragments in plot_df, by default True
+    fragment_intensity_df : pd.DataFrame, optional
+        Fragment intensity dataframe of the peptide for mirror plot, by default None
+    include_precursor_isotopes : bool, optional
+        If plot_df include precursor isotopes, by default False
+    max_isotope : int, optional
+        Maximal number of precursor isotopes, by default 6
+    min_frag_mz : float, optional
+        Minimal m/z value of fragments, by default 100.0
+    min_frag_intensity : float, optional
+        Minimal intensity of fragments to plot, by default 0.001
+    match_mode : "closest", "highest", optional
+        If extract the closest peak or highest peak within
+        the given matching tolerance, by default "closest"
+
+    Returns
+    -------
+    pd.DataFrame
+        Plot dataframe with possible columns:
+        "modified_sequence", "mz", "intensity", "fragment_site",
+        "ppm_err", "mass_err", "ion_name", "mod_sites",
+        "precursor_mz", "precursor_i_0",
+        "precursor_i_1", "precursor_i_2", "precursor_i_3", "precursor_i_4",
+        "precursor_i_5", "precursor_mono_idx", "color"
+    """
+    plot_df = make_query_df_for_peptide(
+        sequence,
+        mods,
+        mod_sites,
+        charge,
+        rt_sec=rt_sec,
+        mobility=mobility,
+        charged_frag_types=charged_frag_types,
+        include_fragments=include_fragments,
         fragment_intensity_df=fragment_intensity_df,
+        include_precursor_isotopes=include_precursor_isotopes,
+        max_isotope=max_isotope,
         min_frag_mz=min_frag_mz,
         min_frag_intensity=min_frag_intensity,
     )
@@ -136,10 +201,82 @@ def make_psm_plot_for_frag_dfs(
         query_mass_tols=plot_df.mz.values * ppm * 1e-6,
         query_frag_idxes=plot_df.fragment_site.values,
         modified_sequence=plot_df.modified_sequence.values[0],
-        mod_sites=precursor_df.mod_sites.values[0],
+        mod_sites=mod_sites,
         query_intensities=plot_df.intensity.values
         if "intensity" in plot_df.columns
         else None,
+        match_mode=match_mode,
+    )
+
+
+def make_psm_plot_df_for_frag_dfs(
+    spec_masses: np.ndarray,
+    spec_intensities: np.ndarray,
+    precursor_df: pd.DataFrame,
+    fragment_mz_df: pd.DataFrame,
+    fragment_intensity_df: pd.DataFrame = None,
+    ppm: float = 20.0,
+    min_frag_mz: float = 100.0,
+    min_frag_intensity: float = 0.001,
+    match_mode: typing.Literal["closest", "highest"] = "closest",
+) -> pd.DataFrame:
+    """
+    Similar to :func:`make_psm_plot_df_for_peptide`, but this function
+    does not start from a peptide, but from its fragment_mz_df.
+
+    Parameters
+    ----------
+    spec_masses : np.ndarray
+        Peak m/z values of a spectrum.
+    spec_intensities : np.ndarray
+        Peak intensities of a spectrum.
+    precursor_df : pd.DataFrame
+        This must be alphabase precursor_df with only one precursor.
+    fragment_mz_df : pd.DataFrame
+        The alphabase fragment_mz_df of the `precursor_df`.
+    fragment_intensity_df : pd.DataFrame, optional
+        Fragment intensity dataframe of precursor for mirror plot, by default None
+    ppm : float, optional
+        Matching mass tolerance in ppm, by default 20.0
+    min_frag_mz : float, optional
+        Minimal m/z value of fragments, by default 100.0
+    min_frag_intensity : float, optional
+        Minimal intensity of fragments to plot, by default 0.001
+    match_mode : "closest", "highest", optional
+        If extract the closest peak or highest peak within
+        the given matching tolerance, by default "closest"
+
+    Returns
+    -------
+    DataFrame
+        Plot dataframe with possible columns:
+        "modified_sequence", "mz", "intensity", "fragment_site",
+        "ppm_err", "mass_err", "ion_name", "mod_sites",
+        "precursor_mz", "color"
+    """
+    plot_df = translate_frag_df_to_plot_df(
+        precursor_df,
+        fragment_mz_df,
+        fragment_intensity_df=fragment_intensity_df,
+        min_frag_mz=min_frag_mz,
+        min_frag_intensity=min_frag_intensity,
+    )
+
+    if "intensity" in plot_df.columns:
+        query_intensities = plot_df.intensity.values
+    else:
+        query_intensities = None
+
+    return make_psm_plot_df(
+        spec_masses=spec_masses,
+        spec_intensities=spec_intensities,
+        query_masses=plot_df.mz.values,
+        query_ion_names=plot_df.ion_name.values,
+        query_mass_tols=plot_df.mz.values * ppm * 1e-6,
+        query_frag_idxes=plot_df.fragment_site.values,
+        modified_sequence=plot_df.modified_sequence.values[0],
+        mod_sites=precursor_df.mod_sites.values[0],
+        query_intensities=query_intensities,
         match_mode=match_mode,
     )
 
@@ -152,6 +289,30 @@ def make_query_df(
     query_im: float = 0.0,
     query_intensities: np.ndarray = None,
 ) -> pd.DataFrame:
+    """
+    Create a query dataframe based on query_masses and query_ion_names
+    to generate MS2 or XIC plots.
+
+    Parameters
+    ----------
+    query_masses : np.ndarray
+        Query or fragment m/z values.
+    query_ion_names : typing.List[str]
+        Query or fragment ion names.
+    query_rt_sec : float
+        RT in seconds.
+    precursor_mz : float
+        Precursor m/z value.
+    query_im : float, optional
+        Ion mobility, by default 0.0
+    query_intensities : np.ndarray, optional
+        Query intensities for mirror plot, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        "mz", "intensity", "fragment_site", "ion_name", "precursor_mz"
+    """
     df = pd.DataFrame(
         dict(
             mz=query_masses,
@@ -179,6 +340,43 @@ def make_psm_plot_df(
     query_intensities: np.ndarray = None,
     match_mode: typing.Literal["closest", "highest"] = "closest",
 ) -> pd.DataFrame:
+    """
+    Create a plot dataframe for a MS2 spectrum and query m/z values.
+
+    Parameters
+    ----------
+    spec_masses : np.ndarray
+        Peak m/z values of a spectrum.
+    spec_intensities : np.ndarray
+        Peak intensities of a spectrum.
+    query_masses : np.ndarray
+        Query or fragment m/z values.
+    query_ion_names : typing.List[str]
+        Query or fragment ion names.
+    query_mass_tols : np.ndarray
+        Matching mass tolerance of `query_masses`.
+    query_frag_idxes : np.ndarray
+        Fragment indices or positions of `query_masses`.
+    modified_sequence : str, optional
+        Modified sequence, such as "AM[+16]DEFGK_(2+)", by default ""
+    mod_sites : str, optional
+        Modification sites in alphabase format, by default ""
+    query_intensities : np.ndarray, optional
+        Query intensities for mirror plot, by default None
+    match_mode : "closest", "highest", optional
+        If extract the closest peak or highest peak within
+        the given matching tolerance, by default "closest"
+
+    Returns
+    -------
+    pd.DataFrame
+        Plot dataframe with possible columns:
+        "modified_sequence", "mz", "intensity", "fragment_site",
+        "ppm_err", "mass_err", "ion_name", "mod_sites",
+        "precursor_mz", "precursor_i_0",
+        "precursor_i_1", "precursor_i_2", "precursor_i_3", "precursor_i_4",
+        "precursor_i_5", "precursor_mono_idx", "color"
+    """
     query_ion_names = np.array(query_ion_names, dtype="U")
     if match_mode == "highest":
         query_matched_idxes = match_highest_peaks(
@@ -261,7 +459,28 @@ def make_psm_plot_df(
     return df
 
 
-def get_modified_sequence(sequence: str, mods: str, mod_sites: str, charge: int = 0):
+def get_modified_sequence(
+    sequence: str, mods: str, mod_sites: str, charge: int = 0
+) -> str:
+    """
+    Parse sequence, mods, mod_sites into a single modified sequence string.
+
+    Parameters
+    ----------
+    sequence : str
+        Peptide sequence.
+    mods : str
+        Modifications in alphabase format.
+    mod_sites : str
+        Modification sites in alphabase format.
+    charge : int, optional
+        Precursor charge, by default 0
+
+    Returns
+    -------
+    str
+        Modified sequence.
+    """
     sequence = "_" + sequence + "_"
     mod_masses = np.zeros(len(sequence))
     if mods:
@@ -288,6 +507,38 @@ def translate_frag_df_to_plot_df(
     min_frag_mz: float = 100.0,
     min_frag_intensity: float = 0.001,
 ) -> pd.DataFrame:
+    """
+    Translate `precursor_df`, `fragment_mz_df` (and `fragment_intensity_df`)
+    into a single plot df.
+
+    Parameters
+    ----------
+    precursor_df : pd.DataFrame
+        Precursor df with a single precursor.
+    fragment_mz_df : pd.DataFrame
+        fragment_mz_df for the precursor.
+    fragment_intensity_df : pd.DataFrame, optional
+        fragment_intensity_df for the precursor, by default None
+    rt_sec : float, optional
+        RT in seconds, by default 0.0
+    mobility : float, optional
+        Ion mobility, by default 0.0
+    ms_level : int, optional
+        MS level. If 2, precursor_mz will be included otherwise it is useless.
+        By default 2
+    min_frag_mz : float, optional
+        Minimal m/z value of fragments, by default 100.0
+    min_frag_intensity : float, optional
+        Minimal intensity of fragments to plot, by default 0.001
+
+    Returns
+    -------
+    pd.DataFrame
+        Query dataframe for plotting with possible columns:
+        'mz', 'type', 'loss_type', 'charge', 'number', 'fragment_site',
+       'ion_name', 'sequence', 'mods', 'mod_sites', 'precursor_charge',
+       'modified_sequence', 'rt_sec', 'precursor_mz'
+    """
     fragment_mz_df = fragment_mz_df.mask(fragment_mz_df < min_frag_mz, 0)
     if fragment_intensity_df is None:
         fragment_intensity_df = pd.DataFrame()
@@ -379,7 +630,35 @@ def make_precursor_fragment_df(
     charged_frag_types: list = ["b_z1", "b_z2", "y_z1", "y_z2"],
     include_precursor_isotopes: bool = False,
     max_isotope: int = 6,
-):
+) -> typing.Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Create precursor_df and fragment_mz_df for a peptide.
+
+    Parameters
+    ----------
+    sequence : str
+        Peptide sequence
+    mods : str
+        Modifications in alphabase format
+    mod_sites : str
+        Modification sites in alphabase format
+    charge : int
+        Precursor charge state
+    include_fragments : bool, optional
+        If calculate fragments (fragment_mz_df), by default True
+    charged_frag_types : list, optional
+        Fragment charge states, by default ["b_z1", "b_z2", "y_z1", "y_z2"]
+    include_precursor_isotopes : bool, optional
+        If calculate precursor isotopes, by default False
+    max_isotope : int, optional
+        Maximal number of isotopes, by default 6
+
+    Returns
+    -------
+    Tuple
+        pd.DataFrame: precursor dataframe.
+        pd.DataFrame: fragment dataframe. Empty dataframe if include_fragments==False
+    """
     precursor_df = pd.DataFrame(
         dict(sequence=[sequence], mods=[mods], mod_sites=[mod_sites], charge=charge)
     )
