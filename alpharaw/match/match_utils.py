@@ -13,7 +13,33 @@ def match_batch_spec(
     peak_stop_idxes: np.ndarray,
     query_mzs: np.ndarray,
     query_mz_tols: np.ndarray,
-):
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Extract matched mzs and intensities for query m/z values against the given batch spectra.
+
+    Parameters
+    ----------
+    spec_idxes : np.ndarray
+        The batch spectra, given as spectrum indexes.
+    peak_mzs : np.ndarray
+        The peak m/z values in the whole raw data.
+    peak_intens : np.ndarray
+        The peak intensities in the whole raw data.
+    peak_start_idxes : np.ndarray
+        The batch spectra, given as the start indexes in peak m/z and intensities.
+    peak_stop_idxes : np.ndarray
+        The batch spectra, given as the stop indexes in peak m/z and intensities.
+    query_mzs : np.ndarray
+        The query m/z values, these can be from fragments of a precursor.
+    query_mz_tols : np.ndarray
+        The query tolerance values of query_mzs.
+
+    Returns
+    -------
+    Tuple[ndarray, ndarray]
+        ndarray with shape (spectrum num, query num): matched m/z values. 0.0 if not matched.
+        ndarray with shape (spectrum num, query num): matched intensity values. 0.0 if not matched.
+    """
     matched_mzs = np.zeros((len(spec_idxes), len(query_mzs)), dtype=peak_mzs.dtype)
     matched_intens = np.zeros(
         (len(spec_idxes), len(query_mzs)), dtype=peak_intens.dtype
@@ -63,7 +89,7 @@ def match_closest_peaks(
     query_mzs: np.ndarray,
     query_mz_tols: np.ndarray,
 ) -> np.ndarray:
-    """Matching query mz values against sorted MS2/spec masses,
+    """Matching query mz values against sorted MS2/spec m/z values,
     only closest (minimal abs mass error) peaks are returned.
 
     Parameters
