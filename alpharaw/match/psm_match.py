@@ -146,7 +146,10 @@ class PepSpecMatch:
 
     def _prepare_matching_dfs(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Prepare dataframes to be matched.
+        Prepare empty `fragment_mz_df`, `matched_intensity_df`,
+        and `matched_mz_err_df` dataframes to extract peak matching information
+        for `self.psm_df`. These three dataframes will be only used internally
+        in :class:`PepSpecMatch` objects.
 
         Returns
         -------
