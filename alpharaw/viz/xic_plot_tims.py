@@ -1,6 +1,5 @@
-# TODO Deprecated
-
 import typing
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -12,6 +11,11 @@ from alphatims.bruker import (
 from plotly.subplots import make_subplots
 
 from .plot_utils import plot_line_tims_fast
+
+warnings.warn(
+    "This module will be deprecated or changed in the future releases",
+    category=DeprecationWarning,
+)
 
 
 class XIC_Plot_Tims:
