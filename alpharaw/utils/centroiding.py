@@ -51,6 +51,7 @@ def _find_sister_peaks(
 ):
     """
     Find sister peak stop idx for the given start idx.
+    Sister peaks refers to peaks from the same ion in profile mode.
     Internal function.
     """
     stop = start + 1
