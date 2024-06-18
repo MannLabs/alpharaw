@@ -1,6 +1,6 @@
 import os
 
-_special_ms_exts: list = [
+_SPECIAL_MS_EXTS: list = [
     ".ms_data.hdf",  # alphapept
     ".raw.hdf",  # alpharaw
     ".raw.hdf5",  # alpharaw
@@ -16,21 +16,22 @@ _special_ms_exts: list = [
 
 def get_raw_name(ms_file: str) -> str:
     """
-    Get raw name str from the ms file path.
+    Get `raw_name` (base name of RAW data file) from the MS file path
+    by removing the extensions defined in :data:`_SPECIAL_MS_EXTS`.
 
     Parameters
     ----------
     ms_file : str
-        The ms file path.
+        The file path of the RAW data.
 
     Returns
     -------
     str
-        The raw name without extension.
+        The `raw_name` without extension.
     """
     raw_name = os.path.basename(ms_file)
     lower_name = raw_name.lower()
-    for _ext in _special_ms_exts:
+    for _ext in _SPECIAL_MS_EXTS:
         if lower_name.endswith(_ext.lower()):
             raw_name = raw_name[: -len(_ext)]
             break
@@ -62,6 +63,6 @@ def parse_ms_files_to_dict(
 
     ms_file_dict = {}
     for ms_file in ms_file_list:
-        raw_name = get_raw_name(ms_file, _special_ms_exts)
+        raw_name = get_raw_name(ms_file, _SPECIAL_MS_EXTS)
         ms_file_dict[raw_name] = ms_file
     return ms_file_dict
