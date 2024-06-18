@@ -7,7 +7,7 @@ from numba import njit
 @njit
 def naive_centroid(
     peak_mzs: np.ndarray,
-    peak_intens: np.ndarray,
+    peak_intensities: np.ndarray,
     centroiding_ppm: float = 20.0,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -17,7 +17,7 @@ def naive_centroid(
     ----------
     peak_mzs : np.ndarray
         peak m/z values to centroid.
-    peak_intens : np.ndarray
+    peak_intensities : np.ndarray
         peak intensities to centroid.
     centroiding_ppm : float, optional
         The centroiding ppm, by default 20.0
@@ -35,13 +35,13 @@ def naive_centroid(
     while start < len(peak_mzs):
         stop = _find_sister_peaks(peak_mzs, centroiding_peak_tols, start)
         mz_list.append(
-            np.average(peak_mzs[start:stop], weights=peak_intens[start:stop])
+            np.average(peak_mzs[start:stop], weights=peak_intensities[start:stop])
         )
-        inten_list.append(np.sum(peak_intens[start:stop]))
+        inten_list.append(np.sum(peak_intensities[start:stop]))
         start = stop
     return (
         np.array(mz_list, dtype=peak_mzs.dtype),
-        np.array(inten_list, dtype=peak_intens.dtype),
+        np.array(inten_list, dtype=peak_intensities.dtype),
     )
 
 
