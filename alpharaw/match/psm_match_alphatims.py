@@ -1,3 +1,4 @@
+# TODO to be remove as already implemented in alphaDIA.
 from typing import Tuple, Union
 
 import numpy as np
@@ -6,9 +7,6 @@ import tqdm
 from alphatims.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
-from alpharaw.wrappers.alphapept_wrapper import (
-    AlphaPept_HDF_MS2_Reader,  # noqa: F401  # TODO remove import side effect
-)
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
 from .psm_match import PepSpecMatch
@@ -231,7 +229,6 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             np.inf if a fragment is not matched.
 
         """
-        self._preprocess_psms(psm_df_one_raw)
         self.psm_df = psm_df_one_raw
 
         psm_df_one_raw = self._add_missing_columns_to_psm_df(psm_df_one_raw)

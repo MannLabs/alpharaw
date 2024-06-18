@@ -30,6 +30,8 @@ register_readers()  # TODO remove this import side effect
 class PepSpecMatch:
     """
     Extract fragment ions from MS2 data.
+    The extracted information can be used for visualization of peak annotation or
+    PeptDeep transfer learnining for the MS2 model.
     """
 
     match_closest: bool = True
@@ -51,18 +53,19 @@ class PepSpecMatch:
         charged_frag_types : list, optional
             fragment types with charge states,
             e.g. ['b_z1', 'y_z2', 'b_modloss_z1', 'y_H2O_z2'].
-            By default `get_charged_frag_types(['b','y','b_modloss','y_modloss'], 2)`
+            Defaults to `get_charged_frag_types(['b','y','b_modloss','y_modloss'], 2)`.
 
         match_closest : bool, optional
             if True, match the closest peak for a m/z;
             if False, matched the higest peak for a m/z in the tolerance range.
-            By default True
+            By default True.
 
         use_ppm : bool, optional
-            If use ppm, by default True
+            If use ppm other wise Da, by default True.
 
         tol_value : float, optional
-            tolerance value, by default 20.0
+            Matching tolerance value (ppm or Da based on `use_ppm`)
+            for peak annotation, by default 20.0
         """
         self.charged_frag_types = (
             get_charged_frag_types(["b", "y", "b_modloss", "y_modloss"], 2)
@@ -73,17 +76,41 @@ class PepSpecMatch:
         self.use_ppm = use_ppm
         self.tolerance = tol_value
 
-    def _preprocess_psms(self, psm_df):
-        pass
+    def get_fragment_mz_df(self) -> pd.DataFrame:
+        """
+        Call :func:`alphabase.peptide.fragment.create_fragment_mz_dataframe`
+        for :attr:`PepSpecMatch.psm_df` and :attr:`PepSpecMatch.charged_frag_types`.
 
-    def get_fragment_mz_df(self):
+
+        Returns
+        -------
+        DataFrame
+            The fragment m/z dataframe in alphabase format.
+        """
         return create_fragment_mz_dataframe(
             self.psm_df,
             self.charged_frag_types,
             dtype=PEAK_MZ_DTYPE,
         )
 
-    def _add_missing_columns_to_psm_df(self, psm_df: pd.DataFrame, raw_data=None):
+    def _add_missing_columns_to_psm_df(
+        self, psm_df: pd.DataFrame, raw_data: MSData_Base = None
+    ):
+        """
+        Add missing "rt", "nce", "rt_norm", ("mobility") columns to `psm_df` inplace if missing.
+
+        Parameters
+        ----------
+        psm_df : pd.DataFrame
+            psm dataframe to be processed.
+        raw_data : MSData_Base, optional
+            The `MSData_Base`. If None, `self.raw_data`. by default None.
+
+        Returns
+        -------
+        DataFrame
+            The original `psm_df` with missing columns added.
+        """
         if raw_data is None:
             raw_data = self.raw_data
         add_spec_info_list = []
@@ -117,7 +144,22 @@ class PepSpecMatch:
         #     psm_df['rt_sec'] = psm_df.rt*60
         return psm_df
 
-    def _prepare_matching_dfs(self):
+    def _prepare_matching_dfs(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Prepare empty `fragment_mz_df`, `matched_intensity_df`,
+        and `matched_mz_err_df` dataframes to extract peak matching information
+        for `self.psm_df`. These three dataframes will be only used internally
+        in :class:`PepSpecMatch` objects.
+
+        Returns
+        -------
+        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+            pd.DataFrame: fragment mz dataframe.
+
+            pd.DataFrame: intensity dataframe to match.
+
+            pd.DataFrame: mz error dataframe to match.
+        """
         fragment_mz_df = self.get_fragment_mz_df()
 
         matched_intensity_df = pd.DataFrame(
@@ -138,17 +180,17 @@ class PepSpecMatch:
         process_count: int = 8,
         **kwargs,
     ):
-        """Load MS files
+        """Load MS file to set `self.raw_data`.
 
         Parameters
         ----------
         ms_file : str | MSData_Base
-            ms2 file path
+            Absolute or relative path of the ms2 file.
 
         ms_file_type : str, optional
             ms2 file type, could be
             ["alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"].
-            Default to 'alpharaw_hdf'
+            Default to 'alpharaw_hdf'.
         """
         self.raw_data = load_ms_data(ms_file, ms_file_type, process_count=process_count)
 
@@ -157,18 +199,39 @@ class PepSpecMatch:
 
     def _match_one_psm(
         self,
-        spec_mzs: np.ndarray,
-        spec_intens: np.ndarray,
+        peak_mzs: np.ndarray,
+        peak_intensities: np.ndarray,
         fragment_mz_df: pd.DataFrame,
         matched_intensity_df: pd.DataFrame,
         matched_mz_err_df: pd.DataFrame,
         frag_start_idx: int,
         frag_stop_idx: int,
     ):
-        if len(spec_mzs) == 0:
+        """
+        Match fragments of one precursor (located by `frag_start_idx` and `frag_stop_idx`)
+        against the corresponding `peak_mzs`.
+
+        Parameters
+        ----------
+        peak_mzs : np.ndarray
+            Peak m/z values to be matched.
+        peak_intensities : np.ndarray
+            Peak intensities to be matched.
+        fragment_mz_df : pd.DataFrame
+            fragment m/z dataframe to be matched.
+        matched_intensity_df : pd.DataFrame
+            The dataframe to store matched intensity values.
+        matched_mz_err_df : pd.DataFrame
+            The dataframe to store matched mz error values.
+        frag_start_idx : int
+            fragment start index of the given PSM.
+        frag_stop_idx : int
+            fragment stop index of the given PSM.
+        """
+        if len(peak_mzs) == 0:
             return
 
-        spec_mzs = spec_mzs.astype(PEAK_MZ_DTYPE)
+        peak_mzs = peak_mzs.astype(PEAK_MZ_DTYPE)
 
         frag_mzs = fragment_mz_df.values[frag_start_idx:frag_stop_idx, :]
 
@@ -179,20 +242,20 @@ class PepSpecMatch:
 
         if self.match_closest:
             matched_idxes = match_closest_peaks(
-                spec_mzs, spec_intens, frag_mzs, mz_tols
+                peak_mzs, peak_intensities, frag_mzs, mz_tols
             )
         else:
             matched_idxes = match_highest_peaks(
-                spec_mzs,
-                spec_intens,
+                peak_mzs,
+                peak_intensities,
                 frag_mzs,
                 mz_tols,
             )
 
-        matched_intens = spec_intens[matched_idxes]
+        matched_intens = peak_intensities[matched_idxes]
         matched_intens[matched_idxes == -1] = 0
 
-        matched_mz_errs = np.abs(spec_mzs[matched_idxes] - frag_mzs)
+        matched_mz_errs = np.abs(peak_mzs[matched_idxes] - frag_mzs)
         matched_mz_errs[matched_idxes == -1] = np.inf
 
         matched_intensity_df.values[frag_start_idx:frag_stop_idx, :] = matched_intens
@@ -203,7 +266,7 @@ class PepSpecMatch:
         self,
         psm_df_one_raw: pd.DataFrame,
         verbose: bool = False,
-    ) -> tuple:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Matching psm_df_one_raw against self.raw_data
         after `self.load_ms_data()`
@@ -216,7 +279,7 @@ class PepSpecMatch:
 
         Returns
         -------
-        tuple:
+        Tuple:
             pd.DataFrame: psm dataframe with fragment index information.
 
             pd.DataFrame: fragment mz dataframe.
@@ -224,10 +287,8 @@ class PepSpecMatch:
             pd.DataFrame: matched intensity dataframe.
 
             pd.DataFrame: matched mass error dataframe.
-            np.inf if a fragment is not matched.
-
+              np.inf if a fragment is not matched.
         """
-        self._preprocess_psms(psm_df_one_raw)
         self.psm_df = psm_df_one_raw
 
         psm_df_one_raw = self._add_missing_columns_to_psm_df(
@@ -307,8 +368,9 @@ class PepSpecMatch:
         ms_files: Union[dict, list],
         ms_file_type: str = "alpharaw_hdf",
         process_num: int = 1,
-    ):
-        """Matching PSM dataframe against the ms2 files in ms_files
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Matching PSM dataframe against the ms2 files in ms_files
         This method will store matched values as attributes:
         - self.psm_df
         - self.fragment_mz_df
@@ -330,7 +392,7 @@ class PepSpecMatch:
 
         Returns
         -------
-        tuple:
+        Tuple:
             pd.DataFrame: psm dataframe with fragment index information.
 
             pd.DataFrame: fragment mz dataframe.
@@ -338,10 +400,9 @@ class PepSpecMatch:
             pd.DataFrame: matched intensity dataframe.
 
             pd.DataFrame: matched mass error dataframe.
-            np.inf if a fragment is not matched.
+                np.inf if a fragment is not matched.
 
         """
-        self._preprocess_psms(psm_df)
         self.psm_df = psm_df
 
         (
@@ -387,6 +448,10 @@ class PepSpecMatch:
 
 
 class PepSpecMatch_DIA(PepSpecMatch):
+    """
+    Peak annotation for DIA data.
+    """
+
     max_spec_per_query: int = 3
     min_frag_mz: float = 200.0
 
@@ -425,7 +490,25 @@ class PepSpecMatch_DIA(PepSpecMatch):
 
         return (fragment_mz_df, matched_intensity_df, matched_mz_err_df)
 
-    def _match_ms2_one_raw_numba(self, raw_name, psm_df_one_raw):
+    def _match_ms2_one_raw_numba(
+        self, raw_name: str, psm_df_one_raw: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Internal method to extract peak information with numba as backend.
+
+        Parameters
+        ----------
+        raw_name : str
+            The raw name of the raw file. `psm_df_one_raw` dataframe should also
+            contain the same raw name in `raw_name` column.
+        psm_df_one_raw : pd.DataFrame
+            The dataframe for PSMs.
+
+        Returns
+        -------
+        pd.DataFrame
+            `psm_df_one_raw`
+        """
         psm_df_one_raw = psm_df_one_raw.reset_index(drop=True)
 
         if raw_name in self._ms_file_dict:
@@ -485,7 +568,36 @@ class PepSpecMatch_DIA(PepSpecMatch):
         ms_files: Tuple[dict, list],
         ms_file_type: str = "alpharaw_hdf",
         process_num: int = 8,
-    ):
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Match peaks for the given `psm_df` against the corresponding MS spectrum files.
+
+        Parameters
+        ----------
+        psm_df : pd.DataFrame
+            Peptide-spectrum matches in alphabase dataframe format.
+        ms_files : Tuple[dict, list]
+            The absolute or relative paths of MS files.
+            if the type is `dict`, the format will be
+            `{'raw_name1': 'raw_name1.raw', ...}` if `ms_file_type` is `thermo_raw`.
+        ms_file_type : str, optional
+            MS file type that is already registered in
+            :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+            By default "alpharaw_hdf".
+        process_num : int, optional
+            Match peaks by using multiprocessing, by default 8
+
+        Returns
+        -------
+        Tuple
+            pd.DataFrame: the `psm_df`.
+
+            pd.DataFrame: fragment m/z dataframe in alphabase format.
+
+            pd.DataFrame: the matched fragment intensity dataframe in alphabase format.
+
+            pd.DataFrame: the matched mass error in the same dataframe format.
+        """
         if isinstance(ms_files, list):
             ms_files = parse_ms_files_to_dict(ms_files)
         psm_df = psm_df[psm_df.raw_name.isin(ms_files)].reset_index(drop=True)
@@ -501,19 +613,19 @@ class PepSpecMatch_DIA(PepSpecMatch):
 
 @numba.jit(nogil=True)
 def match_one_raw_with_numba(
-    spec_idxes,
-    frag_start_idxes,
-    frag_stop_idxes,
-    all_frag_mzs,
-    all_frag_mz_tols,
-    all_spec_mzs,
-    all_spec_intensities,
-    peak_start_idxes,
-    peak_stop_idxes,
-    matched_intensities,
-    matched_mz_errs,
-    match_closest=True,
-):
+    spec_idxes: np.ndarray,
+    frag_start_idxes: np.ndarray,
+    frag_stop_idxes: np.ndarray,
+    all_frag_mzs: np.ndarray,
+    all_frag_mz_tols: np.ndarray,
+    all_spec_mzs: np.ndarray,
+    all_spec_intensities: np.ndarray,
+    peak_start_idxes: np.ndarray,
+    peak_stop_idxes: np.ndarray,
+    matched_intensities: np.ndarray,
+    matched_mz_errs: np.ndarray,
+    match_closest: bool = True,
+) -> None:
     """
     Internel function to match fragment mz values to spectrum mz values.
     Matched_mz_errs[i] = np.inf if no peaks are matched.
@@ -567,7 +679,8 @@ def load_ms_data(
     ms_file_type: str = "alpharaw_hdf",
     process_count: int = 8,
 ) -> MSData_Base:
-    """Load MS files
+    """
+    Load MS file and get `MSData_Base` object.
 
     Parameters
     ----------
@@ -575,9 +688,14 @@ def load_ms_data(
         ms2 file path
 
     ms_file_type : str, optional
-        ms2 file type, could be
-        ["alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"].
-        Default to 'alpharaw_hdf'
+        ms2 file type, can be
+        ["alpharaw_hdf", "thermo", "sciex", "alphapept_hdf", "mgf"].
+        Default to 'alpharaw_hdf'.
+
+    Returns
+    -------
+    MSData_Base:
+        Instance of sub-class of `MSData_Base`.
     """
     if isinstance(ms_file, MSData_Base):
         return ms_file
@@ -600,6 +718,9 @@ def get_best_matched_intens(
     frag_start_idxes: np.ndarray,
     frag_stop_idxes: np.ndarray,
 ):
+    """
+    TODO Deprecated
+    """
     ret_intens = np.zeros(
         shape=matched_intensity_values.shape[1:], dtype=matched_intensity_values.dtype
     )
@@ -624,6 +745,9 @@ def get_ion_count_scores(
     frag_stop_idxes: np.ndarray,
     min_mz: float = 200,
 ):
+    """
+    TODO Deprecated
+    """
     scores = []
     for i in range(len(frag_start_idxes)):
         scores.append(
