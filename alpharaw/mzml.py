@@ -10,15 +10,50 @@ from .ms_data_base import (
 
 
 class MzMLReader(MSData_Base):
+    """
+    Load mzml file as `:class:`MSData_Base` structure.
+    This reader will be registered as "mzml"
+    in :obj:`alphraw.ms_data_base.ms_reader_provider`.
+    """
+
+    def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            If peaks will be centroided after loading,
+            by default True.
+
+        save_as_hdf : bool, optional
+            Automatically save hdf after load raw data, by default False.
+        """
+        super().__init__(centroided, save_as_hdf, **kwargs)
+
     def _import(
         self,
-        filename: str,
-    ):
+        mzml_file_path: str,
+    ) -> dict:
+        """
+        Implementation of :func:`alpharaw.ms_data_base.MSData_Base._import` interface,
+        which will be called by :func:`alpharaw.ms_data_base.MSData_Base.import_raw`,
+        the main entry of :class:`alpharaw.ms_data_base.MSData_Base` sub-classes.
+
+        Parameters
+        ----------
+        mzml_file_path : str
+            Absolute or relative path of the mzml file.
+            For testing purpose, this can be pyteomics `MzML` object as well.
+
+        Returns
+        -------
+        dict
+            Spectrum information dict.
+        """
         self.file_type = "mzml"
-        if isinstance(filename, str):
-            reader = mzml.read(filename, use_index=True)
+        if isinstance(mzml_file_path, str):
+            reader = mzml.read(mzml_file_path, use_index=True)
         else:
-            reader = filename
+            reader = mzml_file_path
         spec_indices = np.arange(len(reader), dtype=int)
 
         rt_list = []
@@ -71,7 +106,7 @@ class MzMLReader(MSData_Base):
             isolation_lower_mz_list.append(isolation_lower_mz)
             isolation_upper_mz_list.append(isolation_upper_mz)
 
-        if isinstance(filename, str):
+        if isinstance(mzml_file_path, str):
             reader.close()
 
         peak_indices = np.empty(len(spec_indices) + 1, np.int64)
@@ -96,6 +131,19 @@ class MzMLReader(MSData_Base):
 
 
 def parse_mzml_entry(item_dict: dict) -> tuple:
+    """
+    Parse mzml entries from pyteomics extracted items.
+
+    Parameters
+    ----------
+    item_dict : dict
+        pyteomics extracted items
+
+    Returns
+    -------
+    tuple
+        items in tuple format.
+    """
     rt = float(item_dict.get("scanList").get("scan")[0].get("scan start time"))
     masses = item_dict.get("m/z array")
     intensities = item_dict.get("intensity array")
