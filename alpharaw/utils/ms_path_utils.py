@@ -22,12 +22,18 @@ def get_raw_name(ms_file: str) -> str:
     Parameters
     ----------
     ms_file : str
-        The file path of the RAW data.
+        The absolute or relative path of the RAW file.
 
     Returns
     -------
     str
         The `raw_name` without extension.
+
+    Examples
+    --------
+    >>> get_raw_name("/MS/files/your_raw_name.raw")
+    'your_raw_name'
+
     """
     raw_name = os.path.basename(ms_file)
     lower_name = raw_name.lower()
