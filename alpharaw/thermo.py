@@ -54,22 +54,6 @@ class ThermoRawData(MSData_Base):
     Loading Thermo Raw data as MSData_Base data structure.
     This class is registered "thermo" and "thermo_raw" in
     :obj:`alpharaw.ms_data_base.ms_reader_provider`.
-
-    Parameters
-    ----------
-    centroided : bool, optional
-        If peaks will be centroided after loading. By defaults True.
-    process_count : int, optional
-        Number of processes to load RAW data, by default 10.
-    mp_batch_size : int, optional
-        Number of spectra to load in each batch, by default 5000.
-    save_as_hdf : bool, optional
-        Automatically save hdf after load raw data, by default False.
-    dda : bool, optional
-        Is DDA data, by default False.
-    auxiliary_items : list, optional
-        Additional spectrum items, candidates are in :data:`auxiliary_item_dtypes`.
-        By default [].
     """
 
     def __init__(
@@ -82,6 +66,23 @@ class ThermoRawData(MSData_Base):
         auxiliary_items: list = [],
         **kwargs,
     ):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            If peaks will be centroided after loading. By defaults True.
+        process_count : int, optional
+            Number of processes to load RAW data, by default 10.
+        mp_batch_size : int, optional
+            Number of spectra to load in each batch, by default 5000.
+        save_as_hdf : bool, optional
+            Automatically save hdf after load raw data, by default False.
+        dda : bool, optional
+            Is DDA data, by default False.
+        auxiliary_items : list, optional
+            Additional spectrum items, candidates are in :data:`auxiliary_item_dtypes`.
+            By default [].
+        """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         self.file_type = "thermo"
         self.process_count = process_count

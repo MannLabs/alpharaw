@@ -7,13 +7,6 @@ from alphabase.io.hdf import HDF_File
 class MSData_Base:
     """
     The base data structure for MS RAW Data, other MSData loaders inherit this class.
-
-    Parameters
-    ----------
-    centroided : bool, optional
-        If centroiding the peak data, by default True
-    save_as_hdf : bool, optional
-        If automatically save the data into HDF5 format, by default False
     """
 
     column_dtypes = {
@@ -76,6 +69,14 @@ class MSData_Base:
     """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
+        """
+        Parameters
+        ----------
+        centroided : bool, optional
+            If centroiding the peak data, by default True
+        save_as_hdf : bool, optional
+            If automatically save the data into HDF5 format, by default False
+        """
         # A spectrum contains peaks
         self.spectrum_df: pd.DataFrame = pd.DataFrame()
         # A peak contains mz, intensity, and ...

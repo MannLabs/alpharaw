@@ -45,25 +45,26 @@ class AlphaTimsReader(MSData_Base):
 class AlphaTimsWrapper(TimsTOF):
     """Create a AlphaTims object that contains
     all data in-memory (or memory mapping).
-
-    Parameters
-    ----------
-    msdata : MSData_Base
-        The AlphaRaw data object.
-
-    dda : bool
-        If DDA, precursor indices will be equal to scan numbers.
-        If not DDA (i.e. DIA), precursor indices will be equal to the
-        scan number within a DIA cycle.
-
-    slice_as_dataframe : bool
-        If True, slicing returns a pd.DataFrame by default.
-        If False, slicing provides a np.int64[:] with raw indices.
-        This value can also be modified after creation.
-        Default is True.
     """
 
     def __init__(self, msdata: MSData_Base, dda: bool, slice_as_dataframe: bool = True):
+        """
+        Parameters
+        ----------
+        msdata : MSData_Base
+            The AlphaRaw data object.
+
+        dda : bool
+            If DDA, precursor indices will be equal to scan numbers.
+            If not DDA (i.e. DIA), precursor indices will be equal to the
+            scan number within a DIA cycle.
+
+        slice_as_dataframe : bool
+            If True, slicing returns a pd.DataFrame by default.
+            If False, slicing provides a np.int64[:] with raw indices.
+            This value can also be modified after creation.
+            Default is True.
+        """
         self._use_calibrated_mz_values_as_default = False
         self._import_alpharaw_object(msdata, dda)
         self.thermo_raw_file_name = msdata.raw_file_path
