@@ -7,4 +7,6 @@ For more information, see AlphaPeptDeep on `GitHub <https://github.com/MannLabs/
 .. toctree::
    :maxdepth: 2
 
-   notebooks
+   reader_modules
+   match_modules
+   viz_modules
