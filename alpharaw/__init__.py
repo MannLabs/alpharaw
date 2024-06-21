@@ -22,6 +22,9 @@ def register_readers():
         print("[WARN] pythonnet is not installed")
 
 
+register_readers()
+
+
 __project__ = "alpharaw"
 __version__ = "0.4.5"
 __license__ = "Apache"
