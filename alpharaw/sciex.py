@@ -7,9 +7,9 @@ from .ms_data_base import MSData_Base, ms_reader_provider
 
 class SciexWiffData(MSData_Base):
     """
-    Load Sciex Wiff data as :class:`MSData_Base` data structure.
+    Load Sciex Wiff data as :class:`alpharaw.ms_data_base.MSData_Base` data structure.
     This reader will be registered as "sciex", "sciex_wiff", and "sciex_raw"
-    in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    in :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers()`.
     """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
@@ -62,6 +62,11 @@ class SciexWiffData(MSData_Base):
         return data_dict
 
 
-ms_reader_provider.register_reader("sciex", SciexWiffData)
-ms_reader_provider.register_reader("sciex_wiff", SciexWiffData)
-ms_reader_provider.register_reader("sciex_raw", SciexWiffData)
+def register_readers():
+    """
+    Register :class:`SciexWiffData` for file formats (types):
+    "sciex", "sciex_wiff", and "sciex_raw" in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    """
+    ms_reader_provider.register_reader("sciex", SciexWiffData)
+    ms_reader_provider.register_reader("sciex_wiff", SciexWiffData)
+    ms_reader_provider.register_reader("sciex_raw", SciexWiffData)

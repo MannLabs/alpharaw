@@ -440,8 +440,9 @@ def index_ragged_list(ragged_list: list) -> np.ndarray:
 class MSData_HDF(MSData_Base):
     """
     Wrapper of reader for alpharaw's HDF5 spectrum file.
-    This class is registered as "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
-    in :obj:`ms_reader_provider` instance.
+    This class will be registered as file formats (types)
+    "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf" and "hdf5"
+    in :obj:`ms_reader_provider` instance by :func:`register_readers`.
     """
 
     def import_raw(self, _path: str):
@@ -495,12 +496,19 @@ class MSReaderProvider:
 
 ms_reader_provider = MSReaderProvider()
 """
-MS data register (:class:`.MSReaderProvider`) performs as a factory to
-produce different readers for different file formats.
+MS data register (:class:`MSReaderProvider`) performs as a factory to
+produce different readers for given file formats.
 """
 
-ms_reader_provider.register_reader("alpharaw", MSData_HDF)
-ms_reader_provider.register_reader("raw.hdf", MSData_HDF)
-ms_reader_provider.register_reader("alpharaw_hdf", MSData_HDF)
-ms_reader_provider.register_reader("hdf", MSData_HDF)
-ms_reader_provider.register_reader("hdf5", MSData_HDF)
+
+def register_readers():
+    """
+    Register :class:`MSData_HDF` for file formats (types):
+    "alpharaw", "raw.hdf", "alpharaw_hdf", "hdf", "hdf5"
+    in :obj:`ms_reader_provider`.
+    """
+    ms_reader_provider.register_reader("alpharaw", MSData_HDF)
+    ms_reader_provider.register_reader("raw.hdf", MSData_HDF)
+    ms_reader_provider.register_reader("alpharaw_hdf", MSData_HDF)
+    ms_reader_provider.register_reader("hdf", MSData_HDF)
+    ms_reader_provider.register_reader("hdf5", MSData_HDF)
