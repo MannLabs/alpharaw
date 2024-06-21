@@ -8,3 +8,4 @@ readers modules
    readers/thermo
    readers/sciex
    readers/mzml
+   readers/mgf
