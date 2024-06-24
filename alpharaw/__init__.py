@@ -5,7 +5,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def register_readers():
+def register_all_readers():
     from .legacy_msdata.mgf import register_readers as register_mgf_readers
     from .mzml import register_readers as register_mzml_readers
 
@@ -20,9 +20,6 @@ def register_readers():
         register_raw_readers()
     except (RuntimeError, ImportError):
         print("[WARN] pythonnet is not installed")
-
-
-register_readers()
 
 
 __project__ = "alpharaw"
