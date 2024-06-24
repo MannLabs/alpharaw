@@ -26,8 +26,7 @@ __trailer_extra_list__ = [
     "faims_cv",
 ]
 
-#: The auxiliary items and types that can be accessed from thermo RawFileReader.
-__auxiliary_item_dtypes__ = {
+auxiliary_item_dtypes: dict = {
     "injection_time": np.float32,
     "cv": np.float32,
     "max_ion_time": np.float32,
@@ -45,27 +44,31 @@ __auxiliary_item_dtypes__ = {
     "scan_event_string": "U",
     "multinotch": "O",
 }
+"""
+The auxiliary items and types that can be accessed from thermo RawFileReader.
+"""
 
 
 class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as MSData_Base data structure.
-    This class is registered "thermo" and "thermo_raw" in :data:`ms_reader_provider`.
+    This class is registered "thermo" and "thermo_raw" in
+    :obj:`alpharaw.ms_data_base.ms_reader_provider`.
 
     Parameters
     ----------
     centroided : bool, optional
         If peaks will be centroided after loading. By defaults True.
     process_count : int, optional
-        number of spectra to load in each batch, by default 10.
+        Number of processes to load RAW data, by default 10.
     mp_batch_size : int, optional
-        automatically save hdf after load raw data, by default 5000.
+        Number of spectra to load in each batch, by default 5000.
     save_as_hdf : bool, optional
-        is DDA data, by default False.
+        Automatically save hdf after load raw data, by default False.
     dda : bool, optional
-        _description_, by default False.
+        Is DDA data, by default False.
     auxiliary_items : list, optional
-        Additional spectrum items, candidates are in :data:`__auxiliary_item_dtypes__`.
+        Additional spectrum items, candidates are in :data:`auxiliary_item_dtypes`.
         By default [].
     """
 
@@ -85,7 +88,7 @@ class ThermoRawData(MSData_Base):
         self.mp_batch_size = mp_batch_size
         self.dda = dda
         self.auxiliary_items = auxiliary_items
-        self.column_dtypes.update(__auxiliary_item_dtypes__)
+        self.column_dtypes.update(auxiliary_item_dtypes)
 
     def _import(
         self,
@@ -190,7 +193,7 @@ def _import_batch(
         is dda data.
 
     auxiliary_items : list
-        Candidates are in :data:`__auxiliary_item_dtypes__`.
+        Candidates are in :data:`auxiliary_item_dtypes`.
 
     Returns
     -------
@@ -357,7 +360,7 @@ def _import_batch(
         "nce": np.array(ce_list, dtype=np.float32).copy(),
     }
     for key, val in list(auxiliary_dict.items()):
-        auxiliary_dict[key] = np.array(val, dtype=__auxiliary_item_dtypes__[key]).copy()
+        auxiliary_dict[key] = np.array(val, dtype=auxiliary_item_dtypes[key]).copy()
     spec_dict.update(auxiliary_dict)
     return spec_dict
 
