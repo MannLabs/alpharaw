@@ -73,7 +73,7 @@ class MSData_Base:
         Parameters
         ----------
         centroided : bool, optional
-            If centroiding the peak data, by default True
+            If peaks will be centroided after loading, by default True
         save_as_hdf : bool, optional
             If automatically save the data into HDF5 format, by default False
         """
@@ -479,7 +479,7 @@ class MSReaderProvider:
         ms_file_type : str
             AlphaRaw supported MS file types.
         centroided : bool, optional
-            If centroiding the data, by default True.
+            If peaks will be centroided after loading, by default True.
 
         Returns
         -------
