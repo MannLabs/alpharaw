@@ -512,3 +512,6 @@ def register_readers():
     ms_reader_provider.register_reader("alpharaw_hdf", MSData_HDF)
     ms_reader_provider.register_reader("hdf", MSData_HDF)
     ms_reader_provider.register_reader("hdf5", MSData_HDF)
+
+
+register_readers()
