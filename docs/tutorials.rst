@@ -10,3 +10,4 @@ formats like `mzml`. To access bruker RAW data, please use our
    :maxdepth: 1
 
    tutorials/base_settings
+   tutorials/raw_readers
