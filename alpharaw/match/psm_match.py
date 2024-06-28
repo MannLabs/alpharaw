@@ -9,7 +9,7 @@ from alphabase.peptide.fragment import (
     get_charged_frag_types,
 )
 
-from alpharaw import register_readers
+from alpharaw import register_all_readers
 from alpharaw.dia.normal_dia import NormalDIAGrouper
 from alpharaw.match.match_utils import (
     match_closest_peaks,
@@ -24,7 +24,7 @@ from alpharaw.ms_data_base import (
 )
 from alpharaw.utils.ms_path_utils import parse_ms_files_to_dict
 
-register_readers()  # TODO remove this import side effect
+register_all_readers()  # TODO remove this import side effect
 
 
 class PepSpecMatch:

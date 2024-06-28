@@ -11,9 +11,9 @@ from .ms_data_base import (
 
 class MzMLReader(MSData_Base):
     """
-    Load mzml file as `:class:`MSData_Base` structure.
-    This reader will be registered as "mzml"
-    in :obj:`alphraw.ms_data_base.ms_reader_provider`.
+    Load mzml file as `:class:`alpharaw.ms_data_base.MSData_Base` structure.
+    This reader will be registered as "mzml" in
+    :obj:`alphraw.ms_data_base.ms_reader_provider` by :func:`register_readers`
     """
 
     def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
@@ -222,4 +222,9 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
     )
 
 
-ms_reader_provider.register_reader("mzml", MzMLReader)
+def register_readers():
+    """
+    Register :class:`MzMLReader` for file format "mzml" in
+    :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    """
+    ms_reader_provider.register_reader("mzml", MzMLReader)

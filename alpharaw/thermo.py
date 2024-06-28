@@ -51,9 +51,9 @@ The auxiliary items and types that can be accessed from thermo RawFileReader.
 
 class ThermoRawData(MSData_Base):
     """
-    Loading Thermo Raw data as MSData_Base data structure.
-    This class is registered "thermo" and "thermo_raw" in
-    :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    Loading Thermo Raw data as :class:`alpharaw.ms_data_base.MSData_Base` data structure.
+    This class will be registered as file formats "thermo" and "thermo_raw" in
+    :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers`.
     """
 
     def __init__(
@@ -372,5 +372,10 @@ def _get_mono_and_charge(trailer_data, scan_event):
     return mono, charge
 
 
-ms_reader_provider.register_reader("thermo", ThermoRawData)
-ms_reader_provider.register_reader("thermo_raw", ThermoRawData)
+def register_readers():
+    """
+    Register :class:`ThermoRawData` for file formats (types):
+    "thermo" and "thermo_raw" in :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    """
+    ms_reader_provider.register_reader("thermo", ThermoRawData)
+    ms_reader_provider.register_reader("thermo_raw", ThermoRawData)

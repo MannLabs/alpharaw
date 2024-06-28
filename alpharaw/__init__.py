@@ -5,21 +5,19 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def register_readers():
-    from .legacy_msdata import mgf  # noqa: F401  # TODO remove import side effect
-    from .ms_data_base import (
-        ms_reader_provider,  # noqa: F401  # TODO remove import side effect
-    )
-    from .mzml import MzMLReader  # noqa: F401  # TODO remove import side effect
-    from .wrappers import (
-        alphapept_wrapper,  # noqa: F401  # TODO remove import side effect
-    )
+def register_all_readers():
+    from .legacy_msdata.mgf import register_readers as register_mgf_readers
+    from .mzml import register_readers as register_mzml_readers
+
+    register_mzml_readers()
+    register_mgf_readers()
 
     try:
-        from .sciex import SciexWiffData  # noqa: F401  # TODO remove import side effect
-        from .thermo import (
-            ThermoRawData,  # noqa: F401  # TODO remove import side effect
-        )
+        from .sciex import register_readers as register_wiff_readers
+        from .thermo import register_readers as register_raw_readers
+
+        register_wiff_readers()
+        register_raw_readers()
     except (RuntimeError, ImportError):
         print("[WARN] pythonnet is not installed")
 

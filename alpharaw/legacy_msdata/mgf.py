@@ -146,4 +146,9 @@ class MGFReader(MSData_Base):
         )
 
 
-ms_reader_provider.register_reader("mgf", MGFReader)
+def register_readers():
+    """
+    Register :class:`MGFReader` for file format "mgf" in
+    :obj:`alpharaw.ms_data_base.ms_reader_provider`.
+    """
+    ms_reader_provider.register_reader("mgf", MGFReader)
