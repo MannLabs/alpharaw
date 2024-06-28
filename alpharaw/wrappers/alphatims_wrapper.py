@@ -8,7 +8,7 @@ from ..ms_data_base import MSData_Base
 
 class AlphaTimsReader(MSData_Base):
     """
-    > TimsTOF data are too large, do not use this class
+    TimsTOF data are too large, do not use this class
     """
 
     def import_raw(self, burker_d_folder: str):
@@ -43,32 +43,42 @@ class AlphaTimsReader(MSData_Base):
 
 
 class AlphaTimsWrapper(TimsTOF):
-    """Create a AlphaTims object that contains
+    """Create a AlphaTims object containing
     all data in-memory (or memory mapping).
 
-    Parameters
-    ----------
-    msdata : MSData_Base
-        The AlphaRaw data object.
-
-    dda : bool
-        If DDA, precursor indices will be equal to scan numbers.
-        If not DDA (i.e. DIA), precursor indices will be equal to the
-        scan number within a DIA cycle.
-
-    slice_as_dataframe : bool
-        If True, slicing returns a pd.DataFrame by default.
-        If False, slicing provides a np.int64[:] with raw indices.
-        This value can also be modified after creation.
-        Default is True.
+    Attribute
+    ---------
+    slice_as_dataframe
+        Attribute from AlphaTims.
+        If True, AlphaTims slicing returns a pd.DataFrame by default.
+        If False, AlphaTims slicing provides a np.int64[:] with raw indices.
+        The value can be modified on-the-fly.
     """
 
     def __init__(self, msdata: MSData_Base, dda: bool, slice_as_dataframe: bool = True):
+        """
+        Parameters
+        ----------
+        msdata : MSData_Base
+            The AlphaRaw data object.
+
+        dda : bool
+            If DDA, precursor indices will be equal to scan numbers.
+            If not DDA (i.e. DIA), precursor indices will be equal to the
+            scan number within a DIA cycle.
+
+        slice_as_dataframe : bool
+            If True, slicing returns a pd.DataFrame by default.
+            If False, slicing provides a np.int64[:] with raw indices.
+            Default is True.
+        """
         self._use_calibrated_mz_values_as_default = False
         self._import_alpharaw_object(msdata, dda)
         self.thermo_raw_file_name = msdata.raw_file_path
         self.bruker_d_folder_name = self.thermo_raw_file_name
-        self.slice_as_dataframe = slice_as_dataframe
+        self.slice_as_dataframe = (
+            slice_as_dataframe  # This value can be modified after creation.
+        )
         # Precompile
         self[0, "raw"]
 
