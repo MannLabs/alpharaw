@@ -8,6 +8,7 @@ For more information, see AlphaRaw on `GitHub <https://github.com/MannLabs/alpha
 .. toctree::
    :maxdepth: 2
 
+   tutorials
    reader_modules
    match_modules
    viz_modules

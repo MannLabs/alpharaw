@@ -45,7 +45,7 @@ auxiliary_item_dtypes: dict = {
     "multinotch": "O",
 }
 """
-The auxiliary items and types that can be accessed from thermo RawFileReader.
+The auxiliary items and dtypes that can be accessed from thermo RawFileReader.
 """
 
 
@@ -53,7 +53,62 @@ class ThermoRawData(MSData_Base):
     """
     Loading Thermo Raw data as :class:`alpharaw.ms_data_base.MSData_Base` data structure.
     This class will be registered as file formats "thermo" and "thermo_raw" in
-    :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers`.
+    :obj:`alpharaw.ms_data_base.ms_reader_provider` by local :func:`register_readers`.
+    """
+
+    MASS_ANALYZER_ID_TO_TYPE = dict(
+        (_id, _t)
+        for _id, _t in pyrawfilereader.RawFileReader.massAnalyzerType.items()
+        if isinstance(_id, int)
+    )
+    """
+    The dict of Thermo's mass analyzer ID (int) to its name (str).
+    The IDs correspond to enum values (int) of `int(scan_event.MassAnalyzer)`
+    in RawFileReader, which originate from
+    `ThermoFisher.CommonCore.Data.FilterEnums.MassAnalyzerType`.
+    """
+
+    MASS_ANALYZER_TYPE_TO_ID = dict(
+        (_t, _id)
+        for _t, _id in pyrawfilereader.RawFileReader.massAnalyzerType.items()
+        if isinstance(_id, int)
+    )
+    """
+    The dict of Thermo's mass analyzer name (str) to its ID (int).
+    The IDs correspond to enum values of `int(scan_event.MassAnalyzer)`
+    in RawFileReader, which originate from
+    `ThermoFisher.CommonCore.Data.FilterEnums.MassAnalyzerType`.
+    """
+
+    ACTIVATION_ID_TO_TYPE = dict(
+        (_id, _t)
+        for _id, _t in pyrawfilereader.RawFileReader.activationType.items()
+        if isinstance(_id, int)
+    )
+    """
+    The dict of Thermo's activation name (str) to its ID (int).
+    The IDs correspond to enum values (int) of `int(scan_event.GetActivation(index))`
+    in RawFileReader, which originate from
+    `ThermoFisher.CommonCore.Data.FilterEnums.ActivationType`.
+    Note that multiple activations like `ETHCD` and `ETCID` are
+    not thermo's built-in activation types,
+    AlphaRaw still assigns IDs to them (ETHCD=201, ETCID=202).
+    We can get multiple activations from auxiliary_item `scan_event_string`.
+    """
+
+    ACTIVATION_TYPE_TO_ID = dict(
+        (_t, _id)
+        for _t, _id in pyrawfilereader.RawFileReader.activationType.items()
+        if isinstance(_id, int)
+    )
+    """
+    The dict of Thermo's activation ID (int) to its name (str).
+    The IDs correspond to enum values (int) of `int(scan_event.GetActivation(index))`
+    in RawFileReader, which originate from
+    `ThermoFisher.CommonCore.Data.FilterEnums.ActivationType`.
+    Note that `ETHCD` and `ETCID` are not thermo's built-in activation types,
+    AlphaRaw still assigns IDs to them (ETHCD=201, ETCID=202).
+    We can get multiple activations from auxiliary_item `scan_event_string`.
     """
 
     def __init__(
@@ -273,7 +328,7 @@ def _import_batch(
             auxiliary_dict["faims_cv"].append(float(trailer_data["FAIMS CV:"]))
         if "activation" in auxiliary_dict:
             auxiliary_dict["activation"].append(
-                rawfile.activationType[int(scan_event.GetActivation(0))]
+                ThermoRawData.ACTIVATION_ID_TO_TYPE[int(scan_event.GetActivation(0))]
                 if ms_order > 1
                 else "MS1"
             )
@@ -283,7 +338,7 @@ def _import_batch(
             )
         if "analyzer" in auxiliary_dict:
             auxiliary_dict["analyzer"].append(
-                rawfile.massAnalyzerType[int(scan_event.MassAnalyzer)]
+                ThermoRawData.MASS_ANALYZER_ID_TO_TYPE[int(scan_event.MassAnalyzer)]
             )
         if "analyzer_id" in auxiliary_dict:
             auxiliary_dict["analyzer_id"].append(int(scan_event.MassAnalyzer))

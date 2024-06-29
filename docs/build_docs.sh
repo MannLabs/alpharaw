@@ -1,6 +1,6 @@
 rm -rf _build
-conda env remove -n alpharawdocs
-conda create -n alpharawdocs python=3.10 -y
+conda env remove -n alpharawdocs -y
+conda create -n alpharawdocs python=3.11 -y
 # conda create -n alphatimsinstaller python=3.10
 conda activate alpharawdocs
 # call conda install git -y
