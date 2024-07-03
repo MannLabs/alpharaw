@@ -67,13 +67,13 @@ requires you to add the ppa to your trusted sources!
 5.  Install pythonnet: `pip install pythonnet`.
 
 
-NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the M1 platform (which is due to an incompatible architecture for the files in the mono library): 
+NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the M1 platform (which is due to an incompatible architecture for the files in the mono library):
 
 ```
 RuntimeError: Failed to create a default .NET runtime, which would have been "mono" on this system. Either install a compatible runtime or configure it explicitly via `set_runtime` or the `PYTHONNET_*` environment variables (see set_runtime_from_env).
 ```
 
-In this case, it is possible to install mono 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html). This version avoids the error. 
+In this case, it is possible to install mono 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html). This version avoids the error.
 
 ------------------------------------------------------------------------
 
