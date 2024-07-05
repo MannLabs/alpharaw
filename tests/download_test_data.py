@@ -15,6 +15,7 @@ def download_file(url, local_filename):
                 f.write(chunk)
 
 
+raw_dir = "../nbs_tests/test_data"
 url_template = (
     "https://datashare.biochem.mpg.de/s/GOiZGGOhrHzS54M/download?path=%2F&files={}"
 )
