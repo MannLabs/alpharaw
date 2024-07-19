@@ -14,7 +14,7 @@ def download_file(url, local_filename):
 
 
 url_template = (
-    "https://datashare.biochem.mpg.de/s/GOiZGGOhrHzS54M/download?path=%2F&files={}"
+    "https://datashare.biochem.mpg.de/s/0lJqqAQQcTd9QNB/download?path=%2F&files={}"
 )
 output_template = "../nbs_tests/test_data/{}"
 test_files = [
