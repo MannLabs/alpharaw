@@ -1,3 +1,5 @@
+import os
+
 import requests
 
 
@@ -13,10 +15,11 @@ def download_file(url, local_filename):
                 f.write(chunk)
 
 
+raw_dir = "../nbs_tests/test_data"
 url_template = (
     "https://datashare.biochem.mpg.de/s/0lJqqAQQcTd9QNB/download?path=%2F&files={}"
 )
-output_template = "../nbs_tests/test_data/{}"
+raw_dir = "../nbs_tests/test_data"
 test_files = [
     "02112022_Zeno1_TiHe_DIAMA_HeLa_200ng_EVO5_01.wiff",
     "02112022_Zeno1_TiHe_DIAMA_HeLa_200ng_EVO5_01.wiff2",
@@ -25,6 +28,8 @@ test_files = [
     "iRT_DIA.raw",
     "multinotch.raw",
 ]
-for test_file in test_files:
-    print(f"Downding {test_file}...")
-    download_file(url_template.format(test_file), output_template.format(test_file))
+
+if __name__ == "__main__":
+    for test_file in test_files:
+        print(f"Downding {test_file}...")
+        download_file(url_template.format(test_file), os.path.join(raw_dir, test_file))
