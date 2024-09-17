@@ -1,6 +1,10 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
 
+from pythonnet import load
+
+load("coreclr")
+
 # require pythonnet, pip install pythonnet on Windows
 import clr
 import numpy as np
@@ -36,6 +40,9 @@ from WiffOps4Python import WiffOps as DotNetWiffOps
 
 class WillFileReader:
     def __init__(self, filename: str):
+        if not os.path.isfile(self.filename):
+            raise FileNotFoundError(f"Wiff file `{self.filename}` does not exist.")
+        
         self._wiffDataProvider = AnalystWiffDataProvider()
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
             filename, self._wiffDataProvider

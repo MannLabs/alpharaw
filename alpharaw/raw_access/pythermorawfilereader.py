@@ -3,6 +3,10 @@ import os
 import warnings
 from collections import defaultdict
 
+from pythonnet import load
+
+load("coreclr")
+
 # require pythonnet, pip install pythonnet on Windows
 import clr
 
@@ -182,6 +186,9 @@ class RawFileReader:
         self.filename = os.path.abspath(filename)
         self.filename = os.path.normpath(self.filename)
 
+        if not os.path.isfile(self.filename):
+            raise FileNotFoundError(f"Raw file `{self.filename}` does not exist.")
+
         self.source = (
             ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(
                 self.filename
@@ -190,7 +197,7 @@ class RawFileReader:
 
         if not self.source.IsOpen:
             raise OSError(
-                f"RAWfile '{self.filename}' could not be opened, is the file accessible ?"
+                f"RAWfile '{self.filename}' could not be opened, is the file accessible?"
             )
         self.source.SelectInstrument(ThermoFisher.CommonCore.Data.Business.Device.MS, 1)
 
