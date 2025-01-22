@@ -42,13 +42,6 @@ jobs:
       run: |
         cd misc
         . ./${{ inputs.install-script }} alpharaw ${{ inputs.python-version }} ${{ !contains(inputs.os, 'windows') }}
-    - name: Install additional dependencies required for testing
-      shell: bash -l {0}
-      run: |
-        conda activate alpharaw
-        pip install matplotlib
-        pip install pytest nbmake==1.5.3
-        conda deactivate
     - name: Run tests
       shell: bash -l {0}
       run: |

@@ -1,0 +1,4 @@
+matplotlib
+pytest
+nbmake==1.5.3
+requests

@@ -1,17 +1,9 @@
-pywin32; sys_platform=='win32'
-pythonnet; sys_platform=='win32'
-
 jupyter
-twine
 bumpversion
 pipdeptree
 ipykernel
 tqdm
 psutil
-h5py
-numba
-pandas
-numpy
 
 # sphinx
 autodocsumm
@@ -22,9 +14,4 @@ jinja2
 contextfilter
 furo
 
-alphabase>=1.1.0
-alphatims
-
-pytest
 pre-commit==3.7.0
-nbmake==1.5.3
