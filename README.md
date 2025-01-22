@@ -119,10 +119,10 @@ AlphaRaw like this. Also note the double quotes `"`.
 
 For those who are really adventurous, it is also possible to directly
 install any branch (e.g. `@development`) with any extras
-(e.g. `#egg=alpharaw[stable,development-stable]`) from GitHub with e.g.
+(e.g. `#egg=alpharaw[stable,development]`) from GitHub with e.g.
 
 ``` bash
-pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development-stable]"
+pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development]"
 ```
 
 ### Developer
@@ -172,7 +172,7 @@ pip install -e "./alpharaw[development]"
 
 By default this installs loose dependancies (no explicit versioning),
 although it is also possible to use stable dependencies
-(e.g. `pip install -e "./alpharaw[stable,development-stable]"`).
+(e.g. `pip install -e "./alpharaw[stable,development]"`).
 
 ***By using the editable flag `-e`, all modifications to the [AlphaRaw
 source code folder](alpharaw) are directly reflected when running
@@ -231,6 +231,12 @@ For an even more interactive participation, check out the
 [the Contributors License Agreement](misc/CLA.md).
 
 ### Notes for developers
+#### Release a new version
+This package uses a shared release process defined in the
+[alphashared](https://github.com/MannLabs/alphashared) repository. Please see the instructions
+[there](https://github.com/MannLabs/alphashared/blob/reusable-release-workflow/.github/workflows/README.md#release-a-new-version)
+
+
 #### pre-commit hooks
 It is highly recommended to use the provided pre-commit hooks, as the CI pipeline enforces all checks therein to
 pass in order to merge a branch.

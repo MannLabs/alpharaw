@@ -1,0 +1,15 @@
+# Dependencies required for running the "loose" version of alphabase.
+# All dependencies that are also included in `requirements.txt` must be added also here (enforced by a test).
+pywin32; sys_platform=='win32'
+pythonnet #; sys_platform=='win32'
+
+h5py
+numba
+pandas
+numpy
+#sqlalchemy
+pyteomics
+lxml
+
+alphabase>=1.5.0 # test: tolerate_version
+alphatims
