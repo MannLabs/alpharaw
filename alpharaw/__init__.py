@@ -23,7 +23,7 @@ def register_all_readers():
 
 
 __project__ = "alpharaw"
-__version__ = "0.4.5"
+__version__ = "0.4.6-dev0"
 __license__ = "Apache"
 __description__ = (
     "An open-source Python package to unify raw MS data access and storage."
