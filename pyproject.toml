@@ -55,7 +55,7 @@ find = {}
 dependencies = {file = ["requirements/requirements_loose.txt"]}
 optional-dependencies.stable = { file = ["requirements/requirements.txt" ]}
 optional-dependencies.viz = { file = ["requirements/requirements_viz.txt" ]}
-optional-dependencies.tests = { file = [ "requirements/requirements_tests.txt"]}
+optional-dependencies.tests = { file = [ "requirements/requirements_tests.txt", "requirements/requirements_viz.txt"]}
 optional-dependencies.docs = { file = [ "requirements/requirements_docs.txt"]}
 optional-dependencies.development = { file = [
             "requirements/requirements_development.txt",
