@@ -5,32 +5,38 @@ import time
 
 from alpharaw.utils.centroiding import centroid_peaks
 
-# require pythonnet, pip install pythonnet on Windows
-import clr
-clr.AddReference('System')
-import System
-from System.Threading import Thread
-from System.Globalization import CultureInfo
+try:
 
-from .clr_utils import DotNetArrayToNPArray, ext_dir
+    # require pythonnet, pip install pythonnet on Windows
+    import clr
+    clr.AddReference('System')
+    import System
+    from System.Threading import Thread
+    from System.Globalization import CultureInfo
 
-de_fr = CultureInfo('fr-FR')
-other = CultureInfo('en-US')
+    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
-Thread.CurrentThread.CurrentCulture = other
-Thread.CurrentThread.CurrentUICulture = other
+    de_fr = CultureInfo('fr-FR')
+    other = CultureInfo('en-US')
 
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+    Thread.CurrentThread.CurrentCulture = other
+    Thread.CurrentThread.CurrentUICulture = other
 
-import Clearcore2
-import WiffOps4Python
-from WiffOps4Python import WiffOps as DotNetWiffOps
-from Clearcore2.Data.AnalystDataProvider import (
-    AnalystWiffDataProvider,
-    AnalystDataProviderFactory
-)
+    clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
+    clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
+    clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+
+    import Clearcore2
+    import WiffOps4Python
+    from WiffOps4Python import WiffOps as DotNetWiffOps
+    from Clearcore2.Data.AnalystDataProvider import (
+        AnalystWiffDataProvider,
+        AnalystDataProviderFactory
+    )
+except Exception as e:
+    print("could not import")
+
+
 
 class WillFileReader:
     def __init__(self, filename:str):

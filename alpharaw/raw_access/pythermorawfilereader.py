@@ -7,24 +7,27 @@ import warnings
 from collections import defaultdict
 
 # require pythonnet, pip install pythonnet on Windows
-import clr
-clr.AddReference('System')
-import System
-from System.Threading import Thread
-from System.Globalization import CultureInfo
+try:
+    import clr
+    clr.AddReference('System')
+    import System
+    from System.Threading import Thread
+    from System.Globalization import CultureInfo
 
-from .clr_utils import DotNetArrayToNPArray, ext_dir
+    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
-de_fr = CultureInfo('fr-FR')
-other = CultureInfo('en-US')
+    de_fr = CultureInfo('fr-FR')
+    other = CultureInfo('en-US')
 
-Thread.CurrentThread.CurrentCulture = other
-Thread.CurrentThread.CurrentUICulture = other
+    Thread.CurrentThread.CurrentCulture = other
+    Thread.CurrentThread.CurrentUICulture = other
 
-clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll"))
-clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll"))
-import ThermoFisher
-from ThermoFisher.CommonCore.Data.Interfaces import IScanEventBase, IScanEvent
+    clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll"))
+    clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll"))
+    import ThermoFisher
+    from ThermoFisher.CommonCore.Data.Interfaces import IScanEventBase, IScanEvent
+except Exception as e:
+    print("could not import")
 
 '''C# code to read Raw data
 rawFile = ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(raw_filename)

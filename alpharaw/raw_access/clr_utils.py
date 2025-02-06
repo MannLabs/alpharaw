@@ -1,8 +1,16 @@
-import clr
+
+try:
+    import clr
+    clr.AddReference('System')
+    from System.Runtime.InteropServices import GCHandle, GCHandleType
+    import ctypes
+except Exception:
+    print("could not import clr")
+raise ValueError("This code is not working, and is not used in the project")
+
 import os
 import numpy as np
 
-clr.AddReference('System')
 # from System.Runtime.InteropServices import Marshal
 # from System import IntPtr, Int64
 # def DotNetArrayToNPArray(src):
@@ -18,8 +26,7 @@ clr.AddReference('System')
 #         len(src))
 #     return dest
 
-from System.Runtime.InteropServices import GCHandle, GCHandleType
-import ctypes
+
 def DotNetArrayToNPArray(src):
     '''
     See https://mail.python.org/pipermail/pythondotnet/2014-May/001527.html
