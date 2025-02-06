@@ -5,8 +5,7 @@ try:
     from System.Runtime.InteropServices import GCHandle, GCHandleType
     import ctypes
 except Exception:
-    print("could not import clr")
-raise ValueError("This code is not working, and is not used in the project")
+    print("Warning: could not import mono-based dependencies")
 
 import os
 import numpy as np

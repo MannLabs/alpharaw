@@ -34,7 +34,7 @@ try:
         AnalystDataProviderFactory
     )
 except Exception as e:
-    print("could not import")
+    print("Warning: could not import mono-based dependencies")
 
 
 

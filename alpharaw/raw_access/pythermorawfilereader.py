@@ -27,7 +27,7 @@ try:
     import ThermoFisher
     from ThermoFisher.CommonCore.Data.Interfaces import IScanEventBase, IScanEvent
 except Exception as e:
-    print("could not import")
+    print("Warning: could not import mono-based dependencies")
 
 '''C# code to read Raw data
 rawFile = ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(raw_filename)
