@@ -103,11 +103,11 @@ pip install alpharaw
 ```
 
 Installing AlphaRaw like this avoids conflicts when integrating it in
-other tools, as this does not enforce strict versioning of dependancies.
-However, if new versions of dependancies are released, they are not
+other tools, as this does not enforce strict versioning of dependencies.
+However, if new versions of dependencies are released, they are not
 guaranteed to be fully compatible with AlphaRaw. While this should only
 occur in rare cases where dependencies are not backwards compatible, you
-can always force AlphaRaw to use dependancy versions which are known to
+can always force AlphaRaw to use dependency versions which are known to
 be compatible with:
 
 ``` bash
@@ -119,10 +119,10 @@ AlphaRaw like this. Also note the double quotes `"`.
 
 For those who are really adventurous, it is also possible to directly
 install any branch (e.g. `@development`) with any extras
-(e.g. `#egg=alpharaw[stable,development-stable]`) from GitHub with e.g.
+(e.g. `#egg=alpharaw[stable,development]`) from GitHub with e.g.
 
 ``` bash
-pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development-stable]"
+pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development]"
 ```
 
 ### Developer
@@ -152,7 +152,7 @@ git clone https://github.com/MannLabs/alpharaw.git
 
 For any Python package, it is highly recommended to use a separate
 [conda virtual environment](https://docs.conda.io/en/latest/), as
-otherwise *dependancy conflicts can occur with already existing
+otherwise *dependency conflicts can occur with already existing
 packages*.
 
 ``` bash
@@ -160,7 +160,7 @@ conda create --name alpharaw python=3.9 -y
 conda activate alpharaw
 ```
 
-Finally, AlphaRaw and all its [dependancies](requirements) need to be
+Finally, AlphaRaw and all its [dependencies](requirements) need to be
 installed. To take advantage of all features and allow development (with
 the `-e` flag), this is best done by also installing the [development
 dependencies](requirements/requirements_development.txt) instead of only
@@ -170,9 +170,9 @@ the [core dependencies](requirements/requirements.txt):
 pip install -e "./alpharaw[development]"
 ```
 
-By default this installs loose dependancies (no explicit versioning),
+By default this installs loose dependencies (no explicit versioning),
 although it is also possible to use stable dependencies
-(e.g. `pip install -e "./alpharaw[stable,development-stable]"`).
+(e.g. `pip install -e "./alpharaw[stable,development]"`).
 
 ***By using the editable flag `-e`, all modifications to the [AlphaRaw
 source code folder](alpharaw) are directly reflected when running
@@ -231,6 +231,12 @@ For an even more interactive participation, check out the
 [the Contributors License Agreement](misc/CLA.md).
 
 ### Notes for developers
+#### Release a new version
+This package uses a shared release process defined in the
+[alphashared](https://github.com/MannLabs/alphashared) repository. Please see the instructions
+[there](https://github.com/MannLabs/alphashared/blob/reusable-release-workflow/.github/workflows/README.md#release-a-new-version)
+
+
 #### pre-commit hooks
 It is highly recommended to use the provided pre-commit hooks, as the CI pipeline enforces all checks therein to
 pass in order to merge a branch.

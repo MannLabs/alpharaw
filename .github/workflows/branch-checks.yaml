@@ -13,8 +13,8 @@ jobs:
     - uses: actions/setup-python@v3
     - uses: pre-commit/action@v3.0.1
   # For feature branches, we don't test the full matrix (os x [stable, loose]) in order to save time & resources.
-  run-tests-loose:
-    name: Test loose pip installation on ubuntu-latest
+  run-tests-stable:
+    name: Test stable pip installation on ubuntu-latest
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -23,4 +23,4 @@ jobs:
     with:
       python-version: ${{ matrix.python-version }}
       os: ${{ matrix.os }}
-      install-script: pip_install.sh loose,tests
+      install-script: pip_install.sh stable,tests
