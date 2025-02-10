@@ -14,7 +14,7 @@ on:
         required: true
         type: string
 jobs:
-  pre-commit:
+  run-tests:
     runs-on: ${{ inputs.os }}
     steps:
     - uses: actions/checkout@v3
@@ -32,18 +32,16 @@ jobs:
     - name: Conda info
       shell: bash -l {0}
       run: conda info
+    - name: Install mono
+      if: ${{ !contains(inputs.os, 'windows') }}
+      shell: bash -l {0}
+      run: |
+        conda install mono
     - name: Perform pip installation
       shell: bash -l {0}
       run: |
         cd misc
-        . ./${{ inputs.install-script }}
-    - name: Install additional dependencies required for testing
-      shell: bash -l {0}
-      run: |
-        conda activate alpharaw
-        pip install matplotlib
-        pip install pytest nbmake==1.5.3
-        conda deactivate
+        . ./${{ inputs.install-script }} alpharaw ${{ inputs.python-version }} ${{ !contains(inputs.os, 'windows') }}
     - name: Run tests
       shell: bash -l {0}
       run: |

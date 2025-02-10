@@ -67,4 +67,5 @@ __console_scripts__ = [
 ]
 __extra_requirements__ = {
     "development": "extra_requirements/development.txt",
+    "tests": "extra_requirements/tests.txt",
 }

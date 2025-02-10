@@ -25,7 +25,7 @@ jobs:
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
-      install-script: "stable_pip_install.sh"
+      install-script: pip_install.sh stable
 
   loose_installation:
     name: Test loose pip installation on ${{ matrix.os }}
@@ -37,4 +37,4 @@ jobs:
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
-      install-script: "loose_pip_install.sh"
+      install-script: pip_install.sh loose

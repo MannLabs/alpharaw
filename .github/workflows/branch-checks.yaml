@@ -18,8 +18,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        python-version: [3.9]
     uses: ./.github/workflows/_run_tests.yml
     with:
       python-version: ${{ matrix.python-version }}
       os: ${{ matrix.os }}
-      install-script: "loose_pip_install.sh"
+      install-script: pip_install.sh loose,tests
