@@ -4,29 +4,39 @@ import warnings
 from collections import defaultdict
 
 # require pythonnet, pip install pythonnet on Windows
-import clr
+try:
+    import clr
 
-clr.AddReference("System")
-import System
-from System.Globalization import CultureInfo
-from System.Threading import Thread
+    clr.AddReference("System")
+    import System
+    from System.Globalization import CultureInfo
+    from System.Threading import Thread
 
-from .clr_utils import DotNetArrayToNPArray, ext_dir
+    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
-de_fr = CultureInfo("fr-FR")
-other = CultureInfo("en-US")
+    de_fr = CultureInfo("fr-FR")
+    other = CultureInfo("en-US")
 
-Thread.CurrentThread.CurrentCulture = other
-Thread.CurrentThread.CurrentUICulture = other
+    Thread.CurrentThread.CurrentCulture = other
+    Thread.CurrentThread.CurrentUICulture = other
 
-clr.AddReference(
-    os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll")
-)
-clr.AddReference(
-    os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
-)
-import ThermoFisher
-from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
+    clr.AddReference(
+        os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll")
+    )
+    clr.AddReference(
+        os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
+    )
+    import ThermoFisher
+    from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
+except Exception:
+    # allows to use the rest of the code without clr
+    import traceback
+
+    traceback.print_exc()
+    print(
+        "Warning: could not import dotnet-based dependencies. Do you have pythonnet and mono (Mac/Linux) installed?"
+    )
+
 
 """C# code to read Raw data
 rawFile = ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(raw_filename)
