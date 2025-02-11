@@ -48,7 +48,7 @@ Pythonnet must be installed to access Thermo or Sciex raw data.
 
 Pythonnet will be automatically installed via pip.
 
-#### For Linux (or MacOS without M1/M2/M3/..., not tested yet)
+#### For Linux (or MacOS with Intel platform, not tested yet)
 
 1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
@@ -58,7 +58,7 @@ Linux](https://www.mono-project.com/download/stable/#download-lin).
 NOTE, the installed mono version should be at least 6.10, which
 requires you to add the ppa to your trusted sources!
 
-#### For MacOS including M1/M2 platform
+#### For MacOS with silicon platform (M1/M2/M3)
 
 1.  Install [brew](https://brew.sh).
 2.  Install mono: `brew install mono`.
@@ -67,13 +67,15 @@ requires you to add the ppa to your trusted sources!
 5.  Install pythonnet: `pip install pythonnet`.
 
 
-NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the M1 platform (which is due to an incompatible architecture for the files in the mono library):
+NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the silicon platform
+(which is due to an incompatible architecture for the files in the mono library):
 
 ```
 RuntimeError: Failed to create a default .NET runtime, which would have been "mono" on this system. Either install a compatible runtime or configure it explicitly via `set_runtime` or the `PYTHONNET_*` environment variables (see set_runtime_from_env).
 ```
 
-In this case, it is possible to install mono 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html). This version avoids the error.
+In this case, install mono version 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html)
+or via `conda install mono=6.12.0.182 -c anaconda -y`. This version avoids the error.
 
 ------------------------------------------------------------------------
 
