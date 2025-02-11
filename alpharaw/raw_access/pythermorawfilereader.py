@@ -21,8 +21,14 @@ other = CultureInfo('en-US')
 Thread.CurrentThread.CurrentCulture = other
 Thread.CurrentThread.CurrentUICulture = other
 
-clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll"))
-clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll"))
+from System.Reflection import Assembly
+
+_ = Assembly.LoadFrom(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll"))
+_ = Assembly.LoadFrom(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll"))
+#
+# clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll"))
+# clr.AddReference(os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll"))
+
 import ThermoFisher
 from ThermoFisher.CommonCore.Data.Interfaces import IScanEventBase, IScanEvent
 
@@ -169,6 +175,19 @@ class RawFileReader(object):
         self.filename = os.path.normpath(self.filename)
 
         self.source = ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(self.filename)
+        print(self.source.__dir__())
+        for key in self.source.__dir__():
+            try:
+                val = self.source.__getattribute__(key)
+            except Exception:
+                val = "XXX"
+            print(key, val)
+
+        fe = self.source.get_FileError()
+        print(fe.__dir__())
+        print("ErrorCode", fe.__getattribute__("ErrorCode"))
+        print("ErrorMessage", fe.__getattribute__("ErrorMessage"))
+        print("WarningMessage", fe.__getattribute__("WarningMessage"))
 
         if not self.source.IsOpen:
             raise IOError(
