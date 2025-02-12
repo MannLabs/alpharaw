@@ -5,7 +5,7 @@ pywin32>=0.0.1; sys_platform=='win32' # test: tolerate_version
 pythonnet==3.0.3 #; sys_platform=='win32'
 
 h5py==3.11.0
-numba===0.59.1
+numba==0.59.1
 pandas==2.2.2
 numpy==1.26.4
 pyteomics==4.7.2
