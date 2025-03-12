@@ -1,11 +1,19 @@
-
 import numpy as np
-from numba import njit
 from alphatims.utils import threadpool
+from numba import njit
+
 
 @threadpool
 @njit
-def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connections:np.ndarray, scores:np.ndarray, centroids:np.ndarray, max_gap:int, centroid_tol:float):
+def connect_centroids_unidirection(
+    x: np.ndarray,
+    row_borders: np.ndarray,
+    connections: np.ndarray,
+    scores: np.ndarray,
+    centroids: np.ndarray,
+    max_gap: int,
+    centroid_tol: float,
+):
     """Connect centroids.
 
     Args:
@@ -26,9 +34,9 @@ def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connect
         if x > 0:
             start_index_f = row_borders[x - 1]
 
-        centroids_1 = centroids[start_index_f: row_borders[x]]
+        centroids_1 = centroids[start_index_f : row_borders[x]]
         start_index_b = row_borders[y - 1]
-        centroids_2 = centroids[start_index_b: row_borders[y]]
+        centroids_2 = centroids[start_index_b : row_borders[y]]
 
         i = 0
         j = 0
@@ -39,10 +47,9 @@ def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connect
             mz_sum = mz1 + mz2
             delta = 2 * 1e6 * abs(diff) / mz_sum
 
-            if delta < centroid_tol:
-                if scores[x, i, gap] > delta:
-                    scores[x, i, gap] = delta
-                    connections[x, i, gap] = (connections.shape[1] * y) + j
+            if delta < centroid_tol and scores[x, i, gap] > delta:
+                scores[x, i, gap] = delta
+                connections[x, i, gap] = (connections.shape[1] * y) + j
 
             if diff > 0:
                 j += 1
@@ -50,7 +57,13 @@ def connect_centroids_unidirection(x:np.ndarray, row_borders:np.ndarray, connect
                 i += 1
 
 
-def find_centroid_connections(rowwise_peaks:np.ndarray, row_borders:np.ndarray, centroids:np.ndarray, max_gap:int, centroid_tol:float):
+def find_centroid_connections(
+    rowwise_peaks: np.ndarray,
+    row_borders: np.ndarray,
+    centroids: np.ndarray,
+    max_gap: int,
+    centroid_tol: float,
+):
     """Wrapper function to call connect_centroids_unidirection
 
     Args:
@@ -67,13 +80,15 @@ def find_centroid_connections(rowwise_peaks:np.ndarray, row_borders:np.ndarray, 
     connections = np.full((spectra_cnt, max_centroids, max_gap + 1), -1, dtype=np.int32)
     score = np.full((spectra_cnt, max_centroids, max_gap + 1), np.inf)
 
-    connect_centroids_unidirection(range(len(row_borders)),
-                                    row_borders,
-                                   connections,
-                                   score,
-                                   centroids,
-                                   max_gap,
-                                   centroid_tol)
+    connect_centroids_unidirection(
+        range(len(row_borders)),
+        row_borders,
+        connections,
+        score,
+        centroids,
+        max_gap,
+        centroid_tol,
+    )
 
     score = score[np.where(score < np.inf)]
 
@@ -91,21 +106,31 @@ def find_centroid_connections(rowwise_peaks:np.ndarray, row_borders:np.ndarray, 
 
     return from_r, from_c, to_r, to_c, score_median, score_std
 
+
 @threadpool(include_progress_callback=False)
 @njit
-def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndarray, to_r:np.ndarray, to_c:np.ndarray, row_borders:np.ndarray, out_from_idx:np.ndarray, out_to_idx:np.ndarray):
+def convert_connections_to_array(
+    x: np.ndarray,
+    from_r: np.ndarray,
+    from_c: np.ndarray,
+    to_r: np.ndarray,
+    to_c: np.ndarray,
+    row_borders: np.ndarray,
+    out_from_idx: np.ndarray,
+    out_to_idx: np.ndarray,
+):
     """Convert integer indices of a matrix to coordinates.
 
     Args:
         x (np.ndarray): Input index. Note that we are using the performance function so this is a range.
         from_r (np.ndarray): From array with row coordinates.
         from_c (np.ndarray): From array with column coordinates.
-        to_r (np.ndarray): To array with row coordinates. 
+        to_r (np.ndarray): To array with row coordinates.
         to_c (np.ndarray): To array with column coordinates.
         row_borders (np.ndarray): Row borders (for indexing).
         out_from_idx (np.ndarray): Reporting array: 1D index from.
         out_to_idx (np.ndarray): Reporting array: 1D index to.
-    """    
+    """
     row = from_r[x]
     col = from_c[x]
     start_index_f = 0
@@ -120,9 +145,12 @@ def convert_connections_to_array(x:np.ndarray, from_r:np.ndarray, from_c:np.ndar
         start_index_f = row_borders[row - 1]
     out_to_idx[x] = start_index_f + col
 
+
 @threadpool(include_progress_callback=False)
 @njit
-def eliminate_overarching_vertex(x:np.ndarray, from_idx:np.ndarray, to_idx:np.ndarray):
+def eliminate_overarching_vertex(
+    x: np.ndarray, from_idx: np.ndarray, to_idx: np.ndarray
+):
     """Eliminate overacrhing vertex.
 
     Args:
@@ -136,7 +164,14 @@ def eliminate_overarching_vertex(x:np.ndarray, from_idx:np.ndarray, to_idx:np.nd
     if from_idx[x - 1] == from_idx[x]:
         to_idx[x] = -1
 
-def connect_centroids(rowwise_peaks:np.ndarray, row_borders:np.ndarray, centroids:np.ndarray, max_gap:int, centroid_tol:float)-> (np.ndarray, np.ndarray, float, float):
+
+def connect_centroids(
+    rowwise_peaks: np.ndarray,
+    row_borders: np.ndarray,
+    centroids: np.ndarray,
+    max_gap: int,
+    centroid_tol: float,
+) -> (np.ndarray, np.ndarray, float, float):
     """Function to connect centroids.
 
     Args:
@@ -150,25 +185,18 @@ def connect_centroids(rowwise_peaks:np.ndarray, row_borders:np.ndarray, centroid
         np.ndarray: To index.
         float: Median score.
         float: Std deviation of the score.
-    """    
+    """
 
-    from_r, from_c, to_r, to_c, score_median, score_std = find_centroid_connections(rowwise_peaks,
-                                                           row_borders,
-                                                           centroids,
-                                                           max_gap,
-                                                           centroid_tol)
+    from_r, from_c, to_r, to_c, score_median, score_std = find_centroid_connections(
+        rowwise_peaks, row_borders, centroids, max_gap, centroid_tol
+    )
 
     from_idx = np.zeros(len(from_r), np.int32)
     to_idx = np.zeros(len(from_r), np.int32)
 
-    convert_connections_to_array(range(len(from_r)),
-                                    from_r,
-                                 from_c,
-                                 to_r,
-                                 to_c,
-                                 row_borders,
-                                 from_idx,
-                                 to_idx)
+    convert_connections_to_array(
+        range(len(from_r)), from_r, from_c, to_r, to_c, row_borders, from_idx, to_idx
+    )
 
     eliminate_overarching_vertex(range(len(from_idx)), from_idx, to_idx)
 

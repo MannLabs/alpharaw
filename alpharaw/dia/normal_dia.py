@@ -1,38 +1,39 @@
-import pandas as pd
-import numpy as np
 import typing
-
 from collections import defaultdict
 
-from alpharaw.ms_data_base import MSData_Base
-
-from alpharaw.utils.df_processing import remove_unused_peaks
-from alpharaw.utils.timstof import convert_to_alphatims
+import numpy as np
 from alphatims.bruker import TimsTOF
 
-class NormalDIAGrouper():
+from alpharaw.ms_data_base import MSData_Base
+from alpharaw.utils.df_processing import remove_unused_peaks
+from alpharaw.utils.timstof import convert_to_alphatims
+
+
+class NormalDIAGrouper:
     def __init__(self, ms_data: MSData_Base):
         self.ms_data = ms_data
-        self.ms_data.spectrum_df[
-            "dia_group"
-        ] = ms_data.spectrum_df.precursor_mz.astype(int)
+        self.ms_data.spectrum_df["dia_group"] = ms_data.spectrum_df.precursor_mz.astype(
+            int
+        )
 
         self.dia_group_dfs = self.ms_data.spectrum_df.groupby("dia_group")
         self.dia_isolation_dict = {}
         for dia_group, df in self.dia_group_dfs:
-            if dia_group == -1: continue
+            if dia_group == -1:
+                continue
             self.dia_isolation_dict[dia_group] = (
                 df.isolation_lower_mz.values[0],
-                df.isolation_upper_mz.values[0]
+                df.isolation_upper_mz.values[0],
             )
         self.dia_groups = np.sort(list(self.dia_isolation_dict.keys()))
 
-    def get_ms_data_for_a_group(self, 
-        dia_group:int=-1, 
-        return_alpharaw_data: bool=True,
-        return_alphatims_data: bool=True,
-    )->typing.Union[MSData_Base, TimsTOF, typing.Tuple[MSData_Base, TimsTOF]]:
-        """ Get compressed MS data for isolation window `dia_group`.
+    def get_ms_data_for_a_group(
+        self,
+        dia_group: int = -1,
+        return_alpharaw_data: bool = True,
+        return_alphatims_data: bool = True,
+    ) -> typing.Union[MSData_Base, TimsTOF, typing.Tuple[MSData_Base, TimsTOF]]:
+        """Get compressed MS data for isolation window `dia_group`.
 
         Args:
             dia_group (int, optional): The DIA group, -1 means ms1. Defaults to -1.
@@ -57,17 +58,15 @@ class NormalDIAGrouper():
         else:
             ms_data = MSData_Base()
 
-            spec_df, peak_df = remove_unused_peaks(
-                spec_df, self.ms_data.peak_df
-            )
+            spec_df, peak_df = remove_unused_peaks(spec_df, self.ms_data.peak_df)
 
             ms_data.spectrum_df = spec_df
             ms_data.peak_df = peak_df
             return ms_data
 
-    def assign_dia_groups(self, 
-        precursor_mzs
-    )->typing.DefaultDict[typing.List, typing.List]:
+    def assign_dia_groups(
+        self, precursor_mzs
+    ) -> typing.DefaultDict[typing.List, typing.List]:
         dia_precursor_groups = defaultdict(list)
         for i, mz in enumerate(precursor_mzs):
             i_group = np.searchsorted(self.dia_groups, int(mz))
@@ -81,7 +80,7 @@ class NormalDIAGrouper():
                 if mz >= isolation_lower and mz <= isolation_upper:
                     dia_precursor_groups[dia_group].append(i)
                     continue
-            dia_group = self.dia_groups[i_group-1]
+            dia_group = self.dia_groups[i_group - 1]
             if dia_group in self.dia_isolation_dict:
                 isolation_lower, isolation_upper = self.dia_isolation_dict[dia_group]
                 if mz >= isolation_lower and mz <= isolation_upper:

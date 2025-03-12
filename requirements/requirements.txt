@@ -1,0 +1,16 @@
+# Dependencies required for running the "stable" version of alphaDIA.
+# Only usage of fixed versions is allowed, and all dependencies listed here must also be
+# included in `requirements_loose.txt` (enforced by a test).
+pywin32>=0.0.1; sys_platform=='win32' # test: tolerate_version
+pythonnet==3.0.3 #; sys_platform=='win32'
+
+h5py==3.11.0
+numba==0.59.1
+pandas==2.2.2
+numpy==1.26.4
+pyteomics==4.7.2
+lxml==5.2.2
+#sqlalchemy
+
+alphabase>=1.5.0  # test: tolerate_version
+alphatims>=0.0.1  # test: tolerate_version

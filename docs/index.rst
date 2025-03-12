@@ -1,10 +1,14 @@
 Documentation for AlphaRaw
 =====================================
 
-The deep learning framework MS proteomics. 
-For more information, see AlphaPeptDeep on `GitHub <https://github.com/MannLabs/alpharaw/>`_.
+AlphaRaw is a pure Python package which is designed to load MS data of different formats
+(Thermo, Sciex, mzml, ...) into a standard DataFrame (tabular) format.
+For more information, see AlphaRaw on `GitHub <https://github.com/MannLabs/alpharaw/>`_.
 
 .. toctree::
    :maxdepth: 2
 
-   notebooks
+   tutorials
+   reader_modules
+   match_modules
+   viz_modules

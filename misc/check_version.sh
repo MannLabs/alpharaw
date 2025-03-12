@@ -1,3 +1,5 @@
+# TODO remove with old release workflow
+
 current_version=$(grep "__version__" ../alpharaw/__init__.py | cut -f3 -d ' ' | sed 's/"//g')
 current_version_as_regex=$(echo $current_version | sed 's/\./\\./g')
 conda create -n version_check python=3.9 -y

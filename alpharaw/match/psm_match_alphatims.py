@@ -1,32 +1,29 @@
-import pandas as pd
-import numpy as np
-import tqdm
-from typing import Union, Tuple
+# TODO to be remove as already implemented in alphaDIA.
+from typing import Tuple, Union
 
+import numpy as np
+import pandas as pd
+import tqdm
 from alphatims.bruker import TimsTOF
 
-from alpharaw.ms_data_base import (
-    MSData_Base, ms_reader_provider
-)
-
+from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
-from alpharaw.wrappers.alphapept_wrapper import AlphaPept_HDF_MS2_Reader
-
 from .psm_match import PepSpecMatch
-from ..utils.ms_path_utils import parse_ms_files_to_dict
 
 alphatims_hdf_types = [
-    'alphatims', 'alphatims_hdf',
-    'tims.hdf',
+    "alphatims",
+    "alphatims_hdf",
+    "tims.hdf",
 ]
 
+
 def load_ms_data_tims(
-    ms_file:Union[str, MSData_Base, TimsTOF],
-    ms_file_type:str='alpharaw_hdf',
-    dda:bool=False,
-    spectra_sorted_by_rt:bool=True,
-)->Tuple[MSData_Base, TimsTOF]:
+    ms_file: Union[str, MSData_Base, TimsTOF],
+    ms_file_type: str = "alpharaw_hdf",
+    dda: bool = False,
+    spectra_sorted_by_rt: bool = True,
+) -> Tuple[MSData_Base, TimsTOF]:
     """Load ms data as TimsTOF object
 
     Parameters
@@ -35,7 +32,7 @@ def load_ms_data_tims(
         ms2 file path
 
     ms_file_type : str, optional
-        ms2 file type, could be 
+        ms2 file type, could be
         ["alpharaw_hdf","raw.hdf","thermo","sciex","alphapept_hdf","mgf"].
         Default to 'alphatims_hdf'
 
@@ -45,7 +42,7 @@ def load_ms_data_tims(
     spectra_sorted_by_rt : bool, optional
         If spectra are already sorted by RT.
         Defaults to True
-    
+
     Returns
     -------
     tuple
@@ -60,25 +57,21 @@ def load_ms_data_tims(
         if isinstance(ms_file, MSData_Base):
             raw_data = ms_file
         else:
-            raw_data = ms_reader_provider.get_reader(
-                ms_file_type
-            )
+            raw_data = ms_reader_provider.get_reader(ms_file_type)
             raw_data.import_raw(ms_file)
 
             if not spectra_sorted_by_rt:
                 # RT may not be sorted in AP HDF for timsTOF after preprocessing
-                raw_data._sort_rt() 
+                raw_data._sort_rt()
 
-        tims_data = AlphaTimsWrapper(
-            raw_data, dda=dda
-        )
+        tims_data = AlphaTimsWrapper(raw_data, dda=dda)
         return raw_data, tims_data
 
 
 class PepSpecMatch_AlphaTims(PepSpecMatch):
     """
     Inherited from :class:`alpharaw.match.psm_match.PepSpecMatch`, but
-    this can be used for DIA PSM matching by selecting 
+    this can be used for DIA PSM matching by selecting
     MS2 spectra with RT (and IM) values.
     """
 
@@ -96,11 +89,12 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
     find_k_nearest_ms2_by_im = False
     k_im_nearest = 11
 
-    def get_peak_df(self,
-        precursor_mz:float,
-        rt_sec:float,
-        im:float=0.0,
-    )->pd.DataFrame:
+    def get_peak_df(
+        self,
+        precursor_mz: float,
+        rt_sec: float,
+        im: float = 0.0,
+    ) -> pd.DataFrame:
         """
         Parameters
         ----------
@@ -117,47 +111,46 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             peak_df in alphatims DF format
         """
         rt_slice = slice(
-            rt_sec-self.rt_sec_tol_to_slice_ms2,
-            rt_sec+self.rt_sec_tol_to_slice_ms2,
+            rt_sec - self.rt_sec_tol_to_slice_ms2,
+            rt_sec + self.rt_sec_tol_to_slice_ms2,
         )
 
         if im == 0 or self.tims_data.scan_max_index == 1:
             im_slice = slice(None)
         elif self.find_k_nearest_ms2_by_im and self.tims_data.scan_max_index > 1:
             # AlphaTims without AlphaRaw for .d files
-            im_slice = self.tims_data.scan_max_index-np.searchsorted(
+            im_slice = self.tims_data.scan_max_index - np.searchsorted(
                 self.tims_data.mobility_values[::-1], im
             )
         else:
             im_slice = slice(
-                im-self.im_tol_to_slice_ms2,
-                im+self.im_tol_to_slice_ms2
+                im - self.im_tol_to_slice_ms2, im + self.im_tol_to_slice_ms2
             )
 
-        spec_df = self.tims_data[
-            rt_slice, im_slice, precursor_mz:precursor_mz
-        ]
+        spec_df = self.tims_data[rt_slice, im_slice, precursor_mz:precursor_mz]
 
         def find_k_nearest(array, val, k=3):
-            nearest = np.argmin(np.abs(array-val))
-            if nearest <= k//2:
+            nearest = np.argmin(np.abs(array - val))
+            if nearest <= k // 2:
                 return slice(k)
-            elif nearest >= len(array)-k//2-1:
+            elif nearest >= len(array) - k // 2 - 1:
                 return slice(-k, None)
             else:
-                return slice(nearest-k//2, nearest+k//2+1)
+                return slice(nearest - k // 2, nearest + k // 2 + 1)
 
         if (
-            self.find_k_nearest_ms2_by_im and 
-            im>0 and self.tims_data.scan_max_index>1
+            self.find_k_nearest_ms2_by_im
+            and im > 0
+            and self.tims_data.scan_max_index > 1
         ):
             # RAW from AlphaRaw, mobility===0 in AlphaTims wrapper obj
             scan_idxes = np.sort(spec_df.scan_indices.unique())
-            if len(scan_idxes) > 1: # im from psm
+            if len(scan_idxes) > 1:  # im from psm
                 scan_idxes = scan_idxes[
                     find_k_nearest(
-                        self.raw_data.spectrum_df.mobility.values[scan_idxes], 
-                        im, self.k_im_nearest
+                        self.raw_data.spectrum_df.mobility.values[scan_idxes],
+                        im,
+                        self.k_im_nearest,
                     )
                 ]
                 spec_df = spec_df[spec_df.scan_indices.isin(scan_idxes)]
@@ -169,15 +162,15 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
                     find_k_nearest(rt_values, rt_sec, self.k_rt_nearest)
                 ]
                 spec_df = spec_df[spec_df.rt_values.isin(closest_rts)]
-        
+
         return spec_df
 
     def get_peaks(
         self,
-        precursor_mz:float,
-        rt_sec:float,
-        im:float=0.0,
-    )->tuple:
+        precursor_mz: float,
+        rt_sec: float,
+        im: float = 0.0,
+    ) -> tuple:
         """
         Parameters
         ----------
@@ -195,14 +188,13 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             np.ndarray: peak intensity values
         """
         spec_df = self.get_peak_df(precursor_mz, rt_sec, im)
-        spec_df = spec_df.sort_values('mz_values').reset_index(drop=True)
-        return (
-            spec_df.mz_values.values, 
-            spec_df.intensity_values.values
-        )
+        spec_df = spec_df.sort_values("mz_values").reset_index(drop=True)
+        return (spec_df.mz_values.values, spec_df.intensity_values.values)
 
-    def load_ms_data(self, 
-        ms_file, ms_file_type, 
+    def load_ms_data(
+        self,
+        ms_file,
+        ms_file_type,
         dda=False,
         spectra_sorted_by_rt=True,
     ):
@@ -210,63 +202,62 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
             ms_file, ms_file_type, dda, spectra_sorted_by_rt
         )
 
-    def match_ms2_one_raw(self, 
-        psm_df_one_raw: pd.DataFrame,
-        verbose:bool=False
-    )->tuple:
+    def match_ms2_one_raw(
+        self, psm_df_one_raw: pd.DataFrame, verbose: bool = False
+    ) -> tuple:
         """
-        Matching psm_df_one_raw against 
+        Matching psm_df_one_raw against
         self.tims_data and self.raw_data
         after `self.load_ms_data()`
 
         Parameters
         ----------
         psm_df_one_raw : pd.DataFrame
-            psm dataframe 
+            psm dataframe
             that contains only one raw file
 
         Returns
         -------
         tuple:
             pd.DataFrame: psm dataframe with fragment index information.
-            
+
             pd.DataFrame: fragment mz dataframe.
-            
+
             pd.DataFrame: matched intensity dataframe.
-            
-            pd.DataFrame: matched mass error dataframe. 
+
+            pd.DataFrame: matched mass error dataframe.
             np.inf if a fragment is not matched.
-            
+
         """
-        self._preprocess_psms(psm_df_one_raw)
-        
-        psm_df_one_raw = self._add_missing_columns_to_psm_df(
-            psm_df_one_raw
-        )
+        self.psm_df = psm_df_one_raw
+
+        psm_df_one_raw = self._add_missing_columns_to_psm_df(psm_df_one_raw)
 
         (
-            fragment_mz_df, 
+            fragment_mz_df,
             matched_intensity_df,
             matched_mz_err_df,
-        ) = self._prepare_matching_dfs(psm_df_one_raw)
+        ) = self._prepare_matching_dfs()
 
         if (
-            'mobility' in psm_df_one_raw.columns and 
-            'mobility' in self.raw_data.spectrum_df.columns
+            "mobility" in psm_df_one_raw.columns
+            and "mobility" in self.raw_data.spectrum_df.columns
         ):
             query_columns = [
-                'frag_start_idx', 
-                'frag_stop_idx',
-                'precursor_mz', 'rt', 
-                'mobility',
+                "frag_start_idx",
+                "frag_stop_idx",
+                "precursor_mz",
+                "rt",
+                "mobility",
             ]
         else:
             query_columns = [
-                'frag_start_idx', 
-                'frag_stop_idx',
-                'precursor_mz', 'rt', 
+                "frag_start_idx",
+                "frag_stop_idx",
+                "precursor_mz",
+                "rt",
             ]
-        
+
         psm_iters = psm_df_one_raw[query_columns].values
         if verbose:
             psm_iters = tqdm.tqdm(psm_iters)
@@ -274,27 +265,27 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         for items in psm_iters:
             frag_start_idx = int(items[0])
             frag_stop_idx = int(items[1])
-            
+
             spec_mzs, spec_intens = self.get_peaks(
                 *items[2:],
             )
             self._match_one_psm(
-                spec_mzs, spec_intens,
-                fragment_mz_df, 
+                spec_mzs,
+                spec_intens,
+                fragment_mz_df,
                 matched_intensity_df,
                 matched_mz_err_df,
-                frag_start_idx, frag_stop_idx,
+                frag_start_idx,
+                frag_stop_idx,
             )
-        return (
-            psm_df_one_raw, fragment_mz_df, 
-            matched_intensity_df, matched_mz_err_df
-        )
+        return (psm_df_one_raw, fragment_mz_df, matched_intensity_df, matched_mz_err_df)
 
-    def match_ms2_multi_raw(self, 
-        psm_df: pd.DataFrame, 
-        ms_files: Union[dict, list], 
-        ms_file_type: str = 'alphatims',
-        dda:bool = False,
+    def match_ms2_multi_raw(
+        self,
+        psm_df: pd.DataFrame,
+        ms_files: Union[dict, list],
+        ms_file_type: str = "alphatims",
+        dda: bool = False,
     ):
         """
         Matching PSM dataframe against the ms2 files in ms_files
@@ -316,19 +307,19 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         ms_file_type : str, optional
             One of ["alphatims_hdf","alpharaw_hdf","thermo","sciex","alphapept_hdf","mgf"]
             Defaults to 'alphapept'.
-            
+
         Returns
         -------
         tuple:
             pd.DataFrame: psm dataframe with fragment index information.
-            
+
             pd.DataFrame: fragment mz dataframe.
-            
+
             pd.DataFrame: matched intensity dataframe.
-            
-            pd.DataFrame: matched mass error dataframe. 
+
+            pd.DataFrame: matched mass error dataframe.
             np.inf if a fragment is not matched.
-            
+
         """
         raise NotImplementedError(
             "Not necessary for matching multiple raw files using AlphaTims, "

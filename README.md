@@ -48,7 +48,7 @@ Pythonnet must be installed to access Thermo or Sciex raw data.
 
 Pythonnet will be automatically installed via pip.
 
-#### For Linux (or MacOS without M1/M2/M3/..., not tested yet)
+#### For Linux (or MacOS with Intel platform, not tested yet)
 
 1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
@@ -58,13 +58,24 @@ Linux](https://www.mono-project.com/download/stable/#download-lin).
 NOTE, the installed mono version should be at least 6.10, which
 requires you to add the ppa to your trusted sources!
 
-#### For MacOS including M1/M2 platform
+#### For MacOS with silicon platform (M1/M2/M3)
 
 1.  Install [brew](https://brew.sh).
 2.  Install mono: `brew install mono`.
 3.  If the pseudo mono folder `/Library/Frameworks/Mono.framework/Versions` does not exist, create it by running `sudo mkdir -p /Library/Frameworks/Mono.framework/Versions`.
-4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions/Current`. Here, `6.12.0.182` is the brew-installed mono version, please check your installed version. Navigate to `/Library/Frameworks/Mono.framework/Versions` and run `ls -l` to verify that the link `Current` points to `/opt/homebrew/Cellar/mono/6.12.0.182`. If `Current` points to a different installation and/or `/opt/homebrew/Cellar/mono/6.12.0.182` is referenced by a different link, delete the corresponding links and run `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 Current`.     
+4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions/Current`. Here, `6.12.0.182` is the brew-installed mono version, please check your installed version. Navigate to `/Library/Frameworks/Mono.framework/Versions` and run `ls -l` to verify that the link `Current` points to `/opt/homebrew/Cellar/mono/6.12.0.182`. If `Current` points to a different installation and/or `/opt/homebrew/Cellar/mono/6.12.0.182` is referenced by a different link, delete the corresponding links and run `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 Current`.
 5.  Install pythonnet: `pip install pythonnet`.
+
+
+NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the silicon platform
+(which is due to an incompatible architecture for the files in the mono library):
+
+```
+RuntimeError: Failed to create a default .NET runtime, which would have been "mono" on this system. Either install a compatible runtime or configure it explicitly via `set_runtime` or the `PYTHONNET_*` environment variables (see set_runtime_from_env).
+```
+
+In this case, install mono version 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html)
+or via `conda install mono=6.12.0.182 -c anaconda -y`. This version avoids the error.
 
 ------------------------------------------------------------------------
 
@@ -94,11 +105,11 @@ pip install alpharaw
 ```
 
 Installing AlphaRaw like this avoids conflicts when integrating it in
-other tools, as this does not enforce strict versioning of dependancies.
-However, if new versions of dependancies are released, they are not
+other tools, as this does not enforce strict versioning of dependencies.
+However, if new versions of dependencies are released, they are not
 guaranteed to be fully compatible with AlphaRaw. While this should only
 occur in rare cases where dependencies are not backwards compatible, you
-can always force AlphaRaw to use dependancy versions which are known to
+can always force AlphaRaw to use dependency versions which are known to
 be compatible with:
 
 ``` bash
@@ -110,10 +121,10 @@ AlphaRaw like this. Also note the double quotes `"`.
 
 For those who are really adventurous, it is also possible to directly
 install any branch (e.g. `@development`) with any extras
-(e.g. `#egg=alpharaw[stable,development-stable]`) from GitHub with e.g.
+(e.g. `#egg=alpharaw[stable,development]`) from GitHub with e.g.
 
 ``` bash
-pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development-stable]"
+pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development]"
 ```
 
 ### Developer
@@ -143,7 +154,7 @@ git clone https://github.com/MannLabs/alpharaw.git
 
 For any Python package, it is highly recommended to use a separate
 [conda virtual environment](https://docs.conda.io/en/latest/), as
-otherwise *dependancy conflicts can occur with already existing
+otherwise *dependency conflicts can occur with already existing
 packages*.
 
 ``` bash
@@ -151,7 +162,7 @@ conda create --name alpharaw python=3.9 -y
 conda activate alpharaw
 ```
 
-Finally, AlphaRaw and all its [dependancies](requirements) need to be
+Finally, AlphaRaw and all its [dependencies](requirements) need to be
 installed. To take advantage of all features and allow development (with
 the `-e` flag), this is best done by also installing the [development
 dependencies](requirements/requirements_development.txt) instead of only
@@ -161,9 +172,9 @@ the [core dependencies](requirements/requirements.txt):
 pip install -e "./alpharaw[development]"
 ```
 
-By default this installs loose dependancies (no explicit versioning),
+By default this installs loose dependencies (no explicit versioning),
 although it is also possible to use stable dependencies
-(e.g. `pip install -e "./alpharaw[stable,development-stable]"`).
+(e.g. `pip install -e "./alpharaw[stable,development]"`).
 
 ***By using the editable flag `-e`, all modifications to the [AlphaRaw
 source code folder](alpharaw) are directly reflected when running
@@ -221,6 +232,25 @@ For an even more interactive participation, check out the
 [discussions](https://github.com/MannLabs/alpharaw/discussions) and the
 [the Contributors License Agreement](misc/CLA.md).
 
+### Notes for developers
+#### Release a new version
+This package uses a shared release process defined in the
+[alphashared](https://github.com/MannLabs/alphashared) repository. Please see the instructions
+[there](https://github.com/MannLabs/alphashared/blob/reusable-release-workflow/.github/workflows/README.md#release-a-new-version)
+
+
+#### pre-commit hooks
+It is highly recommended to use the provided pre-commit hooks, as the CI pipeline enforces all checks therein to
+pass in order to merge a branch.
+
+The hooks need to be installed once by
+```bash
+pre-commit install
+```
+You can run the checks yourself using:
+```bash
+pre-commit run --all-files
+```
 ------------------------------------------------------------------------
 
 ## Changelog

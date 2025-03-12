@@ -1,53 +1,68 @@
+# ruff: noqa: E402  #Module level import not at top of file
 import os
-import sys
-import numpy as np
-import time
-
-from alpharaw.utils.centroiding import centroid_peaks
 
 # require pythonnet, pip install pythonnet on Windows
 import clr
-clr.AddReference('System')
-import System
-from System.Threading import Thread
-from System.Globalization import CultureInfo
+import numpy as np
 
-from .clr_utils import DotNetArrayToNPArray, ext_dir
+from alpharaw.utils.centroiding import naive_centroid
 
-de_fr = CultureInfo('fr-FR')
-other = CultureInfo('en-US')
+try:
+    clr.AddReference("System")
 
-Thread.CurrentThread.CurrentCulture = other
-Thread.CurrentThread.CurrentUICulture = other
+    import System  # noqa: F401
+    from System.Globalization import CultureInfo
+    from System.Threading import Thread
 
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
-import Clearcore2
-import WiffOps4Python
-from WiffOps4Python import WiffOps as DotNetWiffOps
-from Clearcore2.Data.AnalystDataProvider import (
-    AnalystWiffDataProvider,
-    AnalystDataProviderFactory
-)
+    de_fr = CultureInfo("fr-FR")
+    other = CultureInfo("en-US")
+
+    Thread.CurrentThread.CurrentCulture = other
+    Thread.CurrentThread.CurrentUICulture = other
+
+    clr.AddReference(
+        os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll")
+    )
+    clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
+    clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+
+    import Clearcore2  # noqa: F401
+    import WiffOps4Python  # noqa: F401
+    from Clearcore2.Data.AnalystDataProvider import (
+        AnalystDataProviderFactory,
+        AnalystWiffDataProvider,
+    )
+    from WiffOps4Python import WiffOps as DotNetWiffOps
+except Exception:
+    # allows to use the rest of the code without clr
+    import traceback
+
+    traceback.print_exc()
+    print(
+        "Warning: could not import dotnet-based dependencies. Do you have pythonnet and mono (Mac/Linux) installed?"
+    )
+
 
 class WillFileReader:
-    def __init__(self, filename:str):
-
+    def __init__(self, filename: str):
         self._wiffDataProvider = AnalystWiffDataProvider()
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
             filename, self._wiffDataProvider
         )
         self.sample_names = self._wiff_file.GetSampleNames()
 
-    def close(self): self._wiffDataProvider.Close()
+    def close(self):
+        self._wiffDataProvider.Close()
 
-    def load_sample(self, sample_id:int, 
-        centroid:bool=True, 
-        centroid_mz_tol:float=0.06,
-        ignore_empty_scans:bool=True,
-        keep_k_peaks:int=2000,
+    def load_sample(
+        self,
+        sample_id: int,
+        centroid: bool = True,
+        centroid_ppm: float = 20.0,
+        ignore_empty_scans: bool = True,
+        keep_k_peaks: int = 2000,
     ):
         if sample_id < 0 or sample_id >= len(self.sample_names):
             raise ValueError("Incorrect sample number.")
@@ -66,7 +81,7 @@ class WillFileReader:
         isolation_upper_mz_list = []
 
         exp_list = [
-            self.msSample.GetMSExperiment(i) 
+            self.msSample.GetMSExperiment(i)
             for i in range(self.msSample.ExperimentCount)
         ]
 
@@ -78,18 +93,19 @@ class WillFileReader:
                 details = exp.Details
                 ms_level = massSpectrumInfo.MSLevel
                 if (
-                    ms_level>1 and not details.IsSwath and
-                    massSpectrum.NumDataPoints <= 0 
+                    ms_level > 1
+                    and not details.IsSwath
+                    and massSpectrum.NumDataPoints <= 0
                     and ignore_empty_scans
-                ): 
+                ):
                     continue
                 mz_array = DotNetArrayToNPArray(massSpectrum.GetActualXValues())
-                int_array = DotNetArrayToNPArray(massSpectrum.GetActualYValues()).astype(np.float32)
+                int_array = DotNetArrayToNPArray(
+                    massSpectrum.GetActualYValues()
+                ).astype(np.float32)
                 if centroid:
-                    (
-                        mz_array, int_array, mz_starts, mz_ends
-                    ) = centroid_peaks(
-                        mz_array, int_array, centroid_mz_tol
+                    (mz_array, int_array) = naive_centroid(
+                        mz_array, int_array, centroiding_ppm=centroid_ppm
                     )
                 if len(mz_array) > keep_k_peaks:
                     idxes = np.argsort(int_array)[-keep_k_peaks:]
@@ -97,12 +113,8 @@ class WillFileReader:
                     mz_array = mz_array[idxes]
                     int_array = int_array[idxes]
 
-                peak_mz_array_list.append(
-                    mz_array
-                )
-                peak_intensity_array_list.append(
-                    int_array
-                )
+                peak_mz_array_list.append(mz_array)
+                peak_intensity_array_list.append(int_array)
 
                 _peak_indices.append(len(peak_mz_array_list[-1]))
                 rt_list.append(exp.GetRTFromExperimentCycle(j))
@@ -126,28 +138,28 @@ class WillFileReader:
                     precursor_mz_list.append(center_mz)
                     precursor_charge_list.append(massSpectrumInfo.ParentChargeState)
                     ce_list.append(float(massSpectrumInfo.CollisionEnergy))
-                    isolation_lower_mz_list.append(center_mz-isolation_window/2)
-                    isolation_upper_mz_list.append(center_mz+isolation_window/2)
+                    isolation_lower_mz_list.append(center_mz - isolation_window / 2)
+                    isolation_upper_mz_list.append(center_mz + isolation_window / 2)
                 else:
                     precursor_mz_list.append(-1.0)
                     precursor_charge_list.append(0)
                     ce_list.append(0)
                     isolation_lower_mz_list.append(-1.0)
                     isolation_upper_mz_list.append(-1.0)
-        
+
         peak_indices = np.empty(len(rt_list) + 1, np.int64)
         peak_indices[0] = 0
         peak_indices[1:] = np.cumsum(_peak_indices)
 
         return {
-            "peak_indices": peak_indices, 
+            "peak_indices": peak_indices,
             "peak_mz": np.concatenate(peak_mz_array_list),
             "peak_intensity": np.concatenate(peak_intensity_array_list),
-            "rt": np.array(rt_list, dtype=np.float64), 
-            "ms_level": np.array(ms_level_list, dtype=np.int8), 
-            "precursor_mz": np.array(precursor_mz_list, dtype=np.float64), 
-            "precursor_charge": np.array(precursor_charge_list, dtype=np.int8), 
-            'isolation_lower_mz': np.array(isolation_lower_mz_list),
-            'isolation_upper_mz': np.array(isolation_upper_mz_list),
-            'nce': np.array(ce_list, dtype=np.float32),
+            "rt": np.array(rt_list, dtype=np.float64),
+            "ms_level": np.array(ms_level_list, dtype=np.int8),
+            "precursor_mz": np.array(precursor_mz_list, dtype=np.float64),
+            "precursor_charge": np.array(precursor_charge_list, dtype=np.int8),
+            "isolation_lower_mz": np.array(isolation_lower_mz_list),
+            "isolation_upper_mz": np.array(isolation_upper_mz_list),
+            "nce": np.array(ce_list, dtype=np.float32),
         }

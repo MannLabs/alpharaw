@@ -10,20 +10,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
 import importlib
 import inspect
-sys.path.insert(0, os.path.abspath('..'))
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(".."))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'alpharaw'
-copyright = '2022, Mann Labs, MPIB'
-author = 'Mann Labs, MPIB'
+project = "alpharaw"
+copyright = "2022, Mann Labs, MPIB"
+author = "Mann Labs, MPIB"
 
-release = "0.4.5"
+release = "0.4.6-dev0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -31,34 +32,34 @@ release = "0.4.5"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.napoleon',
+    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
-    'sphinx.ext.viewcode',
-    'autodocsumm',
-    'nbsphinx',
-    'myst_parser',
+    "sphinx.ext.viewcode",
+    # 'sphinx.ext.autodoc',
+    "autodocsumm",
+    "nbsphinx",
+    "myst_parser",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [
-    '_build', 'Thumbs.db', '.DS_Store',
-    '_modidx,py'
-]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_modidx,py"]
 
-code_url = f"https://github.com/mannlabs/alpharaw/blob/main"
+code_url = "https://github.com/mannlabs/alpharaw/blob/main"
+
 
 def linkcode_resolve(domain, info):
     # Non-linkable objects from the starter kit in the tutorial.
     if domain == "js" or info["module"] == "connect4":
         return
 
-    if domain != "py": return
+    if domain != "py":
+        return
 
     mod = importlib.import_module(info["module"])
     if "." in info["fullname"]:
@@ -80,7 +81,7 @@ def linkcode_resolve(domain, info):
         # e.g. object is a typing.Union
         return None
     file = os.path.relpath(file, os.path.abspath(".."))
-    if not file.startswith("peptdeep"):
+    if not file.startswith("alpharaw"):
         # e.g. object is a typing.NewType
         return None
     start, end = lines[1], lines[1] + len(lines[0]) - 1
@@ -93,14 +94,18 @@ def linkcode_resolve(domain, info):
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
+html_theme = "furo"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
+
+html_css_files = [
+    "css/custom.css",
+]
 
 autodoc_default_options = {
-    'autosummary': True,
-    'special-members': '__init__',  # Include __init__ methods.
+    "autosummary": True,
+    "special-members": "__init__",  # Include __init__ methods.
 }
