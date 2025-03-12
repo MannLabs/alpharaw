@@ -1,5 +1,6 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
+import warnings
 
 import numpy as np
 
@@ -16,8 +17,8 @@ except Exception:
     import traceback
 
     traceback.print_exc()
-    print(
-        "Warning: could not import dotnet-based dependencies. Do you have pythonnet and mono (Mac/Linux) installed?"
+    warnings.warn(
+        "Dotnet-based dependencies not installed. Do you have pythonnet and mono (Mac/Linux) installed?"
     )
 
 # from System.Runtime.InteropServices import Marshal
