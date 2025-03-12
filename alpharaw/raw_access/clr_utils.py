@@ -1,10 +1,26 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
+import warnings
 
-import clr
 import numpy as np
 
-clr.AddReference("System")
+try:
+    import clr
+
+    clr.AddReference("System")
+
+    import ctypes
+
+    from System.Runtime.InteropServices import GCHandle, GCHandleType
+except Exception:
+    # allows to use the rest of the code without clr
+    import traceback
+
+    traceback.print_exc()
+    warnings.warn(
+        "Dotnet-based dependencies not installed. Do you have pythonnet and mono (Mac/Linux) installed?"
+    )
+
 # from System.Runtime.InteropServices import Marshal
 # from System import IntPtr, Int64
 # def DotNetArrayToNPArray(src):
@@ -19,10 +35,6 @@ clr.AddReference("System")
 #         IntPtr.__overloads__[Int64](dest.__array_interface__['data'][0]),
 #         len(src))
 #     return dest
-
-import ctypes
-
-from System.Runtime.InteropServices import GCHandle, GCHandleType
 
 
 def DotNetArrayToNPArray(src):

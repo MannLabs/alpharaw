@@ -7,31 +7,42 @@ import numpy as np
 
 from alpharaw.utils.centroiding import naive_centroid
 
-clr.AddReference("System")
+try:
+    clr.AddReference("System")
 
-import System  # noqa: F401
-from System.Globalization import CultureInfo
-from System.Threading import Thread
+    import System  # noqa: F401
+    from System.Globalization import CultureInfo
+    from System.Threading import Thread
 
-from .clr_utils import DotNetArrayToNPArray, ext_dir
+    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
-de_fr = CultureInfo("fr-FR")
-other = CultureInfo("en-US")
+    de_fr = CultureInfo("fr-FR")
+    other = CultureInfo("en-US")
 
-Thread.CurrentThread.CurrentCulture = other
-Thread.CurrentThread.CurrentUICulture = other
+    Thread.CurrentThread.CurrentCulture = other
+    Thread.CurrentThread.CurrentUICulture = other
 
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
-clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
+    clr.AddReference(
+        os.path.join(ext_dir, "sciex/Clearcore2.Data.AnalystDataProvider.dll")
+    )
+    clr.AddReference(os.path.join(ext_dir, "sciex/Clearcore2.Data.dll"))
+    clr.AddReference(os.path.join(ext_dir, "sciex/WiffOps4Python.dll"))
 
-import Clearcore2  # noqa: F401
-import WiffOps4Python  # noqa: F401
-from Clearcore2.Data.AnalystDataProvider import (
-    AnalystDataProviderFactory,
-    AnalystWiffDataProvider,
-)
-from WiffOps4Python import WiffOps as DotNetWiffOps
+    import Clearcore2  # noqa: F401
+    import WiffOps4Python  # noqa: F401
+    from Clearcore2.Data.AnalystDataProvider import (
+        AnalystDataProviderFactory,
+        AnalystWiffDataProvider,
+    )
+    from WiffOps4Python import WiffOps as DotNetWiffOps
+except Exception:
+    # allows to use the rest of the code without clr
+    import traceback
+
+    traceback.print_exc()
+    print(
+        "Warning: could not import dotnet-based dependencies. Do you have pythonnet and mono (Mac/Linux) installed?"
+    )
 
 
 class WillFileReader:
