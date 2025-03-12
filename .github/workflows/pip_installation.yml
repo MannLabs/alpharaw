@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/_run_tests.yml
     with:
       os: ${{ matrix.os }}
-      python-version: 3.8
+      python-version: 3.9
       install-script: pip_install.sh stable
 
   loose_installation:
@@ -36,5 +36,5 @@ jobs:
     uses: ./.github/workflows/_run_tests.yml
     with:
       os: ${{ matrix.os }}
-      python-version: 3.8
+      python-version: 3.9
       install-script: pip_install.sh loose
