@@ -556,10 +556,10 @@ def translate_frag_df_to_plot_df(
         fragment_df.rename(columns={"position": "fragment_site"}, inplace=True)
 
         fragment_df["ion_name"] = fragment_df[flat_columns].apply(
-            lambda x: chr(x[0])
-            + str(x[1])
-            + (f"{-x[2]:+}" if x[2] != 0 else "")
-            + "+" * x[3],
+            lambda x: chr(x.iloc[0])
+            + str(x.iloc[1])
+            + (f"{-x.iloc[2]:+}" if x.iloc[2] != 0 else "")
+            + "+" * x.iloc[3],
             axis=1,
         )
     else:
