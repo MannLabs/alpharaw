@@ -120,11 +120,11 @@ NOTE: You might need to run `pip install pip --upgrade` before installing
 AlphaRaw like this. Also note the double quotes `"`.
 
 For those who are really adventurous, it is also possible to directly
-install any branch (e.g. `@development`) with any extras
+install any branch (e.g. `@my_branch`) with any extras
 (e.g. `#egg=alpharaw[stable,development]`) from GitHub with e.g.
 
 ``` bash
-pip install "git+https://github.com/MannLabs/alpharaw.git@development#egg=alpharaw[stable,development]"
+pip install "git+https://github.com/MannLabs/alpharaw.git@my_branch#egg=alpharaw[stable,development]"
 ```
 
 ### Developer
