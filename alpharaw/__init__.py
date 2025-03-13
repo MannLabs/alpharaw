@@ -22,4 +22,4 @@ def register_all_readers():
         print("[WARN] pythonnet is not installed")
 
 
-__version__ = "0.4.6-dev0"
+__version__ = "0.4.6"
