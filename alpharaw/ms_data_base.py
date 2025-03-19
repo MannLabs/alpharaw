@@ -1,7 +1,8 @@
+import copy
+
+import numba
 import numpy as np
 import pandas as pd
-import numba
-import copy
 from alphabase.constants._const import PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
 from alphabase.io.hdf import HDF_File
 
@@ -12,7 +13,7 @@ def get_peaks_to_keep_mask(
 ) -> tuple:
     """
     Generate a mask for peaks to keep and reindex spectrum indices
-    
+
     Parameters
     ----------
     peak_count : int
@@ -23,7 +24,7 @@ def get_peaks_to_keep_mask(
         Array of peak stop indices for each spectrum
     spec_mask : np.ndarray
         Boolean mask indicating which spectra to keep
-        
+
     Returns
     -------
     tuple
@@ -34,30 +35,30 @@ def get_peaks_to_keep_mask(
     """
     # Create a mask for peaks to keep
     peaks_mask = np.zeros(peak_count, dtype=np.bool_)
-    
+
     # Get filtered spectrum indices
     kept_spec_indices = np.nonzero(spec_mask)[0]
-    
+
     # Mark peaks to keep
     for spec_idx in kept_spec_indices:
         start, stop = peak_start_indices[spec_idx], peak_stop_indices[spec_idx]
         peaks_mask[start:stop] = True
-    
+
     # Create new peak indices
     new_start_indices = np.empty(len(kept_spec_indices), dtype=np.int64)
     new_stop_indices = np.empty(len(kept_spec_indices), dtype=np.int64)
-    
+
     # Calculate cumulative sums for new indices
     peak_cumsum = np.zeros(peak_count + 1, dtype=np.int64)
     for i in range(peak_count):
-        peak_cumsum[i+1] = peak_cumsum[i] + (1 if peaks_mask[i] else 0)
-    
+        peak_cumsum[i + 1] = peak_cumsum[i] + (1 if peaks_mask[i] else 0)
+
     # Assign new indices
     for i, spec_idx in enumerate(kept_spec_indices):
         start, stop = peak_start_indices[spec_idx], peak_stop_indices[spec_idx]
         new_start_indices[i] = peak_cumsum[start]
         new_stop_indices[i] = peak_cumsum[stop]
-    
+
     return peaks_mask, new_start_indices, new_stop_indices
 
 
@@ -476,20 +477,20 @@ class MSData_Base:
         self.peak_df.intensity.values[:] = np.concatenate(intens_list)
         self.spectrum_df["peak_start_idx"] = peak_indices[:-1]
         self.spectrum_df["peak_stop_idx"] = peak_indices[1:]
-        
+
     def remove_unused_peaks(self, in_place=True):
         """
         Remove unused peaks from peak_df and reindex the peak indices in spectrum_df.
-        
+
         Assumes that spectra have already been removed from spectrum_df.
         This method will rebuild the peak_df to contain only referenced peaks.
         Preserves all columns in both peak_df and spectrum_df.
-        
+
         Parameters
         ----------
         in_place : bool
             If True, modify this object. If False, return a new instance.
-        
+
         Returns
         -------
         MSData_Base or None
@@ -497,18 +498,18 @@ class MSData_Base:
         """
         # Create mask for all spectra (assume we want to keep all current spectra)
         spec_mask = np.ones(len(self.spectrum_df), dtype=bool)
-        
+
         # Generate mask for peaks to keep and get new indices
         peaks_mask, new_start_indices, new_stop_indices = get_peaks_to_keep_mask(
-            len(self.peak_df), 
-            self.spectrum_df.peak_start_idx.values, 
+            len(self.peak_df),
+            self.spectrum_df.peak_start_idx.values,
             self.spectrum_df.peak_stop_idx.values,
-            spec_mask
+            spec_mask,
         )
-        
+
         # Create a new filtered peak dataframe
         new_peak_df = self.peak_df[peaks_mask].reset_index(drop=True)
-        
+
         if in_place:
             # Update in place
             self.peak_df = new_peak_df
@@ -518,7 +519,7 @@ class MSData_Base:
         else:
             # Create a deep copy of the current instance
             new_instance = copy.deepcopy(self)
-            
+
             # Update dataframes with new values
             new_instance.peak_df = new_peak_df
             new_instance.spectrum_df = self.spectrum_df.copy()
