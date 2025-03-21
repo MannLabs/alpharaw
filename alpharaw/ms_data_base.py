@@ -1,7 +1,57 @@
+import numba
 import numpy as np
 import pandas as pd
 from alphabase.constants._const import PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
 from alphabase.io.hdf import HDF_File
+
+
+@numba.njit
+def _get_peaks_to_keep_mask(
+    peak_count, peak_start_indices, peak_stop_indices, spec_mask
+) -> tuple:
+    """
+    Generate a mask for peaks to keep and reindex spectrum indices
+
+    Parameters
+    ----------
+    peak_count : int
+        Total number of peaks in the dataset
+    peak_start_indices : np.ndarray
+        Array of peak start indices for each spectrum
+    peak_stop_indices : np.ndarray
+        Array of peak stop indices for each spectrum
+    spec_mask : np.ndarray
+        Boolean mask indicating which spectra to keep
+
+    Returns
+    -------
+    tuple
+        (peaks_mask, new_start_indices, new_stop_indices)
+        - peaks_mask: boolean mask with True for peaks to keep
+        - new_start_indices: reindexed start indices for each kept spectrum
+        - new_stop_indices: reindexed stop indices for each kept spectrum
+    """
+    peaks_mask = np.zeros(peak_count, dtype=np.bool_)
+
+    kept_spec_indices = np.nonzero(spec_mask)[0]
+
+    for spec_idx in kept_spec_indices:
+        start, stop = peak_start_indices[spec_idx], peak_stop_indices[spec_idx]
+        peaks_mask[start:stop] = True
+
+    new_start_indices = np.empty(len(kept_spec_indices), dtype=np.int64)
+    new_stop_indices = np.empty(len(kept_spec_indices), dtype=np.int64)
+
+    peak_cumsum = np.zeros(peak_count + 1, dtype=np.int64)
+    for i in range(peak_count):
+        peak_cumsum[i + 1] = peak_cumsum[i] + int(peaks_mask[i])
+
+    for i, spec_idx in enumerate(kept_spec_indices):
+        start, stop = peak_start_indices[spec_idx], peak_stop_indices[spec_idx]
+        new_start_indices[i] = peak_cumsum[start]
+        new_stop_indices[i] = peak_cumsum[stop]
+
+    return peaks_mask, new_start_indices, new_stop_indices
 
 
 class MSData_Base:
@@ -419,6 +469,36 @@ class MSData_Base:
         self.peak_df.intensity.values[:] = np.concatenate(intens_list)
         self.spectrum_df["peak_start_idx"] = peak_indices[:-1]
         self.spectrum_df["peak_stop_idx"] = peak_indices[1:]
+
+    def remove_unused_peaks(self):
+        """
+
+        If the spectrum_df object is filtered, the spectra are not removed from the peak_df.
+        This method will remove the unused peaks from the peak_df and reindex the peak indices in spectrum_df.
+
+        Assumes that spectra have already been removed from spectrum_df.
+        This method will rebuild the peak_df to contain only referenced peaks.
+        Preserves all columns in both peak_df and spectrum_df.
+
+        Returns
+        -------
+        MSData_Base or None
+            New instance if in_place=False, None otherwise.
+        """
+        spec_mask = np.ones(len(self.spectrum_df), dtype=bool)
+        peaks_mask, new_start_indices, new_stop_indices = _get_peaks_to_keep_mask(
+            len(self.peak_df),
+            self.spectrum_df.peak_start_idx.values,
+            self.spectrum_df.peak_stop_idx.values,
+            spec_mask,
+        )
+
+        new_peak_df = self.peak_df[peaks_mask].reset_index(drop=True)
+
+        self.peak_df = new_peak_df
+        self.spectrum_df["peak_start_idx"] = new_start_indices
+        self.spectrum_df["peak_stop_idx"] = new_stop_indices
+        return None
 
 
 def index_ragged_list(ragged_list: list) -> np.ndarray:
