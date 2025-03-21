@@ -39,9 +39,9 @@ def test_remove_unused_peaks_basic():
     )
 
     # Test in-place modification
-    result = ms_data.remove_unused_peaks(in_place=True)
+    result = ms_data.remove_unused_peaks()
 
-    # Verify that the method returns None for in-place modification
+    # Verify that the method returns None
     assert result is None
 
     # Verify that the peak indices remain the same since no spectra were removed
@@ -78,18 +78,26 @@ def test_remove_unused_peaks_with_filtering():
     ms_data.spectrum_df = ms_data.spectrum_df.loc[[0, 2]].reset_index(drop=True)
     ms_data.spectrum_df["spec_idx"] = ms_data.spectrum_df.index
 
-    # Now call remove_unused_peaks with in_place=False to get a new instance
-    new_ms_data = ms_data.remove_unused_peaks(in_place=False)
+    # Create a copy of the peak data before modification for comparison
+    original_peak_df = ms_data.peak_df.copy()
+    original_start_idx = ms_data.spectrum_df["peak_start_idx"].values.copy()
+    original_stop_idx = ms_data.spectrum_df["peak_stop_idx"].values.copy()
 
-    # Verify that the original instance is unchanged
-    assert len(ms_data.peak_df) == 15
-    assert np.array_equal(ms_data.spectrum_df["peak_start_idx"].values, [0, 10])
-    assert np.array_equal(ms_data.spectrum_df["peak_stop_idx"].values, [5, 15])
+    # Now call remove_unused_peaks which always operates in-place
+    result = ms_data.remove_unused_peaks()
 
-    # Verify that the new instance has the correct peak data
-    assert len(new_ms_data.peak_df) == 10  # 5 peaks for spec 0 and 5 for spec 2
-    assert np.array_equal(new_ms_data.spectrum_df["peak_start_idx"].values, [0, 5])
-    assert np.array_equal(new_ms_data.spectrum_df["peak_stop_idx"].values, [5, 10])
+    # Verify that the method returns None
+    assert result is None
+
+    # Verify that the original values match our saved copies
+    assert len(original_peak_df) == 15
+    assert np.array_equal(original_start_idx, [0, 10])
+    assert np.array_equal(original_stop_idx, [5, 15])
+
+    # Verify that the instance has the correct peak data after modification
+    assert len(ms_data.peak_df) == 10  # 5 peaks for spec 0 and 5 for spec 2
+    assert np.array_equal(ms_data.spectrum_df["peak_start_idx"].values, [0, 5])
+    assert np.array_equal(ms_data.spectrum_df["peak_stop_idx"].values, [5, 10])
 
     # Verify that the peak values are correct
     expected_mzs = np.concatenate(
@@ -105,8 +113,8 @@ def test_remove_unused_peaks_with_filtering():
         ]
     )
 
-    assert np.array_equal(new_ms_data.peak_df["mz"].values, expected_mzs)
-    assert np.array_equal(new_ms_data.peak_df["intensity"].values, expected_intensities)
+    assert np.array_equal(ms_data.peak_df["mz"].values, expected_mzs)
+    assert np.array_equal(ms_data.peak_df["intensity"].values, expected_intensities)
 
 
 def test_remove_unused_peaks_with_extra_columns():
@@ -141,8 +149,8 @@ def test_remove_unused_peaks_with_extra_columns():
     ms_data.spectrum_df = ms_data.spectrum_df.loc[[0, 2]].reset_index(drop=True)
     ms_data.spectrum_df["spec_idx"] = ms_data.spectrum_df.index
 
-    # Call remove_unused_peaks with in_place=True
-    ms_data.remove_unused_peaks(in_place=True)
+    # Call remove_unused_peaks which now always operates in-place
+    ms_data.remove_unused_peaks()
 
     # Verify that the peak data is correct
     assert len(ms_data.peak_df) == 10  # 5 peaks for spec 0 and 5 for spec 2
@@ -198,20 +206,23 @@ def test_remove_unused_peaks_with_subclass():
     ms_data.spectrum_df = ms_data.spectrum_df.loc[[0, 2]].reset_index(drop=True)
     ms_data.spectrum_df["spec_idx"] = ms_data.spectrum_df.index
 
-    # Call remove_unused_peaks with in_place=False to get a new instance
-    new_ms_data = ms_data.remove_unused_peaks(in_place=False)
+    # Save attributes before calling remove_unused_peaks for comparison
+    custom_attribute_before = ms_data.custom_attribute
+    another_attribute_before = ms_data.another_attribute
 
-    # Verify that the new instance is of the same class
-    assert isinstance(new_ms_data, CustomMSData)
-    assert type(new_ms_data) == type(ms_data)
+    # Call remove_unused_peaks which now always operates in-place
+    result = ms_data.remove_unused_peaks()
+
+    # Verify that the method returns None
+    assert result is None
 
     # Verify that custom attributes are preserved
-    assert hasattr(new_ms_data, "custom_attribute")
-    assert hasattr(new_ms_data, "another_attribute")
-    assert new_ms_data.custom_attribute == "custom_value"
-    assert new_ms_data.another_attribute == 42
+    assert hasattr(ms_data, "custom_attribute")
+    assert hasattr(ms_data, "another_attribute")
+    assert ms_data.custom_attribute == custom_attribute_before
+    assert ms_data.another_attribute == another_attribute_before
 
     # Verify that the peak data is correct
-    assert len(new_ms_data.peak_df) == 10  # 5 peaks for spec 0 and 5 for spec 2
-    assert np.array_equal(new_ms_data.spectrum_df["peak_start_idx"].values, [0, 5])
-    assert np.array_equal(new_ms_data.spectrum_df["peak_stop_idx"].values, [5, 10])
+    assert len(ms_data.peak_df) == 10  # 5 peaks for spec 0 and 5 for spec 2
+    assert np.array_equal(ms_data.spectrum_df["peak_start_idx"].values, [0, 5])
+    assert np.array_equal(ms_data.spectrum_df["peak_stop_idx"].values, [5, 10])

@@ -1,5 +1,3 @@
-import copy
-
 import numba
 import numpy as np
 import pandas as pd
@@ -472,7 +470,7 @@ class MSData_Base:
         self.spectrum_df["peak_start_idx"] = peak_indices[:-1]
         self.spectrum_df["peak_stop_idx"] = peak_indices[1:]
 
-    def remove_unused_peaks(self, in_place=True):
+    def remove_unused_peaks(self):
         """
 
         If the spectrum_df object is filtered, the spectra are not removed from the peak_df.
@@ -481,11 +479,6 @@ class MSData_Base:
         Assumes that spectra have already been removed from spectrum_df.
         This method will rebuild the peak_df to contain only referenced peaks.
         Preserves all columns in both peak_df and spectrum_df.
-
-        Parameters
-        ----------
-        in_place : bool
-            If True, modify this object. If False, return a new instance.
 
         Returns
         -------
@@ -502,18 +495,10 @@ class MSData_Base:
 
         new_peak_df = self.peak_df[peaks_mask].reset_index(drop=True)
 
-        if in_place:
-            self.peak_df = new_peak_df
-            self.spectrum_df["peak_start_idx"] = new_start_indices
-            self.spectrum_df["peak_stop_idx"] = new_stop_indices
-            return None
-        else:
-            new_instance = copy.deepcopy(self)
-
-            new_instance.peak_df = new_peak_df
-            new_instance.spectrum_df["peak_start_idx"] = new_start_indices
-            new_instance.spectrum_df["peak_stop_idx"] = new_stop_indices
-            return new_instance
+        self.peak_df = new_peak_df
+        self.spectrum_df["peak_start_idx"] = new_start_indices
+        self.spectrum_df["peak_stop_idx"] = new_stop_indices
+        return None
 
 
 def index_ragged_list(ragged_list: list) -> np.ndarray:
