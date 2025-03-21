@@ -24,6 +24,7 @@ __trailer_extra_list__ = [
     "injection_optics_settling_time",
     "funnel_rf_level",
     "faims_cv",
+    "scan_node",
 ]
 
 auxiliary_item_dtypes: dict = {
@@ -35,6 +36,7 @@ auxiliary_item_dtypes: dict = {
     "injection_optics_settling_time": np.float32,
     "funnel_rf_level": np.float32,
     "faims_cv": np.float32,
+    "scan_node": "U",
     "detector": "U",
     "activation": "U",
     "analyzer": "U",
@@ -303,6 +305,8 @@ def _import_batch(
             auxiliary_dict["injection_time"].append(
                 float(trailer_data["Ion Injection Time (ms):"])
             )
+        if "scan_node" in auxiliary_dict:
+            auxiliary_dict["scan_node"].append(trailer_data["Scan Node:"])
         if "max_ion_time" in auxiliary_dict:
             auxiliary_dict["max_ion_time"].append(
                 float(trailer_data["Max. Ion Time (ms):"])
