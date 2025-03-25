@@ -24,6 +24,7 @@ __trailer_extra_list__ = [
     "injection_optics_settling_time",
     "funnel_rf_level",
     "faims_cv",
+    "scan_node",
 ]
 
 auxiliary_item_dtypes: dict = {
@@ -35,6 +36,7 @@ auxiliary_item_dtypes: dict = {
     "injection_optics_settling_time": np.float32,
     "funnel_rf_level": np.float32,
     "faims_cv": np.float32,
+    "scan_node": "U",
     "detector": "U",
     "activation": "U",
     "analyzer": "U",
@@ -303,6 +305,12 @@ def _import_batch(
             auxiliary_dict["injection_time"].append(
                 float(trailer_data["Ion Injection Time (ms):"])
             )
+        if "scan_node" in auxiliary_dict:
+            # String indicating experiment type in Thermo tune setup (e.g., "DIA", "Full scan"), helps differentiate scans with same MS order but from different experiments.
+            # "Scan Node" is not a typo but hows its listed in the Trailer
+            auxiliary_dict["scan_node"].append(
+                _safe_get_trailer_value(trailer_data, "Scan Node:", "")
+            )
         if "max_ion_time" in auxiliary_dict:
             auxiliary_dict["max_ion_time"].append(
                 float(trailer_data["Max. Ion Time (ms):"])
@@ -419,6 +427,34 @@ def _import_batch(
         auxiliary_dict[key] = np.array(val, dtype=auxiliary_item_dtypes[key]).copy()
     spec_dict.update(auxiliary_dict)
     return spec_dict
+
+
+def _safe_get_trailer_value(trailer_data, key, default=None, convert_func=None):
+    """Safely extract a value from trailer data with optional type conversion.
+
+    Parameters
+    ----------
+    trailer_data : dict
+        Dictionary containing trailer data
+    key : str
+        Key to extract from trailer data
+    default : Any, optional
+        Default value if key is not found, by default None
+    convert_func : callable, optional
+        Function to convert the value (e.g., float, int), by default None
+
+    Returns
+    -------
+    Any
+        Extracted and optionally converted value
+    """
+    value = trailer_data.get(key, default)
+    if value is not None and convert_func is not None:
+        try:
+            return convert_func(value)
+        except (ValueError, TypeError):
+            return default
+    return value
 
 
 def _get_mono_and_charge(trailer_data, scan_event):
