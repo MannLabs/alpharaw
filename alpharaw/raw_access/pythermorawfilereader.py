@@ -191,7 +191,9 @@ class RawFileReader:
     def __init__(self, filename, **kwargs):
         if not HAS_DOTNET:
             raise ValueError(
-                "Dotnet-based dependencies are required for reading Thermo files. Do you have pythonnet and mono (Mac/Linux) installed?"
+                "Dotnet-based dependencies are required for reading Thermo files. "
+                "Do you have pythonnet and/or mono installed? "
+                "See the Readme for details."
             )
 
         self.filename = os.path.abspath(filename)
