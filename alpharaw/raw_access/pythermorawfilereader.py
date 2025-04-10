@@ -28,14 +28,14 @@ try:
     )
     import ThermoFisher
     from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
+
+    HAS_DOTNET = True
 except Exception:
     # allows to use the rest of the code without clr
-    import traceback
-
-    traceback.print_exc()
     warnings.warn(
-        "Dotnet-based dependencies not installed. Do you have pythonnet and mono (Mac/Linux) installed?"
+        "Dotnet-based dependencies could not be loaded. Thermo support is disabled."
     )
+    HAS_DOTNET = False
 
 
 """C# code to read Raw data
@@ -189,6 +189,11 @@ class RawFileReader:
     }
 
     def __init__(self, filename, **kwargs):
+        if not HAS_DOTNET:
+            raise ValueError(
+                "Dotnet-based dependencies are required for reading Thermo files. Do you have pythonnet and mono (Mac/Linux) installed?"
+            )
+
         self.filename = os.path.abspath(filename)
         self.filename = os.path.normpath(self.filename)
 

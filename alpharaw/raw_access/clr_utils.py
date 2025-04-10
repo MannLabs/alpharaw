@@ -12,14 +12,11 @@ try:
     import ctypes
 
     from System.Runtime.InteropServices import GCHandle, GCHandleType
+
+    HAS_DOTNET = True
 except Exception:
     # allows to use the rest of the code without clr
-    import traceback
-
-    traceback.print_exc()
-    warnings.warn(
-        "Dotnet-based dependencies not installed. Do you have pythonnet and mono (Mac/Linux) installed?"
-    )
+    warnings.warn("Dotnet-based dependencies could not be loaded.")
 
 # from System.Runtime.InteropServices import Marshal
 # from System import IntPtr, Int64
