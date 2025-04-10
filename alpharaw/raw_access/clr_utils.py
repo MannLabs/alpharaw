@@ -12,8 +12,6 @@ try:
     import ctypes
 
     from System.Runtime.InteropServices import GCHandle, GCHandleType
-
-    HAS_DOTNET = True
 except Exception:
     # allows to use the rest of the code without clr
     warnings.warn("Dotnet-based dependencies could not be loaded.")

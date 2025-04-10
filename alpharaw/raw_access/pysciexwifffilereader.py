@@ -51,7 +51,7 @@ class WillFileReader:
     def __init__(self, filename: str):
         if not HAS_DOTNET:
             raise ValueError(
-                "Dotnet-based dependencies are not available. Do you have pythonnet and mono (Mac/Linux) installed?"
+                "Dotnet-based dependencies are required for reading Sciex files. Do you have pythonnet and mono (Mac/Linux) installed?"
             )
 
         self._wiffDataProvider = AnalystWiffDataProvider()
