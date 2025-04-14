@@ -1,9 +1,5 @@
 #!python
 
-import warnings
-
-warnings.filterwarnings("ignore")
-
 
 def register_all_readers():
     from .legacy_msdata.mgf import register_readers as register_mgf_readers
