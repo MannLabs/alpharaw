@@ -228,9 +228,7 @@ class MSData_Base:
 
         self._save_meta_to_hdf(hdf)
 
-    def save_mzml(
-        self, mzml_file_path: str, binary_precision=64, compression=None, indexed=False, process_count=1, batch_size=5000
-    ):
+    def save_mzml(self, mzml_file_path: str, binary_precision=64, compression=None):
         """
         Save data into mzML file format
 
@@ -242,24 +240,15 @@ class MSData_Base:
             Binary encoding precision (32 or 64 bit), by default 64
         compression : str, optional
             Compression method (None, 'zlib'), by default None
-        indexed : bool, optional
-            Whether to create an indexed mzML file, by default False
-        process_count : int, optional
-            Number of processes to use for writing, by default 1
-        batch_size : int, optional
-            Batch size for writing spectra, by default 5000
         """
 
-        self.writer = MzMLWriter(
+        writer = MzMLWriter(
             self,
             mzml_file_path,
             binary_precision=binary_precision,
             compression=compression,
-            indexed=indexed,
-            process_count=process_count,
-            batch_size=batch_size,
         )
-        self.writer.write()
+        writer.write()
 
     def load_hdf(self, hdf_file_path: str):
         """
