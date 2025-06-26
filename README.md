@@ -44,21 +44,22 @@ licenses, which can be consulted on their respective websites.
 
 Pythonnet must be installed to access Thermo or Sciex raw data.
 
-#### For Windows
+### For Windows
 
 Pythonnet will be automatically installed via pip.
 
-#### For Linux (or MacOS with Intel platform, not tested yet)
+### For Linux / MacOS with Intel platform
 
 1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
 
-If `conda install mono` does not work, we can install Mono from mono-project website [Mono
-Linux](https://www.mono-project.com/download/stable/#download-lin).
+If `conda install mono` does not work, Mono can be installed from the [Mono
+Website](https://www.mono-project.com/download/stable/#download-lin).
 NOTE, the installed mono version should be at least 6.10, which
-requires you to add the ppa to your trusted sources!
+requires you to add the PPA to your trusted sources!
 
-#### For MacOS with silicon platform (M1/M2/M3)
+### For MacOS with silicon platform (M1/M2/M3)
+Note that some command might required to use `sudo`.
 
 1.  Install [brew](https://brew.sh).
 2.  Install mono: `brew install mono`.
@@ -66,10 +67,8 @@ requires you to add the ppa to your trusted sources!
 4.  Link homebrew mono to pseudo mono folder: `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 /Library/Frameworks/Mono.framework/Versions/Current`. Here, `6.12.0.182` is the brew-installed mono version, please check your installed version. Navigate to `/Library/Frameworks/Mono.framework/Versions` and run `ls -l` to verify that the link `Current` points to `/opt/homebrew/Cellar/mono/6.12.0.182`. If `Current` points to a different installation and/or `/opt/homebrew/Cellar/mono/6.12.0.182` is referenced by a different link, delete the corresponding links and run `sudo ln -s /opt/homebrew/Cellar/mono/6.12.0.182 Current`.
 5.  Install pythonnet: `pip install pythonnet`.
 
-
 NOTE, Homebrew installs the most recent version of mono, which may give rise to the following error on the silicon platform
 (which is due to an incompatible architecture for the files in the mono library):
-
 ```
 RuntimeError: Failed to create a default .NET runtime, which would have been "mono" on this system. Either install a compatible runtime or configure it explicitly via `set_runtime` or the `PYTHONNET_*` environment variables (see set_runtime_from_env).
 ```
@@ -77,16 +76,16 @@ RuntimeError: Failed to create a default .NET runtime, which would have been "mo
 In this case, install mono version 6.12.0.182 from the [mono project](https://download.mono-project.com/archive/6.12.0/macos-10-universal/index.html)
 or via `conda install mono=6.12.0.182 -c anaconda -y`. This version avoids the error.
 
-------------------------------------------------------------------------
+### Installation types
 
 AlphaRaw can be installed and used on all major operating systems
 (Windows, macOS and Linux). There are three different types of
 installation possible:
 
-- [**Pip installer:**](#pip) Choose this installation if you want to use
+- [**Pip installation:**](#pip) Choose this installation if you want to use
   AlphaRaw as a Python package in an existing Python 3.8 environment
   (e.g. a Jupyter notebook).
-- [**Developer installer:**](#developer) Choose this installation if you
+- [**Developer installation:**](#developer) Choose this installation if you
   are familiar with CLI tools, [conda](https://docs.conda.io/en/latest/)
   and Python. This installation allows access to all available features
   of AlphaRaw and even allows to modify its source code directly.
@@ -94,7 +93,7 @@ installation possible:
   precompiled versions which makes this the installation of choice for
   high-throughput experiments.
 
-### Pip
+#### Pip installation
 
 AlphaRaw can be installed in an existing Python 3.8 environment with a
 single `bash` command. *This `bash` command can also be run directly
@@ -127,7 +126,7 @@ install any branch (e.g. `@my_branch`) with any extras
 pip install "git+https://github.com/MannLabs/alpharaw.git@my_branch#egg=alpharaw[stable,development]"
 ```
 
-### Developer
+#### Developer installation
 
 AlphaRaw can also be installed in editable (i.e. developer) mode with a
 few `bash` commands. This allows to fully customize the software and
@@ -140,9 +139,6 @@ and) navigate to e.g. a general software folder:
 mkdir ~/folder/where/to/install/software
 cd ~/folder/where/to/install/software
 ```
-
-***The following commands assume you do not perform any additional `cd`
-commands anymore***.
 
 Next, download the AlphaRaw repository from GitHub either directly or
 with a `git` command. This creates a new AlphaRaw subfolder in your

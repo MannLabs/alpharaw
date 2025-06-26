@@ -1,13 +1,15 @@
 # ruff: noqa: E402  #Module level import not at top of file
 import os
+import warnings
 
-# require pythonnet, pip install pythonnet on Windows
-import clr
 import numpy as np
 
 from alpharaw.utils.centroiding import naive_centroid
 
 try:
+    # require pythonnet, pip install pythonnet on Windows
+    import clr
+
     clr.AddReference("System")
 
     import System  # noqa: F401
@@ -35,18 +37,25 @@ try:
         AnalystWiffDataProvider,
     )
     from WiffOps4Python import WiffOps as DotNetWiffOps
+
+    HAS_DOTNET = True
 except Exception:
     # allows to use the rest of the code without clr
-    import traceback
-
-    traceback.print_exc()
-    print(
-        "Warning: could not import dotnet-based dependencies. Do you have pythonnet and mono (Mac/Linux) installed?"
+    warnings.warn(
+        "Dotnet-based dependencies could not be loaded. Sciex support is disabled."
     )
+    HAS_DOTNET = False
 
 
 class WillFileReader:
     def __init__(self, filename: str):
+        if not HAS_DOTNET:
+            raise ValueError(
+                "Dotnet-based dependencies are required for reading Sciex files. "
+                "Do you have pythonnet and/or mono installed? "
+                "See the Readme for details."
+            )
+
         self._wiffDataProvider = AnalystWiffDataProvider()
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
             filename, self._wiffDataProvider

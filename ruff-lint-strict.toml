@@ -1,0 +1,87 @@
+# specific ruff configuraton new code (with stricter rules)
+[lint]
+select = [
+    "ALL"
+]
+
+# TODO excluding explicity is not great but it is a workaround for now
+exclude = [
+"alpharaw/__init__.py",
+"alpharaw/wrappers/alphatims_wrapper.py",
+"alpharaw/wrappers/alphapept_wrapper.py",
+"alpharaw/raw_access/pysciexwifffilereader.py",
+"alpharaw/raw_access/pythermorawfilereader.py",
+"alpharaw/raw_access/clr_utils.py",
+"alpharaw/match/spec_finder.py",
+"alpharaw/match/psm_match_alphatims.py",
+"alpharaw/match/mass_calibration.py",
+"alpharaw/match/psm_match.py",
+"alpharaw/match/match_utils.py",
+"alpharaw/utils/centroiding.py",
+"alpharaw/utils/timstof.py",
+"alpharaw/utils/df_processing.py",
+"alpharaw/utils/ms_path_utils.py",
+"alpharaw/legacy_msdata/mgf.py",
+"alpharaw/sciex.py",
+"alpharaw/viz/df_utils.py",
+"alpharaw/viz/psm_plot.py",
+"alpharaw/viz/plot_utils.py",
+"alpharaw/viz/xic_plot_tims.py",
+"alpharaw/viz/xic_plot.py",
+"alpharaw/cli.py",
+"alpharaw/thermo.py",
+"alpharaw/dia/normal_dia.py",
+"alpharaw/feature/finding.py",
+"alpharaw/feature/isotope_pattern.py",
+"alpharaw/feature/centroids.py",
+"alpharaw/feature/chem.py",
+"alpharaw/feature/hills.py",
+"alpharaw/ms_data_base.py",
+"alpharaw/mzml.py",
+
+"tests/*.py",
+"nbs_tests/**",
+"nbs/**",
+"docs/**",
+#    "nbs/**/*.ipynb",
+#    "misc/*.py",",
+]
+
+ignore = [
+    #
+    "PD002", #pandas-use-of-inplace-argument # TODO revisit
+
+    # same as pyproject.toml
+    "E501",  # Line too long  (ruff wraps code, but not docstrings)
+    "B028",  #  No explicit `stacklevel` keyword argument found (for warnings)
+    "B006", # Do not use mutable data structures for argument defaults # TODO: fix this!
+
+    # some more sensible ignores
+    "E501",  # Line too long  (ruff wraps code, but not docstrings)
+    "B028",  #  No explicit `stacklevel` keyword argument found (for warnings)
+    "COM812", #may cause conflicts when used with the formatter
+    "ISC001", #may cause conflicts when used with the formatter
+    "D211", # no-blank-line-before-class
+    "D213", # multi-line-summary-second-line
+    "S101", # Use of `assert` detected
+    "INP001", # implicit namespace package.
+    "ERA001", # Found commented-out code
+    "D203", # 1 blank line required before class docstring
+    "TD002", "TD003", "FIX002",  # things around TO-DO
+    "PT011", #pytest.raises(ValueError) is too broad
+    "G004", "EM102", # Logging statement uses f-string
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "ANN101", # Missing type annotation for `self` in method
+    "ANN102", # Missing type annotation for `cls` in classmethod
+    "ANN002", # Missing type annotation for `*args`
+    "ANN003", # Missing type annotation for `**kwargs
+    "FA102", # Missing `from __future__ import annotations
+    "EM101", # Exception must not use a string literal, assign to variable first
+    "D104", # Missing docstring in public package
+    "ANN204", # Missing return type annotation for special method `__init__`
+    "D401", # First line of docstring should be in imperative mood
+    "B023", # Function definition does not bind loop variable
+    "PD901", # Avoid using the generic variable name `df` for DataFrames"
+    "TCH003" # Move standard library import into a type-checking block
+
+]

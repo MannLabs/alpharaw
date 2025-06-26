@@ -39,8 +39,6 @@ def run(ctx, **kwargs):
        /_/
 ....................................................
 .{alpharaw.__version__.center(50)}.
-.{alpharaw.__github__.center(50)}.
-.{alpharaw.__license__.center(50)}.
 ....................................................
 """
     )
