@@ -228,7 +228,7 @@ class MSData_Base:
 
         self._save_meta_to_hdf(hdf)
 
-    def save_mzml(self, mzml_file_path: str, binary_precision=64, compression=None):
+    def save_mzml(self, mzml_file_path: str, binary_precision=32, compression=None):
         """
         Save data into mzML file format
 
@@ -237,7 +237,9 @@ class MSData_Base:
         mzml_file_path : str
             Absolute or relative path of the mzML file to create.
         binary_precision : int, optional
-            Binary encoding precision (32 or 64 bit), by default 64
+            Binary encoding precision (32 or 64 bit), by default 32.
+            Since peak data is stored as float32, using 32-bit precision
+            preserves the original data precision while reducing file size.
         compression : str, optional
             Compression method (None, 'zlib'), by default None
         """

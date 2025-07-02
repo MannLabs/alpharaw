@@ -144,6 +144,7 @@ dmypy.json
 alpharaw/logs
 *.DS_Store
 *sandbox*
+.vscode
 
 # nbdev2
 _docs*
