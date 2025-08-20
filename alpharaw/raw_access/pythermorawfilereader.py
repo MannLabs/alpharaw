@@ -27,6 +27,7 @@ try:
         os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
     )
     import ThermoFisher
+    from ThermoFisher.CommonCore.Data.Business import Device
     from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
 
     HAS_DOTNET = True
@@ -186,6 +187,59 @@ class RawFileReader:
         5: "Any",
         6: "Q1MS",
         7: "Q3MS",
+    }
+
+    evosepdict = {
+        "PumpA_displ": 1,
+        "PumpA_flow": 2,
+        "PumpA_setpoint": 3,
+        "PumpA_pressure": 4,
+        "PumpA_speed": 5,
+        "PumpB_displ": 6,
+        "PumpB_flow": 7,
+        "PumpB_setpoint": 8,
+        "PumpB_pressure": 9,
+        "PumpB_speed": 10,
+        "PumpC_displ": 11,
+        "PumpC_flow": 12,
+        "PumpC_setpoint": 13,
+        "PumpC_pressure": 14,
+        "PumpC_speed": 15,
+        "PumpD_displ": 16,
+        "PumpD_flow": 17,
+        "PumpD_setpoint": 18,
+        "PumpD_pressure": 19,
+        "PumpD_speed": 20,
+        "PumpHP_displ": 21,
+        "PumpHP_flow": 22,
+        "PumpHP_setpoint": 23,
+        "PumpHP_pressure": 24,
+        "PumpHP_speed": 25,
+        1: "PumpA_displ",
+        2: "PumpA_flow",
+        3: "PumpA_setpoint",
+        4: "PumpA_pressure",
+        5: "PumpA_speed",
+        6: "PumpB_displ",
+        7: "PumpB_flow",
+        8: "PumpB_setpoint",
+        9: "PumpB_pressure",
+        10: "PumpB_speed",
+        11: "PumpC_displ",
+        12: "PumpC_flow",
+        13: "PumpC_setpoint",
+        14: "PumpC_pressure",
+        15: "PumpC_speed",
+        16: "PumpD_displ",
+        17: "PumpD_flow",
+        18: "PumpD_setpoint",
+        19: "PumpD_pressure",
+        20: "PumpD_speed",
+        21: "PumpHP_displ",
+        22: "PumpHP_flow",
+        23: "PumpHP_setpoint",
+        24: "PumpHP_pressure",
+        25: "PumpHP_speed",
     }
 
     def __init__(self, filename, **kwargs):
@@ -633,3 +687,36 @@ class RawFileReader:
             trailer.Labels[i]: trailer.Values[i] for i in range(trailer.Length)
         }
         return float(trailer_dict["Ion Injection Time (ms):"])
+
+    def GetEvoSepData(self, device=24):
+        """Returns the EvoSep data for the current controller.
+
+        Parameters
+        ----------
+        device : int
+            The device ID to use for data retrieval, defined in evosepdict. E.g. 24 for the HP pressure pump.
+
+        Although the terms 'scan', 'spectrum' and 'TIC' are used, these actually refer to the datapoints
+        in the evosep lc data. E.g. FirstSpectrum refers to the first datapoint, LastSpectrum refers
+        to the last datapoint and TIC refers tot the actual value e.g. bar in the case of the HP pressure pump.
+        """
+
+        self.source.SelectInstrument(Device.Analog, device)
+
+        firstDatapoint = self.source.RunHeaderEx.FirstSpectrum
+        lastDatapoint = self.source.RunHeaderEx.LastSpectrum
+
+        data = []
+
+        for i in range(firstDatapoint, lastDatapoint + 1):
+            rt = self.source.RetentionTimeFromScanNumber(i)
+            stats1 = self.source.GetScanStatsForScanNumber(i)
+            data.append((i, rt, stats1.TIC))
+
+        evoSepData = {
+            "IDX": [row[0] for row in data],
+            "RT": [row[1] for row in data],
+            "VALUE": [row[2] for row in data],
+        }
+
+        return evoSepData
