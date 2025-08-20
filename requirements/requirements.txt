@@ -10,6 +10,7 @@ pandas==2.2.2
 numpy==1.26.4
 pyteomics==4.7.2
 lxml==5.2.2
+owlready2==0.48
 #sqlalchemy
 
 alphabase>=1.5.0  # test: tolerate_version

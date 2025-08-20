@@ -4,6 +4,8 @@ import pandas as pd
 from alphabase.constants._const import PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
 from alphabase.io.hdf import HDF_File
 
+from alpharaw.mzml_io.mzml_writer import MzMLWriter
+
 
 @numba.njit
 def _get_peaks_to_keep_mask(
@@ -225,6 +227,30 @@ class MSData_Base:
         hdf.ms_data = {"spectrum_df": self.spectrum_df, "peak_df": self.peak_df}
 
         self._save_meta_to_hdf(hdf)
+
+    def save_mzml(self, mzml_file_path: str, binary_precision=32, compression=None):
+        """
+        Save data into mzML file format
+
+        Parameters
+        ----------
+        mzml_file_path : str
+            Absolute or relative path of the mzML file to create.
+        binary_precision : int, optional
+            Binary encoding precision (32 or 64 bit), by default 32.
+            Since peak data is stored as float32, using 32-bit precision
+            preserves the original data precision while reducing file size.
+        compression : str, optional
+            Compression method (None, 'zlib'), by default None
+        """
+
+        writer = MzMLWriter(
+            self,
+            mzml_file_path,
+            binary_precision=binary_precision,
+            compression=compression,
+        )
+        writer.write()
 
     def load_hdf(self, hdf_file_path: str):
         """
