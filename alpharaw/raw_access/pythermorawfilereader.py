@@ -671,10 +671,16 @@ class RawFileReader:
         Parameters
         ----------
         parameter : str
-            The parameter ID to use for data retrieval, defined in evoSepDict. E.g. "PumpHP_pressure" for the HP pressure pump.
+            The parameter ID to use for data retrieval, defined in evosep_observable_to_device_mapping.
+            E.g. "PumpHP_pressure" for the HP pressure pump.
         """
 
-        device = RawFileReader.evosep_observable_to_device_mapping[parameter]
+        try:
+            device = RawFileReader.evosep_observable_to_device_mapping[parameter]
+        except KeyError as e:
+            raise KeyError(
+                f"Key '{parameter}' not found. Available keys: {RawFileReader.evosep_observable_to_device_mapping.keys()}"
+            ) from e
 
         self.source.SelectInstrument(Device.Analog, device)
 
@@ -690,7 +696,7 @@ class RawFileReader:
             stats1 = self.source.GetScanStatsForScanNumber(i)
             data.append(
                 (i, rt, stats1.TIC)
-            )  # TIC refers tot the actual value e.g. bar in the case of the HP pressure pump
+            )  # TIC refers to the actual value e.g. bar in the case of the HP pressure pump
 
         evosep_data = {
             "IDX": [row[0] for row in data],
