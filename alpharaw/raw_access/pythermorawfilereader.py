@@ -189,7 +189,9 @@ class RawFileReader:
         7: "Q3MS",
     }
 
-    evosepdict = {
+    # This mapping was determined manually via using thermo freestyle version 1.8
+    # The number corresponds to the device ID in the EvoSep system
+    evosep_observable_to_device_mapping = {
         "PumpA_displ": 1,
         "PumpA_flow": 2,
         "PumpA_setpoint": 3,
@@ -215,31 +217,6 @@ class RawFileReader:
         "PumpHP_setpoint": 23,
         "PumpHP_pressure": 24,
         "PumpHP_speed": 25,
-        1: "PumpA_displ",
-        2: "PumpA_flow",
-        3: "PumpA_setpoint",
-        4: "PumpA_pressure",
-        5: "PumpA_speed",
-        6: "PumpB_displ",
-        7: "PumpB_flow",
-        8: "PumpB_setpoint",
-        9: "PumpB_pressure",
-        10: "PumpB_speed",
-        11: "PumpC_displ",
-        12: "PumpC_flow",
-        13: "PumpC_setpoint",
-        14: "PumpC_pressure",
-        15: "PumpC_speed",
-        16: "PumpD_displ",
-        17: "PumpD_flow",
-        18: "PumpD_setpoint",
-        19: "PumpD_pressure",
-        20: "PumpD_speed",
-        21: "PumpHP_displ",
-        22: "PumpHP_flow",
-        23: "PumpHP_setpoint",
-        24: "PumpHP_pressure",
-        25: "PumpHP_speed",
     }
 
     def __init__(self, filename, **kwargs):
@@ -688,35 +665,37 @@ class RawFileReader:
         }
         return float(trailer_dict["Ion Injection Time (ms):"])
 
-    def GetEvoSepData(self, device=24):
+    def GetEvoSepData(self, parameter="PumpHP_pressure"):
         """Returns the EvoSep data for the current controller.
 
         Parameters
         ----------
-        device : int
-            The device ID to use for data retrieval, defined in evosepdict. E.g. 24 for the HP pressure pump.
-
-        Although the terms 'scan', 'spectrum' and 'TIC' are used, these actually refer to the datapoints
-        in the evosep lc data. E.g. FirstSpectrum refers to the first datapoint, LastSpectrum refers
-        to the last datapoint and TIC refers tot the actual value e.g. bar in the case of the HP pressure pump.
+        parameter : str
+            The parameter ID to use for data retrieval, defined in evoSepDict. E.g. "PumpHP_pressure" for the HP pressure pump.
         """
+
+        device = RawFileReader.evosep_observable_to_device_mapping[parameter]
 
         self.source.SelectInstrument(Device.Analog, device)
 
-        firstDatapoint = self.source.RunHeaderEx.FirstSpectrum
-        lastDatapoint = self.source.RunHeaderEx.LastSpectrum
+        # Although the terms 'scan', 'spectrum' and 'TIC' are used, these actually refer to the datapoints
+        # in the evosep lc data. E.g. FirstSpectrum refers to the first datapoint
+        first_datapoint = self.source.RunHeaderEx.FirstSpectrum
+        last_datapoint = self.source.RunHeaderEx.LastSpectrum
 
         data = []
 
-        for i in range(firstDatapoint, lastDatapoint + 1):
+        for i in range(first_datapoint, last_datapoint + 1):
             rt = self.source.RetentionTimeFromScanNumber(i)
             stats1 = self.source.GetScanStatsForScanNumber(i)
-            data.append((i, rt, stats1.TIC))
+            data.append(
+                (i, rt, stats1.TIC)
+            )  # TIC refers tot the actual value e.g. bar in the case of the HP pressure pump
 
-        evoSepData = {
+        evosep_data = {
             "IDX": [row[0] for row in data],
             "RT": [row[1] for row in data],
             "VALUE": [row[2] for row in data],
         }
 
-        return evoSepData
+        return evosep_data
