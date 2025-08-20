@@ -27,6 +27,7 @@ try:
         os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
     )
     import ThermoFisher
+    from ThermoFisher.CommonCore.Data.Business import Device
     from ThermoFisher.CommonCore.Data.Interfaces import IScanEvent, IScanEventBase
 
     HAS_DOTNET = True
@@ -186,6 +187,36 @@ class RawFileReader:
         5: "Any",
         6: "Q1MS",
         7: "Q3MS",
+    }
+
+    # This mapping was determined manually via using thermo freestyle version 1.8
+    # The number corresponds to the device ID in the EvoSep system
+    evosep_observable_to_device_mapping = {
+        "PumpA_displ": 1,
+        "PumpA_flow": 2,
+        "PumpA_setpoint": 3,
+        "PumpA_pressure": 4,
+        "PumpA_speed": 5,
+        "PumpB_displ": 6,
+        "PumpB_flow": 7,
+        "PumpB_setpoint": 8,
+        "PumpB_pressure": 9,
+        "PumpB_speed": 10,
+        "PumpC_displ": 11,
+        "PumpC_flow": 12,
+        "PumpC_setpoint": 13,
+        "PumpC_pressure": 14,
+        "PumpC_speed": 15,
+        "PumpD_displ": 16,
+        "PumpD_flow": 17,
+        "PumpD_setpoint": 18,
+        "PumpD_pressure": 19,
+        "PumpD_speed": 20,
+        "PumpHP_displ": 21,
+        "PumpHP_flow": 22,
+        "PumpHP_setpoint": 23,
+        "PumpHP_pressure": 24,
+        "PumpHP_speed": 25,
     }
 
     def __init__(self, filename, **kwargs):
@@ -633,3 +664,44 @@ class RawFileReader:
             trailer.Labels[i]: trailer.Values[i] for i in range(trailer.Length)
         }
         return float(trailer_dict["Ion Injection Time (ms):"])
+
+    def GetEvoSepData(self, parameter="PumpHP_pressure"):
+        """Returns the EvoSep data for the current controller.
+
+        Parameters
+        ----------
+        parameter : str
+            The parameter ID to use for data retrieval, defined in evosep_observable_to_device_mapping.
+            E.g. "PumpHP_pressure" for the HP pressure pump.
+        """
+
+        try:
+            device = RawFileReader.evosep_observable_to_device_mapping[parameter]
+        except KeyError as e:
+            raise KeyError(
+                f"Key '{parameter}' not found. Available keys: {RawFileReader.evosep_observable_to_device_mapping.keys()}"
+            ) from e
+
+        self.source.SelectInstrument(Device.Analog, device)
+
+        # Although the terms 'scan', 'spectrum' and 'TIC' are used, these actually refer to the datapoints
+        # in the evosep lc data. E.g. FirstSpectrum refers to the first datapoint
+        first_datapoint = self.source.RunHeaderEx.FirstSpectrum
+        last_datapoint = self.source.RunHeaderEx.LastSpectrum
+
+        data = []
+
+        for i in range(first_datapoint, last_datapoint + 1):
+            rt = self.source.RetentionTimeFromScanNumber(i)
+            stats1 = self.source.GetScanStatsForScanNumber(i)
+            data.append(
+                (i, rt, stats1.TIC)
+            )  # TIC refers to the actual value e.g. bar in the case of the HP pressure pump
+
+        evosep_data = {
+            "IDX": [row[0] for row in data],
+            "RT": [row[1] for row in data],
+            "VALUE": [row[2] for row in data],
+        }
+
+        return evosep_data
