@@ -12,13 +12,13 @@ class SciexWiffData(MSData_Base):
     in :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers()`.
     """
 
-    def __init__(self, centroided: bool = True, save_as_hdf: bool = False, **kwargs):
+    def __init__(self, centroided: bool = False, save_as_hdf: bool = False, **kwargs):
         """
         Parameters
         ----------
         centroided : bool, optional
             If peaks will be centroided after loading,
-            by default True.
+            by default False.
 
         save_as_hdf : bool, optional
             Automatically save hdf after load raw data, by default False.
@@ -26,7 +26,9 @@ class SciexWiffData(MSData_Base):
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         if self.centroided:
             self.centroided = False
-            warnings.warn("Centroiding for Sciex data is not well implemented yet")
+            warnings.warn(
+                "Centroiding for Sciex data is not well implemented yet. Disabling it."
+            )
         self.centroid_ppm = 20.0
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
