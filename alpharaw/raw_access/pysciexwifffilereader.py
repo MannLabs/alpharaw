@@ -1,4 +1,5 @@
 # ruff: noqa: E402  #Module level import not at top of file
+import logging
 import os
 import warnings
 
@@ -60,7 +61,13 @@ class WillFileReader:
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
             filename, self._wiffDataProvider
         )
-        self.sample_names = self._wiff_file.GetSampleNames()
+        try:
+            self.sample_names = self._wiff_file.GetSampleNames()
+        except System.UnauthorizedAccessException as e:
+            logging.error(
+                "Access denied to the file. Note that the Sciex library requires write access, even though AlphaRaw just reads."
+            )
+            raise e
 
     def close(self):
         self._wiffDataProvider.Close()
