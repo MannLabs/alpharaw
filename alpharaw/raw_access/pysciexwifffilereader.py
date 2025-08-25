@@ -65,7 +65,9 @@ class WiffFileReader:
             self.sample_names = self._wiff_file.GetSampleNames()
         except System.UnauthorizedAccessException as e:
             logging.error(
-                "Access denied to the file. Note that the Sciex library requires write access, even though AlphaRaw just reads."
+                f"Access denied to file {filename}. "
+                f"The Sciex library requires write access to the directory containing the file, even for read-only operations. "
+                f"Please check file and directory permissions."
             )
             raise e
 
