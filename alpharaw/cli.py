@@ -3,22 +3,12 @@ import os
 import click
 
 import alpharaw
-from alpharaw.legacy_msdata import mgf  # noqa: F401  # TODO remove import side effect
 from alpharaw.ms_data_base import ms_reader_provider
-from alpharaw.mzml import MzMLReader  # noqa: F401  # TODO remove import side effect
 from alpharaw.wrappers import (
-    alphapept_wrapper,  # noqa: F401  # TODO remove import side effect
+    alphapept_wrapper,  # noqa: F401  # TODO remove import side effect => move to register_all_readers()
 )
 
-try:
-    from alpharaw.sciex import (
-        SciexWiffData,  # noqa: F401 # TODO remove import side effect
-    )
-    from alpharaw.thermo import (
-        ThermoRawData,  # noqa: F401 # TODO remove import side effect
-    )
-except (RuntimeError, ImportError):
-    print("[WARN] pythonnet is not installed")
+alpharaw.register_all_readers()
 
 
 @click.group(

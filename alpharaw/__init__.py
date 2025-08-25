@@ -14,7 +14,8 @@ def register_all_readers():
 
         register_wiff_readers()
         register_raw_readers()
-    except (RuntimeError, ImportError):
+    except (RuntimeError, ImportError) as e:
+        print(e)
         print("[WARN] pythonnet is not installed")
 
 
