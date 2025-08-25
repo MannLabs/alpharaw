@@ -48,7 +48,7 @@ except Exception:
     HAS_DOTNET = False
 
 
-class WillFileReader:
+class WiffFileReader:
     def __init__(self, filename: str):
         if not HAS_DOTNET:
             raise ValueError(
@@ -179,3 +179,13 @@ class WillFileReader:
             "isolation_upper_mz": np.array(isolation_upper_mz_list),
             "nce": np.array(ce_list, dtype=np.float32),
         }
+
+
+class WillFileReader(WiffFileReader):
+    def __init__(self, *args, **kwargs):
+        # show deprecationwarning
+        warnings.warn(
+            "WillFileReader is deprecated and will be removed in future versions. Please use WiffFileReader instead.",
+            DeprecationWarning,
+        )
+        super().__init__(*args, **kwargs)

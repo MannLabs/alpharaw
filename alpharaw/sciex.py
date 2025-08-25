@@ -49,7 +49,7 @@ class SciexWiffData(MSData_Base):
         dict
             Spectrum information dict.
         """
-        wiff_reader = pysciexwifffilereader.WillFileReader(_wiff_file_path)
+        wiff_reader = pysciexwifffilereader.WiffFileReader(_wiff_file_path)
         data_dict = wiff_reader.load_sample(
             self.sample_id,
             centroid=self.centroided,
