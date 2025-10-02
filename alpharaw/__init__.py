@@ -14,8 +14,11 @@ def register_all_readers():
 
         register_wiff_readers()
         register_raw_readers()
-    except (RuntimeError, ImportError):
-        print("[WARN] pythonnet is not installed")
+    except (RuntimeError, ImportError) as e:
+        print(e)
+        print(
+            "Error importing Thermo and/or Sciex readers. Is pythonnet installed correctly?"
+        )
 
 
 __version__ = "0.4.9-dev0"

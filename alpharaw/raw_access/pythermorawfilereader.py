@@ -238,7 +238,7 @@ class RawFileReader:
 
         if not self.source.IsOpen:
             raise OSError(
-                f"RAWfile '{self.filename}' could not be opened, is the file accessible ?"
+                f"Thermo raw file '{self.filename}' could not be opened, is the file accessible? Did you set '--raw_type' correctly?"
             )
         self.source.SelectInstrument(ThermoFisher.CommonCore.Data.Business.Device.MS, 1)
 

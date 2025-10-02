@@ -1,4 +1,5 @@
 # ruff: noqa: E402  #Module level import not at top of file
+import logging
 import os
 import warnings
 
@@ -47,7 +48,7 @@ except Exception:
     HAS_DOTNET = False
 
 
-class WillFileReader:
+class WiffFileReader:
     def __init__(self, filename: str):
         if not HAS_DOTNET:
             raise ValueError(
@@ -60,7 +61,15 @@ class WillFileReader:
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
             filename, self._wiffDataProvider
         )
-        self.sample_names = self._wiff_file.GetSampleNames()
+        try:
+            self.sample_names = self._wiff_file.GetSampleNames()
+        except System.UnauthorizedAccessException as e:
+            logging.error(
+                f"Access denied to file {filename}. "
+                f"The Sciex library requires write access to the directory containing the file, even for read-only operations. "
+                f"Please check file and directory permissions."
+            )
+            raise e
 
     def close(self):
         self._wiffDataProvider.Close()
@@ -172,3 +181,13 @@ class WillFileReader:
             "isolation_upper_mz": np.array(isolation_upper_mz_list),
             "nce": np.array(ce_list, dtype=np.float32),
         }
+
+
+class WillFileReader(WiffFileReader):
+    def __init__(self, *args, **kwargs):
+        # show deprecationwarning
+        warnings.warn(
+            "WillFileReader is deprecated and will be removed in future versions. Please use WiffFileReader instead.",
+            DeprecationWarning,
+        )
+        super().__init__(*args, **kwargs)
