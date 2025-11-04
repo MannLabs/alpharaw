@@ -402,3 +402,22 @@ def test_integer_values_formatting(ms_data, temp_dir):
     for param in charge_params:
         value = param.get("value")
         assert value.isdigit(), f"Charge state should be integer format, got {value}"
+
+
+def test_software_reference_in_data_processing(ms_data, temp_dir):
+    """Test that the softwareRef in dataProcessing is correctly set."""
+    output_path = os.path.join(temp_dir, "test_software_ref.mzML")
+
+    writer = MzMLWriter(ms_data, output_path)
+    writer.write()
+
+    tree = ET.parse(output_path)
+    root = tree.getroot()
+    ns = {"mzml": writer.ns_uri}
+
+    # Find the processingMethod element
+    processing_method = root.find(".//mzml:dataProcessing/mzml:processingMethod", ns)
+    assert processing_method is not None
+
+    # Check that the softwareRef attribute is correct
+    assert processing_method.get("softwareRef") == "alpharaw"

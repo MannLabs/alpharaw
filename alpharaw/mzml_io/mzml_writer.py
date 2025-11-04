@@ -371,7 +371,7 @@ class MzMLWriter:
             data_processing, self._ns_prefix + "processingMethod"
         )
         processing_method.set("order", "1")
-        processing_method.set("softwareRef", "alpharraw")
+        processing_method.set("softwareRef", "alpharaw")
 
         if get_accession_key(CVTerms.FILE_FORMAT_CONVERSION) in self._cv:
             self._add_cv_param(
@@ -550,6 +550,33 @@ class MzMLWriter:
                 self._cv[get_accession_key(CVTerms.ISOLATION_TARGET_MZ)],
                 self._cv[get_name_key(CVTerms.ISOLATION_TARGET_MZ)],
                 str(precursor_mz),
+                self._cv[CV.MS],
+                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
+                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+            )
+
+        lower_offset = row.get("precursor_mz", 0) - row.get("isolation_lower_mz", 0)
+        upper_offset = row.get("isolation_upper_mz", 0) - row.get("precursor_mz", 0)
+
+        if get_accession_key(CVTerms.ISOLATION_LOWER_OFFSET) in self._cv and lower_offset > 0:
+            self._add_cv_param(
+                isolation_window,
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ISOLATION_LOWER_OFFSET)],
+                self._cv[get_name_key(CVTerms.ISOLATION_LOWER_OFFSET)],
+                str(lower_offset),
+                self._cv[CV.MS],
+                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
+                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+            )
+
+        if get_accession_key(CVTerms.ISOLATION_UPPER_OFFSET) in self._cv and upper_offset > 0:
+            self._add_cv_param(
+                isolation_window,
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ISOLATION_UPPER_OFFSET)],
+                self._cv[get_name_key(CVTerms.ISOLATION_UPPER_OFFSET)],
+                str(upper_offset),
                 self._cv[CV.MS],
                 self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
                 self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
