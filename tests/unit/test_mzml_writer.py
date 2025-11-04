@@ -6,6 +6,23 @@ import numpy as np
 import pytest
 
 from alpharaw.mzml_io.mzml_writer import MzMLWriter
+from alpharaw.mzml_io.cv_constants import CVTerms, CV_TERM_MAPPING
+
+
+# A small dictionary with expected names for the tested CV terms
+EXPECTED_NAMES = {
+    CVTerms.FLOAT_32BIT: "32-bit float",
+    CVTerms.FLOAT_64BIT: "64-bit float",
+    CVTerms.NO_COMPRESSION: "no compression",
+    CVTerms.ZLIB_COMPRESSION: "zlib compression",
+    CVTerms.MS_LEVEL: "ms level",
+    CVTerms.SCAN_START_TIME: "scan start time",
+    CVTerms.ISOLATION_TARGET_MZ: "isolation window target m/z",
+    CVTerms.HCD: "beam-type collision-induced dissociation",
+    CVTerms.CENTROIDED: "centroid spectrum",
+    CVTerms.ANALYSIS_SOFTWARE: "analysis software",
+    CVTerms.CHARGE_STATE: "charge state",
+}
 
 
 # Create a simple mock MSData object for testing
@@ -134,9 +151,10 @@ def test_binary_precision_32_bit(ms_data, temp_dir):
     root = tree.getroot()
     ns = {"mzml": writer.ns_uri}
 
-    precision_params = root.findall(".//mzml:cvParam[@accession='MS:1000521']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.FLOAT_32BIT]
+    precision_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert len(precision_params) > 0  # Should have 32-bit float params
-    assert precision_params[0].get("name") == "32-bit float"
+    assert precision_params[0].get("name") == EXPECTED_NAMES[CVTerms.FLOAT_32BIT]
 
 
 def test_binary_precision_64_bit(ms_data, temp_dir):
@@ -152,9 +170,10 @@ def test_binary_precision_64_bit(ms_data, temp_dir):
     root = tree.getroot()
     ns = {"mzml": writer.ns_uri}
 
-    precision_params = root.findall(".//mzml:cvParam[@accession='MS:1000523']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.FLOAT_64BIT]
+    precision_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert len(precision_params) > 0  # Should have 64-bit float params
-    assert precision_params[0].get("name") == "64-bit float"
+    assert precision_params[0].get("name") == EXPECTED_NAMES[CVTerms.FLOAT_64BIT]
 
 
 def test_compression_none(ms_data, temp_dir):
@@ -169,9 +188,10 @@ def test_compression_none(ms_data, temp_dir):
     root = tree.getroot()
     ns = {"mzml": writer.ns_uri}
 
-    compression_params = root.findall(".//mzml:cvParam[@accession='MS:1000576']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.NO_COMPRESSION]
+    compression_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert len(compression_params) > 0  # Should have no compression params
-    assert compression_params[0].get("name") == "no compression"
+    assert compression_params[0].get("name") == EXPECTED_NAMES[CVTerms.NO_COMPRESSION]
 
 
 def test_compression_zlib(ms_data, temp_dir):
@@ -186,9 +206,10 @@ def test_compression_zlib(ms_data, temp_dir):
     root = tree.getroot()
     ns = {"mzml": writer.ns_uri}
 
-    compression_params = root.findall(".//mzml:cvParam[@accession='MS:1000574']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.ZLIB_COMPRESSION]
+    compression_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert len(compression_params) > 0  # Should have zlib compression params
-    assert compression_params[0].get("name") == "zlib compression"
+    assert compression_params[0].get("name") == EXPECTED_NAMES[CVTerms.ZLIB_COMPRESSION]
 
 
 def test_spectrum_content(ms_data, temp_dir):
@@ -212,12 +233,12 @@ def test_spectrum_content(ms_data, temp_dir):
     assert spec1.get("id") == "scan=0"
 
     # Check MS level - should be integer, not float
-    ms_level = spec1.find(".//mzml:cvParam[@name='ms level']", ns)
+    ms_level = spec1.find(f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns)
     assert ms_level is not None
     assert ms_level.get("value") == "1"  # Should be "1", not "1.0"
 
     # Check that it has a scan with retention time
-    scan_time = spec1.find(".//mzml:scan/mzml:cvParam[@name='scan start time']", ns)
+    scan_time = spec1.find(f".//mzml:scan/mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.SCAN_START_TIME]}']", ns)
     assert scan_time is not None
     assert float(scan_time.get("value")) == pytest.approx(
         60.0
@@ -228,7 +249,7 @@ def test_spectrum_content(ms_data, temp_dir):
     assert spec2.get("index") == "1"
 
     # Check MS level
-    ms_level = spec2.find(".//mzml:cvParam[@name='ms level']", ns)
+    ms_level = spec2.find(f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns)
     assert ms_level is not None
     assert ms_level.get("value") == "2"  # Should be "2", not "2.0"
 
@@ -242,17 +263,18 @@ def test_spectrum_content(ms_data, temp_dir):
 
     # Check target m/z
     target_mz = isolation_window.find(
-        ".//mzml:cvParam[@name='isolation window target m/z']", ns
+        f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.ISOLATION_TARGET_MZ]}']", ns
     )
     assert target_mz is not None
     assert float(target_mz.get("value")) == pytest.approx(400.0)
 
     # Check activation method
+    accession = CV_TERM_MAPPING[CVTerms.HCD]
     activation = spec2.find(
-        ".//mzml:activation/mzml:cvParam[@accession='MS:1000422']", ns
+        f".//mzml:activation/mzml:cvParam[@accession='{accession}']", ns
     )
     assert activation is not None
-    assert activation.get("name") == "beam-type collision-induced dissociation"
+    assert activation.get("name") == EXPECTED_NAMES[CVTerms.HCD]
 
     # Check that there are binary data arrays
     binary_arrays = spec1.findall(".//mzml:binaryDataArray", ns)
@@ -276,9 +298,10 @@ def test_centroided_flag(ms_data, temp_dir):
     ns = {"mzml": writer.ns_uri}
 
     # Check for centroid spectrum CV param
-    centroid_params = root.findall(".//mzml:cvParam[@accession='MS:1000127']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.CENTROIDED]
+    centroid_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert len(centroid_params) > 0
-    assert centroid_params[0].get("name") == "centroid spectrum"
+    assert centroid_params[0].get("name") == EXPECTED_NAMES[CVTerms.CENTROIDED]
 
 
 def test_cv_list_structure(ms_data, temp_dir):
@@ -323,9 +346,10 @@ def test_software_info(ms_data, temp_dir):
     assert software is not None
 
     # Check software CV param - should be "analysis software" not "custom unreleased software tool"
-    software_param = software.find(".//mzml:cvParam[@accession='MS:1001456']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.ANALYSIS_SOFTWARE]
+    software_param = software.find(f".//mzml:cvParam[@accession='{accession}']", ns)
     assert software_param is not None
-    assert software_param.get("name") == "analysis software"
+    assert software_param.get("name") == EXPECTED_NAMES[CVTerms.ANALYSIS_SOFTWARE]
     assert software_param.get("value") == "alpharaw"
 
 
@@ -366,13 +390,15 @@ def test_integer_values_formatting(ms_data, temp_dir):
     ns = {"mzml": writer.ns_uri}
 
     # Check MS level values are integers
-    ms_level_params = root.findall(".//mzml:cvParam[@accession='MS:1000511']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.MS_LEVEL]
+    ms_level_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     for param in ms_level_params:
         value = param.get("value")
         assert value.isdigit(), f"MS level should be integer format, got {value}"
 
     # Check charge state values are integers
-    charge_params = root.findall(".//mzml:cvParam[@accession='MS:1000041']", ns)
+    accession = CV_TERM_MAPPING[CVTerms.CHARGE_STATE]
+    charge_params = root.findall(f".//mzml:cvParam[@accession='{accession}']", ns)
     for param in charge_params:
         value = param.get("value")
         assert value.isdigit(), f"Charge state should be integer format, got {value}"
