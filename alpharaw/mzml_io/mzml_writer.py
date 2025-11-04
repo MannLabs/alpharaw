@@ -84,7 +84,7 @@ class MzMLWriter:
         """Initialize CV constants from OWL file."""
         # Get path to OWL file
         current_dir = Path(__file__).parent
-        owl_file_path = current_dir / "psi-ms.owl"
+        owl_file_path = current_dir.parent / "resources" / "psi-ms.owl"
 
         # Load CV constants from OWL file
         self._cv = create_cv_constants_from_owl(owl_file_path)
