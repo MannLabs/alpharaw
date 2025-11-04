@@ -10,7 +10,14 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from alpharaw.mzml_io.cv_constants import create_cv_constants_from_owl
+from alpharaw.mzml_io.cv_constants import (
+    CV,
+    XML,
+    CVTerms,
+    create_cv_constants_from_owl,
+    get_accession_key,
+    get_name_key,
+)
 
 
 class MzMLWriter:
@@ -64,7 +71,7 @@ class MzMLWriter:
         # Initialize CV constants
         self._initialize_cv_constants()
 
-        self._ns_uri = self._cv["NS_URI_MZML"]
+        self._ns_uri = self._cv[XML.NS_URI_MZML]
         self._ns_prefix = "{" + self._ns_uri + "}"
         self.root: Optional[ET.Element] = None
 
@@ -118,8 +125,8 @@ class MzMLWriter:
         # Create root element for mzML
         root = ET.Element(self._ns_prefix + "mzML")
         root.set("version", "1.1.0")
-        root.set("xmlns:xsi", self._cv["NS_URI_XSI"])
-        root.set("xsi:schemaLocation", self._cv["SCHEMA_LOCATION"])
+        root.set("xmlns:xsi", self._cv[XML.NS_URI_XSI])
+        root.set("xsi:schemaLocation", self._cv[XML.SCHEMA_LOCATION])
 
         # Add required elements
         self._add_cv_list(root)
@@ -145,21 +152,21 @@ class MzMLWriter:
 
         # MS CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv["CV_MS"])
-        cv.set("fullName", self._cv["CV_NAME_MS"])
-        cv.set("URI", self._cv["CV_URI_MS"])
+        cv.set("id", self._cv[CV.MS])
+        cv.set("fullName", self._cv[CV.NAME_MS])
+        cv.set("URI", self._cv[XML.URI_MS])
 
         # UO CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv["CV_UO"])
-        cv.set("fullName", self._cv["CV_NAME_UO"])
-        cv.set("URI", self._cv["CV_URI_UO"])
+        cv.set("id", self._cv[CV.UO])
+        cv.set("fullName", self._cv[CV.NAME_UO])
+        cv.set("URI", self._cv[XML.URI_UO])
 
         # PSI-MS CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv["CV_PSI_MS"])
-        cv.set("fullName", self._cv["CV_NAME_PSI_MS"])
-        cv.set("URI", self._cv["CV_URI_PSI_MS"])
+        cv.set("id", self._cv[CV.PSI_MS])
+        cv.set("fullName", self._cv[CV.NAME_PSI_MS])
+        cv.set("URI", self._cv[XML.URI_PSI_MS])
 
     def _add_file_description(self, parent_elem: ET.Element) -> None:
         """Add file description section to the mzML document.
@@ -180,18 +187,18 @@ class MzMLWriter:
         # Add CV params for file content
         self._add_cv_param(
             file_content,
-            self._cv["CV_MS"],
-            self._cv["ACCESSION_MS1_SPECTRUM"],
-            self._cv["NAME_MS1_SPECTRUM"],
+            self._cv[CV.MS],
+            self._cv[get_accession_key(CVTerms.MS1_SPECTRUM)],
+            self._cv[get_name_key(CVTerms.MS1_SPECTRUM)],
             "",
         )
 
         if (self._ms_data.spectrum_df["ms_level"] == 2).any():
             self._add_cv_param(
                 file_content,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_MSN_SPECTRUM"],
-                self._cv["NAME_MSN_SPECTRUM"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.MSN_SPECTRUM)],
+                self._cv[get_name_key(CVTerms.MSN_SPECTRUM)],
                 "",
             )
 
@@ -213,13 +220,13 @@ class MzMLWriter:
             if (
                 hasattr(self._ms_data, "file_type")
                 and self._ms_data.file_type == "thermo"
-                and "ACCESSION_THERMO_RAW" in self._cv
+                and get_accession_key(CVTerms.THERMO_RAW) in self._cv
             ):
                 self._add_cv_param(
                     source_file,
-                    self._cv["CV_MS"],
-                    self._cv["ACCESSION_THERMO_RAW"],
-                    self._cv["NAME_THERMO_RAW"],
+                    self._cv[CV.MS],
+                    self._cv[get_accession_key(CVTerms.THERMO_RAW)],
+                    self._cv[get_name_key(CVTerms.THERMO_RAW)],
                     "",
                 )
 
@@ -240,12 +247,12 @@ class MzMLWriter:
         software.set("version", "0.4.7.dev0")
 
         # Use analysis software CV term if available
-        if "ACCESSION_ANALYSIS_SOFTWARE" in self._cv:
+        if get_accession_key(CVTerms.ANALYSIS_SOFTWARE) in self._cv:
             self._add_cv_param(
                 software,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ANALYSIS_SOFTWARE"],
-                self._cv["NAME_ANALYSIS_SOFTWARE"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ANALYSIS_SOFTWARE)],
+                self._cv[get_name_key(CVTerms.ANALYSIS_SOFTWARE)],
                 "alpharaw",
             )
 
@@ -269,12 +276,12 @@ class MzMLWriter:
         instrument.set("id", "IC1")
 
         # Use instrument model CV term if available
-        if "ACCESSION_INSTRUMENT_MODEL" in self._cv:
+        if get_accession_key(CVTerms.INSTRUMENT_MODEL) in self._cv:
             self._add_cv_param(
                 instrument,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_INSTRUMENT_MODEL"],
-                self._cv["NAME_INSTRUMENT_MODEL"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.INSTRUMENT_MODEL)],
+                self._cv[get_name_key(CVTerms.INSTRUMENT_MODEL)],
                 "",
             )
 
@@ -285,12 +292,12 @@ class MzMLWriter:
         # Source
         source = ET.SubElement(component_list, self._ns_prefix + "source")
         source.set("order", "1")
-        if "ACCESSION_ESI" in self._cv:
+        if get_accession_key(CVTerms.ESI) in self._cv:
             self._add_cv_param(
                 source,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ESI"],
-                self._cv["NAME_ESI"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ESI)],
+                self._cv[get_name_key(CVTerms.ESI)],
                 "",
             )
 
@@ -311,33 +318,33 @@ class MzMLWriter:
 
             if analyzer_type.lower() in self._cv.get("ANALYZER_TYPES", {}):
                 accession, name = self._cv["ANALYZER_TYPES"][analyzer_type.lower()]
-                self._add_cv_param(analyzer, self._cv["CV_MS"], accession, name, "")
-            elif "ACCESSION_ORBITRAP" in self._cv:
+                self._add_cv_param(analyzer, self._cv[CV.MS], accession, name, "")
+            elif get_accession_key(CVTerms.ORBITRAP) in self._cv:
                 self._add_cv_param(
                     analyzer,
-                    self._cv["CV_MS"],
-                    self._cv["ACCESSION_ORBITRAP"],
-                    self._cv["NAME_ORBITRAP"],
+                    self._cv[CV.MS],
+                    self._cv[get_accession_key(CVTerms.ORBITRAP)],
+                    self._cv[get_name_key(CVTerms.ORBITRAP)],
                     "",
                 )
-        elif "ACCESSION_ORBITRAP" in self._cv:
+        elif get_accession_key(CVTerms.ORBITRAP) in self._cv:
             self._add_cv_param(
                 analyzer,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ORBITRAP"],
-                self._cv["NAME_ORBITRAP"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ORBITRAP)],
+                self._cv[get_name_key(CVTerms.ORBITRAP)],
                 "",
             )
 
         # Detector
         detector = ET.SubElement(component_list, self._ns_prefix + "detector")
         detector.set("order", "3")
-        if "ACCESSION_ELECTRON_MULTIPLIER" in self._cv:
+        if get_accession_key(CVTerms.ELECTRON_MULTIPLIER) in self._cv:
             self._add_cv_param(
                 detector,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ELECTRON_MULTIPLIER"],
-                self._cv["NAME_ELECTRON_MULTIPLIER"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ELECTRON_MULTIPLIER)],
+                self._cv[get_name_key(CVTerms.ELECTRON_MULTIPLIER)],
                 "",
             )
 
@@ -364,14 +371,14 @@ class MzMLWriter:
             data_processing, self._ns_prefix + "processingMethod"
         )
         processing_method.set("order", "1")
-        processing_method.set("softwareRef", "alpharaw")
+        processing_method.set("softwareRef", "alpharraw")
 
-        if "ACCESSION_FILE_FORMAT_CONVERSION" in self._cv:
+        if get_accession_key(CVTerms.FILE_FORMAT_CONVERSION) in self._cv:
             self._add_cv_param(
                 processing_method,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_FILE_FORMAT_CONVERSION"],
-                self._cv["NAME_FILE_FORMAT_CONVERSION"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.FILE_FORMAT_CONVERSION)],
+                self._cv[get_name_key(CVTerms.FILE_FORMAT_CONVERSION)],
                 "",
             )
 
@@ -434,9 +441,9 @@ class MzMLWriter:
         ms_level = int(row.get("ms_level", 1))
         self._add_cv_param(
             spectrum,
-            self._cv["CV_MS"],
-            self._cv["ACCESSION_MS_LEVEL"],
-            self._cv["NAME_MS_LEVEL"],
+            self._cv[CV.MS],
+            self._cv[get_accession_key(CVTerms.MS_LEVEL)],
+            self._cv[get_name_key(CVTerms.MS_LEVEL)],
             ms_level,
         )
 
@@ -444,17 +451,17 @@ class MzMLWriter:
         if self._ms_data.centroided:
             self._add_cv_param(
                 spectrum,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_CENTROIDED"],
-                self._cv["NAME_CENTROIDED"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.CENTROIDED)],
+                self._cv[get_name_key(CVTerms.CENTROIDED)],
                 "",
             )
         else:
             self._add_cv_param(
                 spectrum,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_PROFILE"],
-                self._cv["NAME_PROFILE"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.PROFILE)],
+                self._cv[get_name_key(CVTerms.PROFILE)],
                 "",
             )
 
@@ -462,12 +469,12 @@ class MzMLWriter:
         scan_list = ET.SubElement(spectrum, self._ns_prefix + "scanList")
         scan_list.set("count", "1")
 
-        if "ACCESSION_NO_COMBINATION" in self._cv:
+        if get_accession_key(CVTerms.NO_COMBINATION) in self._cv:
             self._add_cv_param(
                 scan_list,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_NO_COMBINATION"],
-                self._cv["NAME_NO_COMBINATION"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.NO_COMBINATION)],
+                self._cv[get_name_key(CVTerms.NO_COMBINATION)],
                 "",
             )
 
@@ -475,16 +482,19 @@ class MzMLWriter:
 
         # Add retention time
         rt_seconds = row["rt"] * 60  # Convert to seconds
-        if "ACCESSION_SCAN_START_TIME" in self._cv and "ACCESSION_SECOND" in self._cv:
+        if (
+            get_accession_key(CVTerms.SCAN_START_TIME) in self._cv
+            and get_accession_key(CVTerms.SECOND) in self._cv
+        ):
             self._add_cv_param(
                 scan,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_SCAN_START_TIME"],
-                self._cv["NAME_SCAN_START_TIME"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.SCAN_START_TIME)],
+                self._cv[get_name_key(CVTerms.SCAN_START_TIME)],
                 str(rt_seconds),
-                self._cv["CV_UO"],
-                self._cv["ACCESSION_SECOND"],
-                self._cv["NAME_SECOND"],
+                self._cv[CV.UO],
+                self._cv[get_accession_key(CVTerms.SECOND)],
+                self._cv[get_name_key(CVTerms.SECOND)],
             )
 
         # Add precursor information for MS2+ spectra
@@ -499,16 +509,16 @@ class MzMLWriter:
         self._add_binary_data_array(
             binary_list,
             mz_array,
-            self._cv["ACCESSION_MZ_ARRAY"],
-            self._cv["NAME_MZ_ARRAY"],
+            self._cv[get_accession_key(CVTerms.MZ_ARRAY)],
+            self._cv[get_name_key(CVTerms.MZ_ARRAY)],
         )
 
         # Intensity array
         self._add_binary_data_array(
             binary_list,
             intensity_array,
-            self._cv["ACCESSION_INTENSITY_ARRAY"],
-            self._cv["NAME_INTENSITY_ARRAY"],
+            self._cv[get_accession_key(CVTerms.INTENSITY_ARRAY)],
+            self._cv[get_name_key(CVTerms.INTENSITY_ARRAY)],
         )
 
     def _add_precursor_info(self, spectrum: ET.Element, row: pd.Series) -> None:
@@ -533,16 +543,16 @@ class MzMLWriter:
         precursor_mz = row.get("precursor_mz", 0)
 
         # Add isolation window parameters if CV terms are available
-        if "ACCESSION_ISOLATION_TARGET_MZ" in self._cv:
+        if get_accession_key(CVTerms.ISOLATION_TARGET_MZ) in self._cv:
             self._add_cv_param(
                 isolation_window,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ISOLATION_TARGET_MZ"],
-                self._cv["NAME_ISOLATION_TARGET_MZ"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ISOLATION_TARGET_MZ)],
+                self._cv[get_name_key(CVTerms.ISOLATION_TARGET_MZ)],
                 str(precursor_mz),
-                self._cv["CV_MS"],
-                self._cv.get("ACCESSION_MZ_UNIT", "MS:1000040"),
-                self._cv.get("NAME_MZ_UNIT", "m/z"),
+                self._cv[CV.MS],
+                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
+                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
             )
 
         # Selected ion list
@@ -553,27 +563,27 @@ class MzMLWriter:
 
         selected_ion = ET.SubElement(selected_ion_list, self._ns_prefix + "selectedIon")
 
-        if "ACCESSION_SELECTED_ION_MZ" in self._cv:
+        if get_accession_key(CVTerms.SELECTED_ION_MZ) in self._cv:
             self._add_cv_param(
                 selected_ion,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_SELECTED_ION_MZ"],
-                self._cv["NAME_SELECTED_ION_MZ"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.SELECTED_ION_MZ)],
+                self._cv[get_name_key(CVTerms.SELECTED_ION_MZ)],
                 str(precursor_mz),
-                self._cv["CV_MS"],
-                self._cv.get("ACCESSION_MZ_UNIT", "MS:1000040"),
-                self._cv.get("NAME_MZ_UNIT", "m/z"),
+                self._cv[CV.MS],
+                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
+                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
             )
 
         # Ensure charge state is an integer
         if "precursor_charge" in row and row["precursor_charge"] > 0:
             charge = int(row["precursor_charge"])
-            if "ACCESSION_CHARGE_STATE" in self._cv:
+            if get_accession_key(CVTerms.CHARGE_STATE) in self._cv:
                 self._add_cv_param(
                     selected_ion,
-                    self._cv["CV_MS"],
-                    self._cv["ACCESSION_CHARGE_STATE"],
-                    self._cv["NAME_CHARGE_STATE"],
+                    self._cv[CV.MS],
+                    self._cv[get_accession_key(CVTerms.CHARGE_STATE)],
+                    self._cv[get_name_key(CVTerms.CHARGE_STATE)],
                     charge,
                 )
 
@@ -585,28 +595,32 @@ class MzMLWriter:
 
         if activation_method in self._cv.get("ACTIVATION_METHODS", {}):
             accession, name = self._cv["ACTIVATION_METHODS"][activation_method]
-            self._add_cv_param(activation, self._cv["CV_MS"], accession, name, "")
-        elif "ACCESSION_DISSOCIATION_METHOD" in self._cv:
+            self._add_cv_param(activation, self._cv[CV.MS], accession, name, "")
+        elif get_accession_key(CVTerms.DISSOCIATION_METHOD) in self._cv:
             # Fallback for unknown activation methods
             self._add_cv_param(
                 activation,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_DISSOCIATION_METHOD"],
-                self._cv["NAME_DISSOCIATION_METHOD"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.DISSOCIATION_METHOD)],
+                self._cv[get_name_key(CVTerms.DISSOCIATION_METHOD)],
                 activation_method,
             )
 
         # Add collision energy if available
-        if "nce" in row and row["nce"] > 0 and "ACCESSION_COLLISION_ENERGY" in self._cv:
+        if (
+            "nce" in row
+            and row["nce"] > 0
+            and get_accession_key(CVTerms.COLLISION_ENERGY) in self._cv
+        ):
             self._add_cv_param(
                 activation,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_COLLISION_ENERGY"],
-                self._cv["NAME_COLLISION_ENERGY"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.COLLISION_ENERGY)],
+                self._cv[get_name_key(CVTerms.COLLISION_ENERGY)],
                 str(row["nce"]),
-                self._cv["CV_UO"],
-                self._cv.get("ACCESSION_ELECTRONVOLT", "UO:0000266"),
-                self._cv.get("NAME_ELECTRONVOLT", "electronvolt"),
+                self._cv[CV.UO],
+                self._cv.get(get_accession_key(CVTerms.ELECTRONVOLT), "UO:0000266"),
+                self._cv.get(get_name_key(CVTerms.ELECTRONVOLT), "electronvolt"),
             )
 
     def _add_binary_data_array(
@@ -653,17 +667,17 @@ class MzMLWriter:
         if self._binary_precision == 32:
             self._add_cv_param(
                 binary_array,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_32BIT_FLOAT"],
-                self._cv["NAME_32BIT_FLOAT"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.FLOAT_32BIT)],
+                self._cv[get_name_key(CVTerms.FLOAT_32BIT)],
                 "",
             )
         else:
             self._add_cv_param(
                 binary_array,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_64BIT_FLOAT"],
-                self._cv["NAME_64BIT_FLOAT"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.FLOAT_64BIT)],
+                self._cv[get_name_key(CVTerms.FLOAT_64BIT)],
                 "",
             )
 
@@ -671,22 +685,22 @@ class MzMLWriter:
         if self._compression == "zlib":
             self._add_cv_param(
                 binary_array,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_ZLIB_COMPRESSION"],
-                self._cv["NAME_ZLIB_COMPRESSION"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.ZLIB_COMPRESSION)],
+                self._cv[get_name_key(CVTerms.ZLIB_COMPRESSION)],
                 "",
             )
         else:
             self._add_cv_param(
                 binary_array,
-                self._cv["CV_MS"],
-                self._cv["ACCESSION_NO_COMPRESSION"],
-                self._cv["NAME_NO_COMPRESSION"],
+                self._cv[CV.MS],
+                self._cv[get_accession_key(CVTerms.NO_COMPRESSION)],
+                self._cv[get_name_key(CVTerms.NO_COMPRESSION)],
                 "",
             )
 
         self._add_cv_param(
-            binary_array, self._cv["CV_MS"], array_type_acc, array_type_name, ""
+            binary_array, self._cv[CV.MS], array_type_acc, array_type_name, ""
         )
 
         # Add binary element
@@ -730,9 +744,9 @@ class MzMLWriter:
 
         """
         cv_param = ET.SubElement(parent, self._ns_prefix + "cvParam")
-        cv_param.set(self._cv["CV_REF"], cv_ref)
-        cv_param.set(self._cv["ACCESSION"], accession)
-        cv_param.set(self._cv["NAME"], name)
+        cv_param.set(self._cv[CV.REF], cv_ref)
+        cv_param.set(self._cv[CV.ACCESSION], accession)
+        cv_param.set(self._cv[CV.NAME], name)
 
         # Format value appropriately based on the parameter type
         if value != "" and value is not None:
@@ -741,8 +755,8 @@ class MzMLWriter:
 
             # If this is an ms level or charge state, ensure it's an integer
             if accession in [
-                self._cv.get("ACCESSION_MS_LEVEL"),
-                self._cv.get("ACCESSION_CHARGE_STATE"),
+                self._cv.get(get_accession_key(CVTerms.MS_LEVEL)),
+                self._cv.get(get_accession_key(CVTerms.CHARGE_STATE)),
             ]:
                 try:
                     int_value = int(float(str_value))
@@ -750,9 +764,9 @@ class MzMLWriter:
                 except (ValueError, TypeError):
                     str_value = str_value
 
-            cv_param.set(self._cv["VALUE"], str_value)
+            cv_param.set(self._cv[CV.VALUE], str_value)
         else:
-            cv_param.set(self._cv["VALUE"], "")
+            cv_param.set(self._cv[CV.VALUE], "")
 
         if unit_cv_ref:
             cv_param.set("unitCvRef", unit_cv_ref)
