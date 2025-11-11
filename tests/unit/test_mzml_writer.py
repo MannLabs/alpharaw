@@ -329,6 +329,20 @@ def test_cv_list_structure(ms_data, temp_dir):
     assert "UO" in cv_ids
     assert "PSI-MS" in cv_ids
 
+    # Check that each CV has required attributes: id, fullName, and URI
+    for cv in cvs:
+        cv_id = cv.get("id")
+        assert cv_id is not None, "CV element must have 'id' attribute"
+        
+        full_name = cv.get("fullName")
+        assert full_name is not None, f"CV element with id='{cv_id}' must have 'fullName' attribute"
+        assert len(full_name) > 0, f"CV element with id='{cv_id}' must have non-empty 'fullName'"
+        
+        uri = cv.get("URI")
+        assert uri is not None, f"CV element with id='{cv_id}' must have 'URI' attribute"
+        assert len(uri) > 0, f"CV element with id='{cv_id}' must have non-empty 'URI'"
+        assert uri.startswith("http"), f"CV URI should be a valid URL, got '{uri}'"
+
 
 def test_software_info(ms_data, temp_dir):
     """Test that software information is correctly set"""

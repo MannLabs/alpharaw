@@ -33,6 +33,11 @@ class MzMLWriter:
 
     """
 
+    # XML attribute constants
+    ATTR_ID = "id"
+    ATTR_FULL_NAME = "fullName"
+    ATTR_URI = "URI"
+
     def __init__(
         self,
         ms_data,
@@ -152,21 +157,21 @@ class MzMLWriter:
 
         # MS CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv[CV.MS])
-        cv.set("fullName", self._cv[CV.NAME_MS])
-        cv.set("URI", self._cv[XML.URI_MS])
+        cv.set(self.ATTR_ID, self._cv[CV.MS])
+        cv.set(self.ATTR_FULL_NAME, self._cv[CV.NAME_MS])
+        cv.set(self.ATTR_URI, self._cv[XML.URI_MS])
 
         # UO CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv[CV.UO])
-        cv.set("fullName", self._cv[CV.NAME_UO])
-        cv.set("URI", self._cv[XML.URI_UO])
+        cv.set(self.ATTR_ID, self._cv[CV.UO])
+        cv.set(self.ATTR_FULL_NAME, self._cv[CV.NAME_UO])
+        cv.set(self.ATTR_URI, self._cv[XML.URI_UO])
 
         # PSI-MS CV
         cv = ET.SubElement(cv_list, self._ns_prefix + "cv")
-        cv.set("id", self._cv[CV.PSI_MS])
-        cv.set("fullName", self._cv[CV.NAME_PSI_MS])
-        cv.set("URI", self._cv[XML.URI_PSI_MS])
+        cv.set(self.ATTR_ID, self._cv[CV.PSI_MS])
+        cv.set(self.ATTR_FULL_NAME, self._cv[CV.NAME_PSI_MS])
+        cv.set(self.ATTR_URI, self._cv[XML.URI_PSI_MS])
 
     def _add_file_description(self, parent_elem: ET.Element) -> None:
         """Add file description section to the mzML document.
@@ -212,7 +217,7 @@ class MzMLWriter:
             source_file = ET.SubElement(
                 source_file_list, self._ns_prefix + "sourceFile"
             )
-            source_file.set("id", "RAW1")
+            source_file.set(self.ATTR_ID, "RAW1")
             source_file.set("name", os.path.basename(self._ms_data.raw_file_path))
             source_file.set("location", os.path.dirname(self._ms_data.raw_file_path))
 
@@ -243,7 +248,7 @@ class MzMLWriter:
         software_list.set("count", "1")
 
         software = ET.SubElement(software_list, self._ns_prefix + "software")
-        software.set("id", "alpharaw")
+        software.set(self.ATTR_ID, "alpharaw")
         software.set("version", "0.4.7.dev0")
 
         # Use analysis software CV term if available
@@ -273,7 +278,7 @@ class MzMLWriter:
         instrument = ET.SubElement(
             instrument_list, self._ns_prefix + "instrumentConfiguration"
         )
-        instrument.set("id", "IC1")
+        instrument.set(self.ATTR_ID, "IC1")
 
         # Use instrument model CV term if available
         if get_accession_key(CVTerms.INSTRUMENT_MODEL) in self._cv:
@@ -365,7 +370,7 @@ class MzMLWriter:
         data_processing = ET.SubElement(
             data_processing_list, self._ns_prefix + "dataProcessing"
         )
-        data_processing.set("id", "alpharaw_processing")
+        data_processing.set(self.ATTR_ID, "alpharaw_processing")
 
         processing_method = ET.SubElement(
             data_processing, self._ns_prefix + "processingMethod"
@@ -392,7 +397,7 @@ class MzMLWriter:
 
         """
         run = ET.SubElement(parent_elem, self._ns_prefix + "run")
-        run.set("id", "run1")
+        run.set(self.ATTR_ID, "run1")
         run.set("defaultInstrumentConfigurationRef", "IC1")
 
         # Add spectrum list
@@ -425,7 +430,7 @@ class MzMLWriter:
 
         # Required attributes
         spectrum.set("index", str(i))
-        spectrum.set("id", f"scan={i}")
+        spectrum.set(self.ATTR_ID, f"scan={i}")
 
         # Get peak data
         try:
