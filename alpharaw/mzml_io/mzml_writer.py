@@ -195,7 +195,6 @@ class MzMLWriter:
             self._cv[CV.MS],
             self._cv[get_accession_key(CVTerms.MS1_SPECTRUM)],
             self._cv[get_name_key(CVTerms.MS1_SPECTRUM)],
-            "",
         )
 
         if (self._ms_data.spectrum_df["ms_level"] == 2).any():
@@ -204,7 +203,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.MSN_SPECTRUM)],
                 self._cv[get_name_key(CVTerms.MSN_SPECTRUM)],
-                "",
             )
 
         # Source file list
@@ -232,7 +230,6 @@ class MzMLWriter:
                     self._cv[CV.MS],
                     self._cv[get_accession_key(CVTerms.THERMO_RAW)],
                     self._cv[get_name_key(CVTerms.THERMO_RAW)],
-                    "",
                 )
 
     def _add_software_list(self, parent_elem: ET.Element) -> None:
@@ -287,7 +284,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.INSTRUMENT_MODEL)],
                 self._cv[get_name_key(CVTerms.INSTRUMENT_MODEL)],
-                "",
             )
 
         # Add component list
@@ -303,7 +299,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.ESI)],
                 self._cv[get_name_key(CVTerms.ESI)],
-                "",
             )
 
         # Analyzer
@@ -323,14 +318,13 @@ class MzMLWriter:
 
             if analyzer_type.lower() in self._cv.get("ANALYZER_TYPES", {}):
                 accession, name = self._cv["ANALYZER_TYPES"][analyzer_type.lower()]
-                self._add_cv_param(analyzer, self._cv[CV.MS], accession, name, "")
+                self._add_cv_param(analyzer, self._cv[CV.MS], accession, name)
             elif get_accession_key(CVTerms.ORBITRAP) in self._cv:
                 self._add_cv_param(
                     analyzer,
                     self._cv[CV.MS],
                     self._cv[get_accession_key(CVTerms.ORBITRAP)],
                     self._cv[get_name_key(CVTerms.ORBITRAP)],
-                    "",
                 )
         elif get_accession_key(CVTerms.ORBITRAP) in self._cv:
             self._add_cv_param(
@@ -338,7 +332,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.ORBITRAP)],
                 self._cv[get_name_key(CVTerms.ORBITRAP)],
-                "",
             )
 
         # Detector
@@ -350,7 +343,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.ELECTRON_MULTIPLIER)],
                 self._cv[get_name_key(CVTerms.ELECTRON_MULTIPLIER)],
-                "",
             )
 
     def _add_data_processing_list(self, parent_elem: ET.Element) -> None:
@@ -384,7 +376,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.FILE_FORMAT_CONVERSION)],
                 self._cv[get_name_key(CVTerms.FILE_FORMAT_CONVERSION)],
-                "",
             )
 
     def _add_run(self, parent_elem: ET.Element) -> None:
@@ -459,7 +450,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.CENTROIDED)],
                 self._cv[get_name_key(CVTerms.CENTROIDED)],
-                "",
             )
         else:
             self._add_cv_param(
@@ -467,7 +457,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.PROFILE)],
                 self._cv[get_name_key(CVTerms.PROFILE)],
-                "",
             )
 
         # Add scan list
@@ -480,7 +469,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.NO_COMBINATION)],
                 self._cv[get_name_key(CVTerms.NO_COMBINATION)],
-                "",
             )
 
         scan = ET.SubElement(scan_list, self._ns_prefix + "scan")
@@ -627,7 +615,7 @@ class MzMLWriter:
 
         if activation_method in self._cv.get("ACTIVATION_METHODS", {}):
             accession, name = self._cv["ACTIVATION_METHODS"][activation_method]
-            self._add_cv_param(activation, self._cv[CV.MS], accession, name, "")
+            self._add_cv_param(activation, self._cv[CV.MS], accession, name)
         elif get_accession_key(CVTerms.DISSOCIATION_METHOD) in self._cv:
             # Fallback for unknown activation methods
             self._add_cv_param(
@@ -702,7 +690,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.FLOAT_32BIT)],
                 self._cv[get_name_key(CVTerms.FLOAT_32BIT)],
-                "",
             )
         else:
             self._add_cv_param(
@@ -710,7 +697,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.FLOAT_64BIT)],
                 self._cv[get_name_key(CVTerms.FLOAT_64BIT)],
-                "",
             )
 
         # Compression
@@ -720,7 +706,6 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.ZLIB_COMPRESSION)],
                 self._cv[get_name_key(CVTerms.ZLIB_COMPRESSION)],
-                "",
             )
         else:
             self._add_cv_param(
@@ -728,11 +713,10 @@ class MzMLWriter:
                 self._cv[CV.MS],
                 self._cv[get_accession_key(CVTerms.NO_COMPRESSION)],
                 self._cv[get_name_key(CVTerms.NO_COMPRESSION)],
-                "",
             )
 
         self._add_cv_param(
-            binary_array, self._cv[CV.MS], array_type_acc, array_type_name, ""
+            binary_array, self._cv[CV.MS], array_type_acc, array_type_name
         )
 
         # Add binary element
@@ -753,7 +737,9 @@ class MzMLWriter:
         """Helper method to add a CV (Controlled Vocabulary) parameter to an XML element.
 
         CV parameters use standardized terms from PSI-MS ontology to provide semantic
-        meaning to mzML data elements.
+        meaning to mzML data elements. Per HUPO-PSI mzML specifications, all cvParam
+        elements must have a value attribute. If the ontology term does not have an
+        associated value, it must be set to an empty string.
 
         Parameters
         ----------
@@ -766,7 +752,8 @@ class MzMLWriter:
         name : str
             CV parameter name (e.g., 'ms level')
         value : Union[str, int, float], optional
-            Parameter value, by default ""
+            Parameter value, by default "". Empty string is used when the CV term
+            has no associated value (e.g., for binary CV terms like 'centroid spectrum').
         unit_cv_ref : Optional[str], optional
             Unit CV reference, by default None
         unit_accession : Optional[str], optional
