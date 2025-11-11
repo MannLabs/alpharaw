@@ -544,8 +544,8 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.ISOLATION_TARGET_MZ)],
                 str(precursor_mz),
                 self._cv[CV.MS],
-                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
-                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+                self._cv[get_accession_key(CVTerms.MZ_UNIT)],
+                self._cv[get_name_key(CVTerms.MZ_UNIT)],
             )
 
         lower_offset = row.get("precursor_mz", 0) - row.get("isolation_lower_mz", 0)
@@ -559,8 +559,8 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.ISOLATION_LOWER_OFFSET)],
                 str(lower_offset),
                 self._cv[CV.MS],
-                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
-                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+                self._cv[get_accession_key(CVTerms.MZ_UNIT)],
+                self._cv[get_name_key(CVTerms.MZ_UNIT)],
             )
 
         if get_accession_key(CVTerms.ISOLATION_UPPER_OFFSET) in self._cv and upper_offset > 0:
@@ -571,8 +571,8 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.ISOLATION_UPPER_OFFSET)],
                 str(upper_offset),
                 self._cv[CV.MS],
-                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
-                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+                self._cv[get_accession_key(CVTerms.MZ_UNIT)],
+                self._cv[get_name_key(CVTerms.MZ_UNIT)],
             )
 
         # Selected ion list
@@ -591,8 +591,8 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.SELECTED_ION_MZ)],
                 str(precursor_mz),
                 self._cv[CV.MS],
-                self._cv.get(get_accession_key(CVTerms.MZ_UNIT), "MS:1000040"),
-                self._cv.get(get_name_key(CVTerms.MZ_UNIT), "m/z"),
+                self._cv[get_accession_key(CVTerms.MZ_UNIT)],
+                self._cv[get_name_key(CVTerms.MZ_UNIT)],
             )
 
         # Ensure charge state is an integer
@@ -639,8 +639,8 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.COLLISION_ENERGY)],
                 str(row["nce"]),
                 self._cv[CV.UO],
-                self._cv.get(get_accession_key(CVTerms.ELECTRONVOLT), "UO:0000266"),
-                self._cv.get(get_name_key(CVTerms.ELECTRONVOLT), "electronvolt"),
+                self._cv[get_accession_key(CVTerms.ELECTRONVOLT)],
+                self._cv[get_name_key(CVTerms.ELECTRONVOLT)],
             )
 
     def _add_binary_data_array(
