@@ -69,6 +69,6 @@ def parse_ms_files_to_dict(
 
     ms_file_dict = {}
     for ms_file in ms_file_list:
-        raw_name = get_raw_name(ms_file, _SPECIAL_MS_EXTS)
+        raw_name = get_raw_name(ms_file)
         ms_file_dict[raw_name] = ms_file
     return ms_file_dict

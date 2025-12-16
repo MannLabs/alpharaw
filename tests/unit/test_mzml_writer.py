@@ -5,9 +5,8 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import pytest
 
+from alpharaw.mzml_io.cv_constants import CV_TERM_MAPPING, CVTerms
 from alpharaw.mzml_io.mzml_writer import MzMLWriter
-from alpharaw.mzml_io.cv_constants import CVTerms, CV_TERM_MAPPING
-
 
 # A small dictionary with expected names for the tested CV terms
 EXPECTED_NAMES = {
@@ -233,12 +232,17 @@ def test_spectrum_content(ms_data, temp_dir):
     assert spec1.get("id") == "scan=0"
 
     # Check MS level - should be integer, not float
-    ms_level = spec1.find(f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns)
+    ms_level = spec1.find(
+        f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns
+    )
     assert ms_level is not None
     assert ms_level.get("value") == "1"  # Should be "1", not "1.0"
 
     # Check that it has a scan with retention time
-    scan_time = spec1.find(f".//mzml:scan/mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.SCAN_START_TIME]}']", ns)
+    scan_time = spec1.find(
+        f".//mzml:scan/mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.SCAN_START_TIME]}']",
+        ns,
+    )
     assert scan_time is not None
     assert float(scan_time.get("value")) == pytest.approx(
         60.0
@@ -249,7 +253,9 @@ def test_spectrum_content(ms_data, temp_dir):
     assert spec2.get("index") == "1"
 
     # Check MS level
-    ms_level = spec2.find(f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns)
+    ms_level = spec2.find(
+        f".//mzml:cvParam[@name='{EXPECTED_NAMES[CVTerms.MS_LEVEL]}']", ns
+    )
     assert ms_level is not None
     assert ms_level.get("value") == "2"  # Should be "2", not "2.0"
 
@@ -333,13 +339,19 @@ def test_cv_list_structure(ms_data, temp_dir):
     for cv in cvs:
         cv_id = cv.get("id")
         assert cv_id is not None, "CV element must have 'id' attribute"
-        
+
         full_name = cv.get("fullName")
-        assert full_name is not None, f"CV element with id='{cv_id}' must have 'fullName' attribute"
-        assert len(full_name) > 0, f"CV element with id='{cv_id}' must have non-empty 'fullName'"
-        
+        assert (
+            full_name is not None
+        ), f"CV element with id='{cv_id}' must have 'fullName' attribute"
+        assert (
+            len(full_name) > 0
+        ), f"CV element with id='{cv_id}' must have non-empty 'fullName'"
+
         uri = cv.get("URI")
-        assert uri is not None, f"CV element with id='{cv_id}' must have 'URI' attribute"
+        assert (
+            uri is not None
+        ), f"CV element with id='{cv_id}' must have 'URI' attribute"
         assert len(uri) > 0, f"CV element with id='{cv_id}' must have non-empty 'URI'"
         assert uri.startswith("http"), f"CV URI should be a valid URL, got '{uri}'"
 
