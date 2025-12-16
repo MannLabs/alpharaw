@@ -15,10 +15,11 @@ from owlready2 import get_ontology
 class ConstantsClass(type):
     """A metaclass for classes that should only contain string constants."""
 
-    def __setattr__(self, name, value):
+    def __setattr__(cls, name: str, value: Any) -> None:  # noqa: ANN401
+        """Prevent modification of class attributes."""
         raise TypeError("Constants class cannot be modified")
 
-    def get_values(cls):
+    def get_values(cls) -> list[str]:
         """Get all user-defined string values of the class."""
         return [
             value
@@ -251,7 +252,7 @@ class CVTermProcessor:
             self.onto = get_ontology(f"file://{self.owl_file_path.absolute()}").load()
         except Exception as e:
             msg = f"Failed to load OWL file: {e}"
-            raise Exception(msg) from e
+            raise Exception(msg) from e  # noqa: TRY002
 
     def get_cv_term_info(self, ms_id: str) -> dict[str, str] | None:
         """Get CV term information by MS ID.
