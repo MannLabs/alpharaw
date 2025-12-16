@@ -7,13 +7,11 @@ import struct
 import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
-from alpharaw.ms_data_base import MSData_Base
 from alpharaw.mzml_io.cv_constants import (
     CV,
     XML,
@@ -22,6 +20,11 @@ from alpharaw.mzml_io.cv_constants import (
     get_accession_key,
     get_name_key,
 )
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from alpharaw.ms_data_base import MSData_Base
 
 
 class MzMLWriter:
@@ -47,7 +50,7 @@ class MzMLWriter:
         ms_data: MSData_Base,
         output_path: str,
         binary_precision: int = 32,  # Changed from 64 to 32
-        compression: Optional[str] = None,
+        compression: str | None = None,
     ) -> None:
         """Initialize the writer with an MSData_Base object.
 
@@ -82,7 +85,7 @@ class MzMLWriter:
 
         self._ns_uri = self._cv[XML.NS_URI_MZML]
         self._ns_prefix = "{" + self._ns_uri + "}"
-        self.root: Optional[ET.Element] = None
+        self.root: ET.Element | None = None
 
     @property
     def ns_uri(self) -> str:
@@ -739,10 +742,10 @@ class MzMLWriter:
         cv_ref: str,
         accession: str,
         name: str,
-        value: Union[str, float] = "",
-        unit_cv_ref: Optional[str] = None,
-        unit_accession: Optional[str] = None,
-        unit_name: Optional[str] = None,
+        value: str | float = "",
+        unit_cv_ref: str | None = None,
+        unit_accession: str | None = None,
+        unit_name: str | None = None,
     ) -> None:
         """Helper method to add a CV (Controlled Vocabulary) parameter to an XML element.
 
