@@ -50,7 +50,9 @@ class XML(metaclass=ConstantsClass):
     SCHEMA_LOCATION = "http://psi.hupo.org/ms/mzml http://psi.hupo.org/ms/mzml"
     URI_MS = "https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"
     URI_UO = "http://ontologies.berkeleybop.org/uo.obo"
-    URI_PSI_MS = "https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"
+    URI_PSI_MS = (
+        "https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"
+    )
 
 
 class CVTerms(metaclass=ConstantsClass):

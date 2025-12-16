@@ -1,5 +1,8 @@
+"""A writer for mzML files from MSData_Base objects."""
+
+from __future__ import annotations
+
 import base64
-import os
 import struct
 import xml.etree.ElementTree as ET
 import zlib
@@ -10,6 +13,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from alpharaw.ms_data_base import MSData_Base
 from alpharaw.mzml_io.cv_constants import (
     CV,
     XML,
@@ -40,7 +44,7 @@ class MzMLWriter:
 
     def __init__(
         self,
-        ms_data,
+        ms_data: MSData_Base,
         output_path: str,
         binary_precision: int = 32,  # Changed from 64 to 32
         compression: Optional[str] = None,
@@ -197,7 +201,7 @@ class MzMLWriter:
             self._cv[get_name_key(CVTerms.MS1_SPECTRUM)],
         )
 
-        if (self._ms_data.spectrum_df["ms_level"] == 2).any():
+        if (self._ms_data.spectrum_df["ms_level"] == 2).any():  # noqa: PLR2004
             self._add_cv_param(
                 file_content,
                 self._cv[CV.MS],
@@ -216,8 +220,8 @@ class MzMLWriter:
                 source_file_list, self._ns_prefix + "sourceFile"
             )
             source_file.set(self.ATTR_ID, "RAW1")
-            source_file.set("name", os.path.basename(self._ms_data.raw_file_path))
-            source_file.set("location", os.path.dirname(self._ms_data.raw_file_path))
+            source_file.set("name", str(Path(self._ms_data.raw_file_path).name))
+            source_file.set("location", str(Path(self._ms_data.raw_file_path).parent))
 
             # Add CV params for source file if available
             if (
@@ -397,7 +401,7 @@ class MzMLWriter:
         spectrum_list.set("count", str(spectrum_count))
         spectrum_list.set("defaultDataProcessingRef", "alpharaw_processing")
 
-        print(f"Writing {spectrum_count} spectra...")
+        print(f"Writing {spectrum_count} spectra...")  # noqa: T201
 
         # Add spectra to spectrum_list
         for i in tqdm(range(spectrum_count), desc="Processing spectra"):
@@ -426,7 +430,7 @@ class MzMLWriter:
         # Get peak data
         try:
             mz_array, intensity_array = self._ms_data.get_peaks(i)
-        except Exception:
+        except Exception:  # noqa: BLE001
             # If there's an error, create empty arrays
             mz_array = np.array([])
             intensity_array = np.array([])
@@ -551,7 +555,10 @@ class MzMLWriter:
         lower_offset = row.get("precursor_mz", 0) - row.get("isolation_lower_mz", 0)
         upper_offset = row.get("isolation_upper_mz", 0) - row.get("precursor_mz", 0)
 
-        if get_accession_key(CVTerms.ISOLATION_LOWER_OFFSET) in self._cv and lower_offset > 0:
+        if (
+            get_accession_key(CVTerms.ISOLATION_LOWER_OFFSET) in self._cv
+            and lower_offset > 0
+        ):
             self._add_cv_param(
                 isolation_window,
                 self._cv[CV.MS],
@@ -563,7 +570,10 @@ class MzMLWriter:
                 self._cv[get_name_key(CVTerms.MZ_UNIT)],
             )
 
-        if get_accession_key(CVTerms.ISOLATION_UPPER_OFFSET) in self._cv and upper_offset > 0:
+        if (
+            get_accession_key(CVTerms.ISOLATION_UPPER_OFFSET) in self._cv
+            and upper_offset > 0
+        ):
             self._add_cv_param(
                 isolation_window,
                 self._cv[CV.MS],
@@ -670,7 +680,7 @@ class MzMLWriter:
         encoded_data = ""
         if len(data) > 0:
             # Format string: '<' for little-endian, 'f' for 32-bit float, 'd' for 64-bit float
-            format_char = "f" if self._binary_precision == 32 else "d"
+            format_char = "f" if self._binary_precision == 32 else "d"  # noqa: PLR2004
             buffer = struct.pack(f"<{len(data)}{format_char}", *data)
 
             # Apply compression if requested
@@ -684,7 +694,7 @@ class MzMLWriter:
         binary_array.set("arrayLength", str(len(data)))
 
         # Data type and compression
-        if self._binary_precision == 32:
+        if self._binary_precision == 32:  # noqa: PLR2004
             self._add_cv_param(
                 binary_array,
                 self._cv[CV.MS],
@@ -723,7 +733,7 @@ class MzMLWriter:
         binary = ET.SubElement(binary_array, self._ns_prefix + "binary")
         binary.text = encoded_data
 
-    def _add_cv_param(
+    def _add_cv_param(  # noqa: PLR0913
         self,
         parent: ET.Element,
         cv_ref: str,
@@ -781,7 +791,7 @@ class MzMLWriter:
                     int_value = int(float(str_value))
                     str_value = str(int_value)
                 except (ValueError, TypeError):
-                    str_value = str_value
+                    pass
 
             cv_param.set(self._cv[CV.VALUE], str_value)
         else:
