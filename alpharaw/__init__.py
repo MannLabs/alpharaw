@@ -21,4 +21,4 @@ def register_all_readers():
         )
 
 
-__version__ = "0.4.9-dev0"
+__version__ = "0.5.0"
