@@ -4,7 +4,7 @@ Original implementation in AlphaTims.
 """
 
 import multiprocessing
-from typing import Callable
+from typing import Callable, Optional
 
 MAX_THREADS = multiprocessing.cpu_count()
 PROGRESS_CALLBACK = True
@@ -119,6 +119,7 @@ def threadpool(
                     include_progress_callback=include_progress_callback,
                 ):
                     pass
+                return None
 
         return functools.wraps(func)(wrapper)
 
@@ -151,7 +152,7 @@ def conditional_njit(use_numba: bool = True, **kwargs) -> Callable:
 def pjit(
     _func=None,
     *,
-    thread_count: int = None,
+    thread_count: Optional[int] = None,
     include_progress_callback: bool = True,
     use_numba: bool = True,
     **kwargs,
@@ -198,13 +199,10 @@ def pjit(
     import numba
     import numpy as np
 
-    def _handle_progress_callback(iterable, progress_counter):
+    def _handle_progress_callback(iterable, progress_counter) -> None:
         import time
 
-        if len(iterable) > 10**6:
-            granularity = 1000
-        else:
-            granularity = len(iterable)
+        granularity = 1000 if len(iterable) > 10**6 else len(iterable)
         progress_bar = 0
         progress_count = np.sum(progress_counter)
         for _ in progress_callback(
@@ -227,7 +225,7 @@ def pjit(
             stop,
             step,
             *args,
-        ):
+        ) -> None:
             if len(iterable) == 0:
                 for i in range(start, stop, step):
                     wrapped_func(
@@ -239,7 +237,7 @@ def pjit(
                     wrapped_func(i, *args)
                     progress_counter[thread_id] += 1
 
-        def wrapper(iterable, *args):
+        def wrapper(iterable, *args) -> None:
             """A wrapper function that parallelizes the numba.njit function.
 
             The first argument of the wrapped function is seperately stored as `iterable` and its elements are
@@ -323,10 +321,7 @@ def progress_callback(
 
     """
     global PROGRESS_CALLBACK
-    if include_progress_callback:
-        current_progress_callback = PROGRESS_CALLBACK
-    else:
-        current_progress_callback = None
+    current_progress_callback = PROGRESS_CALLBACK if include_progress_callback else None
     if total == -1:
         total = len(iterable)
     if current_progress_callback is None:
@@ -355,7 +350,7 @@ def progress_callback(
         current_progress_callback.value = total
 
 
-def set_progress_callback(progress_callback):
+def set_progress_callback(progress_callback) -> None:
     """Set the global progress callback.
 
     Parameters
