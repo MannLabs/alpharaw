@@ -71,8 +71,6 @@ ignore = [
     "PT011", #pytest.raises(ValueError) is too broad
     "G004", "EM102", # Logging statement uses f-string
     "TRY003", # Avoid specifying long messages outside the exception class
-    "ANN101", # Missing type annotation for `self` in method
-    "ANN102", # Missing type annotation for `cls` in classmethod
     "ANN002", # Missing type annotation for `*args`
     "ANN003", # Missing type annotation for `**kwargs
     "FA102", # Missing `from __future__ import annotations
@@ -82,6 +80,6 @@ ignore = [
     "D401", # First line of docstring should be in imperative mood
     "B023", # Function definition does not bind loop variable
     "PD901", # Avoid using the generic variable name `df` for DataFrames"
-    "TCH003" # Move standard library import into a type-checking block
+    "TC003" # Move standard library import into a type-checking block
 
 ]

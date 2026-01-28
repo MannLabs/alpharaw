@@ -6,10 +6,11 @@ Original implementation in AlphaTims.
 from __future__ import annotations
 
 import multiprocessing
+from collections.abc import Iterable
 from typing import Callable
 
-MAX_THREADS = multiprocessing.cpu_count()
-PROGRESS_CALLBACK = True
+_MAX_THREADS = multiprocessing.cpu_count()
+_PROGRESS_CALLBACK = True
 
 
 def set_threads(threads: int, *, set_global: bool = True) -> int:
@@ -40,8 +41,8 @@ def set_threads(threads: int, *, set_global: bool = True) -> int:
         while threads <= 0:
             threads += max_cpu_count
     if set_global:
-        global MAX_THREADS  # noqa: PLW0603
-        MAX_THREADS = threads
+        global _MAX_THREADS  # noqa: PLW0603
+        _MAX_THREADS = threads
     return threads
 
 
@@ -102,20 +103,20 @@ def threadpool(
             except TypeError:
                 return func(iterable, *args, **kwargs)
             if thread_count is None:
-                current_thread_count = MAX_THREADS
+                current_thread_count = _MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
             with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
                 if return_results:
                     results = []
-                    for result in progress_callback(
+                    for result in _progress_callback(
                         pool.imap(starfunc, iterable),
                         total=len(iterable),
                         include_progress_callback=include_progress_callback,
                     ):
                         results.append(result)  # noqa: PERF402
                     return results
-                for _ in progress_callback(
+                for _ in _progress_callback(
                     pool.imap_unordered(starfunc, iterable),
                     total=len(iterable),
                     include_progress_callback=include_progress_callback,
@@ -130,7 +131,7 @@ def threadpool(
     return parallel_func_inner(_func)
 
 
-def conditional_njit(*, use_numba: bool = True, **kwargs) -> Callable:  # noqa: D417
+def _conditional_njit(*, use_numba: bool = True, **kwargs) -> Callable:  # noqa: D417
     """A conditional decorator that applies @numba.njit() when use_numba=True, otherwise returns the original function unchanged.
 
     Args:
@@ -207,7 +208,7 @@ def pjit(  # noqa: ANN201, D417, C901
         granularity = 1000 if len(iterable) > 10**6 else len(iterable)
         progress_bar = 0
         progress_count = np.sum(progress_counter)
-        for _ in progress_callback(
+        for _ in _progress_callback(
             range(granularity), include_progress_callback=include_progress_callback
         ):
             while progress_bar >= progress_count:
@@ -218,7 +219,7 @@ def pjit(  # noqa: ANN201, D417, C901
     def _parallel_compiled_func_inner(func: Callable) -> Callable:  # noqa: C901
         wrapped_func = numba.njit(nogil=True, **kwargs)(func) if use_numba else func
 
-        @conditional_njit(use_numba=use_numba, nogil=True)
+        @_conditional_njit(use_numba=use_numba, nogil=True)
         def wrapped_func_parallel(  # noqa: PLR0913
             iterable,  # noqa: ANN001
             thread_id: int,
@@ -246,7 +247,7 @@ def pjit(  # noqa: ANN201, D417, C901
             subsequently passed to the original function.
             """
             if thread_count is None:
-                current_thread_count = MAX_THREADS
+                current_thread_count = _MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
 
@@ -297,12 +298,12 @@ def pjit(  # noqa: ANN201, D417, C901
     return _parallel_compiled_func_inner(_func)
 
 
-def progress_callback(  # noqa: ANN201
+def _progress_callback(
     iterable,  # noqa: ANN001
     *,
     include_progress_callback: bool = True,
     total: int = -1,
-):
+) -> Iterable:
     """A generator that adds progress callback to an iterable.
 
     Parameters
@@ -325,8 +326,10 @@ def progress_callback(  # noqa: ANN201
         A generator over the iterable with added callback.
 
     """
-    global PROGRESS_CALLBACK  # noqa: PLW0602
-    current_progress_callback = PROGRESS_CALLBACK if include_progress_callback else None
+    global _PROGRESS_CALLBACK  # noqa: PLW0602
+    current_progress_callback = (
+        _PROGRESS_CALLBACK if include_progress_callback else None
+    )
     if total == -1:
         total = len(iterable)
     if current_progress_callback is None:
@@ -369,5 +372,5 @@ def set_progress_callback(progress_callback) -> None:  # noqa: ANN001
             - Any object that supports a `max` and `value` variable.
 
     """
-    global PROGRESS_CALLBACK  # noqa: PLW0603
-    PROGRESS_CALLBACK = progress_callback
+    global _PROGRESS_CALLBACK  # noqa: PLW0603
+    _PROGRESS_CALLBACK = progress_callback
