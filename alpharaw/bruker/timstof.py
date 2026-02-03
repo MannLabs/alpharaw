@@ -13,8 +13,6 @@ import numpy as np
 import pandas as pd
 import h5py
 # local
-import alphatims
-import alphatims.tempmmap as tm
 
 from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf_group
 
@@ -31,6 +29,8 @@ from alpharaw.bruker.slice import set_precursor, centroid_spectra
 from alpharaw.bruker.slice import trim_spectra, filter_spectra_by_abundant_peaks
 
 from alpharaw.bruker.write import save_as_mgf, save_as_spectra
+
+from alpharaw.bruker.dll import open_bruker_d_folder
 
 
 class TimsTOF(object):
@@ -521,14 +521,15 @@ class TimsTOF(object):
                 "WARNING: file extension not understood"
             )
         if not hasattr(self, "version"):
-            self._version = "N.A."
-        if self.version != alphatims.__version__:
-            logging.info(
-                "WARNING: "
-                f"AlphaTims version {self.version} was used to initialize "
-                f"{bruker_d_folder_name}, while the current version of "
-                f"AlphaTims is {alphatims.__version__}."
-            )
+            self._version = "1.0.10"
+        # TODO
+        # if self.version != alphatims.__version__:
+        #     logging.info(
+        #         "WARNING: "
+        #         f"AlphaTims version {self.version} was used to initialize "
+        #         f"{bruker_d_folder_name}, while the current version of "
+        #         f"AlphaTims is {alphatims.__version__}."
+        #     )
         self.slice_as_dataframe = slice_as_dataframe
         self.use_calibrated_mz_values_as_default(
             use_calibrated_mz_values_as_default
@@ -553,7 +554,7 @@ class TimsTOF(object):
         mmap_detector_events: bool = True
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
-        self._version = alphatims.__version__
+        self._version = "1.0.10" # TODO alphatims.__version__
         self._zeroth_frame = True
         (
             self._acquisition_mode,
@@ -600,7 +601,7 @@ class TimsTOF(object):
         self._intensity_corrections = self._max_accumulation_time / self._accumulation_times
         if (mobility_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with alphatims.bruker.open_bruker_d_folder(
+            with open_bruker_d_folder(
                 bruker_d_folder_name
             ) as (bruker_dll, bruker_d_folder_handle):
                 logging.info(
@@ -643,7 +644,7 @@ class TimsTOF(object):
         ) / self.tof_max_index
         if (mz_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with alphatims.bruker.open_bruker_d_folder(
+            with open_bruker_d_folder(
                 bruker_d_folder_name
             ) as (bruker_dll, bruker_d_folder_handle):
                 logging.info(

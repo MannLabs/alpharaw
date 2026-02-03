@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from alpharaw.alpharaw.utils.pjit import progress_callback
+from alpharaw.utils.pjit import progress_callback
 
 
 def create_hdf_group_from_dict(
