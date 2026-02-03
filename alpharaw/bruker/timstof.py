@@ -22,6 +22,8 @@ from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
 
 from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
 
+from alpharaw.bruker.read import indptr_lookup
+
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.
