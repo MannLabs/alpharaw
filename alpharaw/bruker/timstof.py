@@ -1,3 +1,22 @@
+#!python
+"""This module provides functions to handle Bruker data.
+It primarily implements the TimsTOF class, that acts as an in-memory container
+for Bruker data accession and storage.
+"""
+
+# builtin
+import os
+import sys
+import contextlib
+import logging
+# external
+import numpy as np
+import pandas as pd
+import h5py
+# local
+import alphatims
+import alphatims.utils
+import alphatims.tempmmap as tm
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.
