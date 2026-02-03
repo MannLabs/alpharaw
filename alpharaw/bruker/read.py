@@ -8,6 +8,7 @@ import pandas as pd
 
 from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
 from alpharaw.utils.pjit import njit, threadpool
+from alpharaw.utils import tempmmap as tm
 
 
 def read_bruker_sql(
