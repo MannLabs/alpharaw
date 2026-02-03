@@ -1,18 +1,17 @@
 """This module provides functions to handle Bruker data.
 It primarily implements the TimsTOF class, that acts as an in-memory container
 for Bruker data accession and storage.
+
+Note: this code has been moved from the alphatims package and does not comply to the MSData_Base contract.
 """
 
-# builtin
 import os
-import sys
-import contextlib
 import logging
-# external
 import numpy as np
 import pandas as pd
 import h5py
-# local
+
+import alpharaw
 
 from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf_group
 
@@ -521,15 +520,15 @@ class TimsTOF(object):
                 "WARNING: file extension not understood"
             )
         if not hasattr(self, "version"):
-            self._version = "1.0.10"
-        # TODO
-        # if self.version != alphatims.__version__:
-        #     logging.info(
-        #         "WARNING: "
-        #         f"AlphaTims version {self.version} was used to initialize "
-        #         f"{bruker_d_folder_name}, while the current version of "
-        #         f"AlphaTims is {alphatims.__version__}."
-        #     )
+            self._version = alpharaw.__version__
+
+        if self.version != alpharaw.__version__:
+            logging.info(
+                "WARNING: "
+                f"alpharaw version {self.version} was used to initialize "
+                f"{bruker_d_folder_name}, while the current version of "
+                f"AlphaTims is {alpharaw.__version__}."
+            )
         self.slice_as_dataframe = slice_as_dataframe
         self.use_calibrated_mz_values_as_default(
             use_calibrated_mz_values_as_default
