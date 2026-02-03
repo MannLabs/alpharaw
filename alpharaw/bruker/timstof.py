@@ -993,8 +993,10 @@ class TimsTOF:
                     raise PrecursorFloatError(
                         "Can not convert values to precursor_indices"
                     )
-            except ValueError:
-                raise PrecursorFloatError("Can not convert values to precursor_indices")
+            except ValueError as err:
+                raise PrecursorFloatError(
+                    "Can not convert values to precursor_indices"
+                ) from err
             if values == -np.inf:
                 return 0
             elif values == np.inf:
@@ -1462,7 +1464,6 @@ class TimsTOF:
         trimmed_spectrum_intensity_values = np.empty(
             len(trimmed_spectrum_tof_indices), dtype=np.float64
         )
-        spectrum_intensity_values
         trim_spectra(
             range(1, self.precursor_max_index),
             spectrum_tof_indices,
@@ -1675,17 +1676,16 @@ class TimsTOF:
             If 1, calibration at the MS1 level is performed.
             If 2, calibration at the MS2 level is performed.
         """
-        if use_calibrated_mz_values != 0:
-            if not hasattr(self, "_calibrated_mz_values"):
-                if use_calibrated_mz_values == 1:
-                    ms_level = 0
-                if use_calibrated_mz_values == 2:
-                    ms_level = slice(1, None)
-                self.calculate_global_calibrated_mz_values(
-                    calibrant1=(922.009798, 1.1895, ms_level),
-                    calibrant2=(1221.990637, 1.3820, ms_level),
-                    mz_tolerance=1,
-                )
+        if use_calibrated_mz_values != 0 and not hasattr(self, "_calibrated_mz_values"):
+            if use_calibrated_mz_values == 1:
+                ms_level = 0
+            if use_calibrated_mz_values == 2:
+                ms_level = slice(1, None)
+            self.calculate_global_calibrated_mz_values(
+                calibrant1=(922.009798, 1.1895, ms_level),
+                calibrant2=(1221.990637, 1.3820, ms_level),
+                mz_tolerance=1,
+            )
         self._use_calibrated_mz_values_as_default = use_calibrated_mz_values
 
     def set_cycle(self) -> None:
@@ -1892,24 +1892,24 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
         if key is None:
             key = slice(None)
         if isinstance(key, slice):
-            if dimension == "scan_indices":
-                if isinstance(key.start, (np.inexact, float)) or isinstance(
-                    key.stop, (np.inexact, float)
-                ):
-                    key = slice(key.stop, key.start, key.step)
+            if dimension == "scan_indices" and (
+                isinstance(key.start, (np.inexact, float))
+                or isinstance(key.stop, (np.inexact, float))
+            ):
+                key = slice(key.stop, key.start, key.step)
             start = key.start
             if not isinstance(start, (np.integer, int)):
                 if start is None:
                     start = np.inf if dimension == "scan_indices" else -np.inf
                 if not isinstance(start, (np.inexact, float)):
-                    raise ValueError
+                    raise ValueError from None
                 start = data.convert_to_indices(start, return_type=dimension)
             stop = key.stop
             if not isinstance(stop, (np.integer, int)):
                 if stop is None:
                     stop = -np.inf if dimension == "scan_indices" else np.inf
                 if not isinstance(stop, (np.inexact, float)):
-                    raise ValueError
+                    raise ValueError from None
                 stop = data.convert_to_indices(
                     stop,
                     return_type=dimension,
@@ -1917,7 +1917,7 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
             step = key.step
             if not isinstance(step, (np.integer, int)):
                 if step is not None:
-                    raise ValueError
+                    raise ValueError from None
                 step = 1
             result = np.array([[start, stop, step]])
         elif isinstance(key, (np.integer, int)):
@@ -1929,7 +1929,7 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
             else:
                 result = np.array([[key, key + 1, 1]])
         else:
-            raise ValueError
+            raise ValueError from None
     else:
         if not isinstance(key, np.ndarray):
             key = np.array(key)

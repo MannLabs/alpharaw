@@ -184,10 +184,9 @@ def filter_indices(
                             if tof_value in range(tof_start, tof_stop, tof_step):
                                 intensity = intensities[idx]
                                 for low_intensity, high_intensity in intensity_slices:
-                                    if low_intensity <= intensity:
-                                        if intensity <= high_intensity:
-                                            result.append(idx)
-                                            break
+                                    if low_intensity <= intensity <= high_intensity:
+                                        result.append(idx)
+                                        break
                             idx += 1
                             tof_value = tof_indices[idx]
     return np.array(result)
