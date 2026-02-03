@@ -376,7 +376,7 @@ def set_progress_callback(progress_callback) -> None:  # noqa: ANN001
     _PROGRESS_CALLBACK = progress_callback
 
 
-def njit(_func=None, *args, **kwargs):
+def njit(_func: Callable | None = None, *args, **kwargs) -> Callable:
     """A wrapper for the numba.njit decorator.
 
     This can be overriden with kwargs.

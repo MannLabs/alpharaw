@@ -698,10 +698,7 @@ class TimsTOF:
             directory = self.directory
         if file_name is None:
             file_name = f"{self.sample_name}.hdf"
-        if overwrite:
-            hdf_mode = "w"
-        else:
-            hdf_mode = "a"
+        hdf_mode = "w" if overwrite else "a"
         if return_as_bytes_io:
             full_file_name = io.BytesIO()
         else:
@@ -1523,10 +1520,9 @@ class TimsTOF:
                 "a ddaPASEF file, nothing to do."
             )
             return full_file_name
-        if os.path.exists(full_file_name):
-            if not overwrite:
-                logging.info(f"File {full_file_name} already exists, nothing to do.")
-                return full_file_name
+        if os.path.exists(full_file_name) and not overwrite:
+            logging.info(f"File {full_file_name} already exists, nothing to do.")
+            return full_file_name
         logging.info(f"Indexing spectra of {self.bruker_d_folder_name}...")
         (
             spectrum_indptr,
@@ -1718,7 +1714,7 @@ class TimsTOF:
             subframe = subframes.iloc[max_index]
             if subframe.equals(subframes.iloc[0]):
                 break
-        for index, row in self.fragment_frames[:max_index].iterrows():
+        for _index, row in self.fragment_frames[:max_index].iterrows():
             frame = int(row.Frame - self.zeroth_frame)
             scan_begin = int(row.ScanNumBegin)
             scan_end = int(row.ScanNumEnd)
@@ -1904,20 +1900,14 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
             start = key.start
             if not isinstance(start, (np.integer, int)):
                 if start is None:
-                    if dimension == "scan_indices":
-                        start = np.inf
-                    else:
-                        start = -np.inf
+                    start = np.inf if dimension == "scan_indices" else -np.inf
                 if not isinstance(start, (np.inexact, float)):
                     raise ValueError
                 start = data.convert_to_indices(start, return_type=dimension)
             stop = key.stop
             if not isinstance(stop, (np.integer, int)):
                 if stop is None:
-                    if dimension == "scan_indices":
-                        stop = -np.inf
-                    else:
-                        stop = np.inf
+                    stop = -np.inf if dimension == "scan_indices" else np.inf
                 if not isinstance(stop, (np.inexact, float)):
                     raise ValueError
                 stop = data.convert_to_indices(

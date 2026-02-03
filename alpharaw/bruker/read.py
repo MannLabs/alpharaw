@@ -273,7 +273,7 @@ def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
     index = 0
     for size in scan_indices:
         current_sum = 0
-        for i in range(size):
+        for _i in range(size):
             current_sum += tof_indices[index]
             tof_indices[index] = current_sum
             index += 1
