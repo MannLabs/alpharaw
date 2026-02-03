@@ -1,7 +1,9 @@
 import numpy as np
 
+from alpharaw.utils.pjit import njit, pjit
 
-@alphatims.utils.njit
+
+@njit
 def valid_quad_mz_values(
     low_mz_value: float,
     high_mz_value: float,
@@ -41,7 +43,7 @@ def valid_quad_mz_values(
     return False
 
 
-@alphatims.utils.njit
+@njit
 def valid_precursor_index(
     precursor_index: int,
     precursor_slices: np.ndarray
@@ -77,7 +79,7 @@ def valid_precursor_index(
     )
 
 
-@alphatims.utils.njit
+@njit
 def filter_indices(
     frame_slices: np.ndarray,
     scan_slices: np.ndarray,
@@ -217,7 +219,7 @@ def filter_indices(
 
 
 # Overhead of using more than 1 threads is actually slower
-@alphatims.utils.pjit(thread_count=1, include_progress_callback=False)
+@pjit(thread_count=1, include_progress_callback=False)
 def add_intensity_to_bin(
     query_index: int,
     intensities: np.ndarray,
