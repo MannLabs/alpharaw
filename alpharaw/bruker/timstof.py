@@ -18,6 +18,8 @@ import alphatims.tempmmap as tm
 
 from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf_group
 
+from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
+
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.

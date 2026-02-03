@@ -9,7 +9,7 @@ import multiprocessing
 from collections.abc import Iterable
 from typing import Callable
 
-_MAX_THREADS = multiprocessing.cpu_count()
+MAX_THREADS = multiprocessing.cpu_count()
 _PROGRESS_CALLBACK = True
 
 
@@ -41,8 +41,8 @@ def set_threads(threads: int, *, set_global: bool = True) -> int:
         while threads <= 0:
             threads += max_cpu_count
     if set_global:
-        global _MAX_THREADS  # noqa: PLW0603
-        _MAX_THREADS = threads
+        global MAX_THREADS  # noqa: PLW0603
+        MAX_THREADS = threads
     return threads
 
 
@@ -103,7 +103,7 @@ def threadpool(
             except TypeError:
                 return func(iterable, *args, **kwargs)
             if thread_count is None:
-                current_thread_count = _MAX_THREADS
+                current_thread_count = MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
             with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
@@ -247,7 +247,7 @@ def pjit(  # noqa: ANN201, D417, C901
             subsequently passed to the original function.
             """
             if thread_count is None:
-                current_thread_count = _MAX_THREADS
+                current_thread_count = MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
 
