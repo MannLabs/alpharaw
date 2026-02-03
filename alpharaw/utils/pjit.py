@@ -109,14 +109,14 @@ def threadpool(
             with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
                 if return_results:
                     results = []
-                    for result in _progress_callback(
+                    for result in progress_callback(
                         pool.imap(starfunc, iterable),
                         total=len(iterable),
                         include_progress_callback=include_progress_callback,
                     ):
                         results.append(result)  # noqa: PERF402
                     return results
-                for _ in _progress_callback(
+                for _ in progress_callback(
                     pool.imap_unordered(starfunc, iterable),
                     total=len(iterable),
                     include_progress_callback=include_progress_callback,
@@ -208,7 +208,7 @@ def pjit(  # noqa: ANN201, D417, C901
         granularity = 1000 if len(iterable) > 10**6 else len(iterable)
         progress_bar = 0
         progress_count = np.sum(progress_counter)
-        for _ in _progress_callback(
+        for _ in progress_callback(
             range(granularity), include_progress_callback=include_progress_callback
         ):
             while progress_bar >= progress_count:
@@ -298,7 +298,7 @@ def pjit(  # noqa: ANN201, D417, C901
     return _parallel_compiled_func_inner(_func)
 
 
-def _progress_callback(
+def progress_callback(
     iterable,  # noqa: ANN001
     *,
     include_progress_callback: bool = True,

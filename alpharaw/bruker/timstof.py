@@ -1,4 +1,3 @@
-#!python
 """This module provides functions to handle Bruker data.
 It primarily implements the TimsTOF class, that acts as an in-memory container
 for Bruker data accession and storage.
@@ -15,8 +14,10 @@ import pandas as pd
 import h5py
 # local
 import alphatims
-import alphatims.utils
 import alphatims.tempmmap as tm
+
+from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf_group
+
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.
@@ -726,7 +727,7 @@ class TimsTOF(object):
         self._compressed = compress
         with h5py.File(full_file_name, hdf_mode) as hdf_root:
             # hdf_root.swmr_mode = True
-            alphatims.utils.create_hdf_group_from_dict(
+            create_hdf_group_from_dict(
                 hdf_root.create_group("raw"),
                 self.__dict__,
                 overwrite=overwrite,
@@ -751,7 +752,7 @@ class TimsTOF(object):
             if mmap_detector_events:
                 mmap_arrays.append("/raw/_tof_indices")
                 mmap_arrays.append("/raw/_intensity_values")
-            self.__dict__ = alphatims.utils.create_dict_from_hdf_group(
+            self.__dict__ = create_dict_from_hdf_group(
                 hdf_root["raw"],
                 mmap_arrays,
                 bruker_d_folder_name,
