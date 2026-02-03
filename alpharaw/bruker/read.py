@@ -245,6 +245,7 @@ def process_frame(
             tof_indices[frame_start:frame_end] = tof_indices_
             intensities[frame_start:frame_end] = intensities_
 
+
 @njit(nogil=True)
 def parse_decompressed_bruker_binary_type1(
     decompressed_bytes: bytes,
@@ -294,6 +295,7 @@ def parse_decompressed_bruker_binary_type1(
     scan_size = current_index - scan_start
     scan_indices_[scan_index] = scan_size
     return scan_size
+
 
 @njit(nogil=True)
 def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
