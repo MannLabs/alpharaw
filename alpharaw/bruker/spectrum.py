@@ -2,8 +2,7 @@
 
 import numpy as np
 
-from alpharaw.utils.pjit import njit, pjit
-
+from alpharaw.utils.pjit import pjit
 
 
 @pjit(
@@ -54,27 +53,25 @@ def set_precursor(
     offset = spectrum_indptr[precursor_index]
     precursor_offset_lower = precursor_offsets[precursor_index]
     precursor_offset_upper = precursor_offsets[precursor_index + 1]
-    selected_offsets = offset_order[
-        precursor_offset_lower: precursor_offset_upper
-    ]
+    selected_offsets = offset_order[precursor_offset_lower:precursor_offset_upper]
     starts = quad_indptr[selected_offsets]
     ends = quad_indptr[selected_offsets + 1]
     offset_index = offset
     for start, end in zip(starts, ends):
-        spectrum_tof_indices[
-            offset_index: offset_index + end - start
-        ] = tof_indices[start: end]
-        spectrum_intensity_values[
-            offset_index: offset_index + end - start
-            ] = intensities[start: end]
+        spectrum_tof_indices[offset_index : offset_index + end - start] = tof_indices[
+            start:end
+        ]
+        spectrum_intensity_values[offset_index : offset_index + end - start] = (
+            intensities[start:end]
+        )
         offset_index += end - start
     offset_end = spectrum_indptr[precursor_index + 1]
-    order = np.argsort(spectrum_tof_indices[offset: offset_end])
+    order = np.argsort(spectrum_tof_indices[offset:offset_end])
     current_index = offset - 1
     previous_tof_index = -1
     for tof_index, intensity in zip(
-        spectrum_tof_indices[offset: offset_end][order],
-        spectrum_intensity_values[offset: offset_end][order],
+        spectrum_tof_indices[offset:offset_end][order],
+        spectrum_intensity_values[offset:offset_end][order],
     ):
         if tof_index != previous_tof_index:
             current_index += 1
@@ -83,8 +80,8 @@ def set_precursor(
             previous_tof_index = tof_index
         else:
             spectrum_intensity_values[current_index] += intensity
-    spectrum_tof_indices[current_index + 1: offset_end] = 0
-    spectrum_intensity_values[current_index + 1: offset_end] = 0
+    spectrum_tof_indices[current_index + 1 : offset_end] = 0
+    spectrum_intensity_values[current_index + 1 : offset_end] = 0
     spectrum_counts[precursor_index] = current_index + 1 - offset
 
 
@@ -126,8 +123,8 @@ def centroid_spectra(
     end = start + spectrum_counts[index]
     if start == end:
         return
-    mzs = spectrum_tof_indices[start: end]
-    ints = spectrum_intensity_values[start: end]
+    mzs = spectrum_tof_indices[start:end]
+    ints = spectrum_intensity_values[start:end]
     smooth_ints = ints.copy()
     for i, self_mz in enumerate(mzs[:-1]):
         for j in range(i + 1, len(mzs)):
@@ -154,16 +151,13 @@ def centroid_spectra(
             intensities.append(0)
             pre_apex = True
         intensities[-1] += ints[i]
-    spectrum_tof_indices[start: start + len(maxima)] = np.array(
-        maxima,
-        dtype=spectrum_tof_indices.dtype
+    spectrum_tof_indices[start : start + len(maxima)] = np.array(
+        maxima, dtype=spectrum_tof_indices.dtype
     )
-    spectrum_intensity_values[start: start + len(maxima)] = np.array(
-        intensities,
-        dtype=spectrum_intensity_values.dtype
+    spectrum_intensity_values[start : start + len(maxima)] = np.array(
+        intensities, dtype=spectrum_intensity_values.dtype
     )
     spectrum_counts[index] = len(maxima)
-
 
 
 @pjit
@@ -204,14 +198,12 @@ def filter_spectra_by_abundant_peaks(
     end = start + spectrum_counts[index]
     if end - start <= keep_n_most_abundant_peaks:
         return
-    mzs = spectrum_tof_indices[start: end]
-    ints = spectrum_intensity_values[start: end]
-    selected_indices = np.sort(
-        np.argsort(ints)[-keep_n_most_abundant_peaks:]
-    )
+    mzs = spectrum_tof_indices[start:end]
+    ints = spectrum_intensity_values[start:end]
+    selected_indices = np.sort(np.argsort(ints)[-keep_n_most_abundant_peaks:])
     count = len(selected_indices)
-    spectrum_tof_indices[start: start + count] = mzs[selected_indices]
-    spectrum_intensity_values[start: start + count] = ints[selected_indices]
+    spectrum_tof_indices[start : start + count] = mzs[selected_indices]
+    spectrum_intensity_values[start : start + count] = ints[selected_indices]
     spectrum_counts[index] = count
 
 
@@ -251,12 +243,9 @@ def trim_spectra(
     start = spectrum_indptr[index]
     new_start = new_spectrum_indptr[index]
     new_end = new_spectrum_indptr[index + 1]
-    trimmed_spectrum_tof_indices[new_start: new_end] = spectrum_tof_indices[
-        start: start + new_end - new_start
+    trimmed_spectrum_tof_indices[new_start:new_end] = spectrum_tof_indices[
+        start : start + new_end - new_start
     ]
-    trimmed_spectrum_intensity_values[
-        new_start: new_end
-    ] = spectrum_intensity_values[
-        start: start + new_end - new_start
+    trimmed_spectrum_intensity_values[new_start:new_end] = spectrum_intensity_values[
+        start : start + new_end - new_start
     ]
-

@@ -14,6 +14,7 @@ from alpharaw.feature.chem import (
 )
 from alpharaw.utils.pjit import threadpool
 
+
 def find_connected_components(edges, min_size=2):
     num_nodes = np.max(edges) + 1
     parent = np.arange(num_nodes)

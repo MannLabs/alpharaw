@@ -12,7 +12,7 @@ def create_hdf_group_from_dict(
     overwrite: bool = False,
     compress: bool = False,
     recursed: bool = False,
-    chunked: bool = False
+    chunked: bool = False,
 ) -> None:
     """Save a dict to an open hdf group.
 
@@ -61,8 +61,9 @@ def create_hdf_group_from_dict(
     KeyError
         When a key of data_dict is not a string.
     """
-    import pandas as pd
     import h5py
+    import pandas as pd
+
     if recursed:
         iterable_dict = data_dict.items()
     else:
@@ -88,13 +89,9 @@ def create_hdf_group_from_dict(
                 del hdf_group[key]
             if key not in hdf_group:
                 if value.dtype.type == np.str_:
-                    value = value.astype(np.dtype('O'))
-                if value.dtype == np.dtype('O'):
-                    hdf_group.create_dataset(
-                        key,
-                        data=value,
-                        dtype=h5py.string_dtype()
-                    )
+                    value = value.astype(np.dtype("O"))
+                if value.dtype == np.dtype("O"):
+                    hdf_group.create_dataset(key, data=value, dtype=h5py.string_dtype())
                 else:
                     hdf_group.create_dataset(
                         key,
@@ -161,6 +158,7 @@ def create_dict_from_hdf_group(
     """
     import h5py
     import pandas as pd
+
     result = {}
     for key in hdf_group.attrs:
         value = hdf_group.attrs[key]
@@ -183,17 +181,16 @@ def create_dict_from_hdf_group(
                 if offset is not None:
                     shape = subgroup.shape
                     import mmap
+
                     with open(parent_file_name, "rb") as raw_hdf_file:
                         mmap_obj = mmap.mmap(
-                            raw_hdf_file.fileno(),
-                            0,
-                            access=mmap.ACCESS_READ
+                            raw_hdf_file.fileno(), 0, access=mmap.ACCESS_READ
                         )
                         result[key] = np.frombuffer(
                             mmap_obj,
                             dtype=subgroup.dtype,
                             count=np.prod(shape),
-                            offset=offset
+                            offset=offset,
                         ).reshape(shape)
                         # TODO WARNING: mmap is not closed!
                     # result[key] = np.memmap(
@@ -204,7 +201,7 @@ def create_dict_from_hdf_group(
                     #     shape=shape,
                     # )
                 else:
-                    raise IOError(
+                    raise OSError(
                         f"Array {subgroup.name} cannot be mmapped. "
                         "Perhaps it is compressed or chunked?"
                     )
@@ -213,11 +210,7 @@ def create_dict_from_hdf_group(
         else:
             if "is_pd_dataframe" in subgroup.attrs:
                 result[key] = pd.DataFrame(
-                    {
-                        column: subgroup[column][:] for column in sorted(
-                            subgroup
-                        )
-                    }
+                    {column: subgroup[column][:] for column in sorted(subgroup)}
                 )
             else:
                 result[key] = create_dict_from_hdf_group(
@@ -226,4 +219,3 @@ def create_dict_from_hdf_group(
                     parent_file_name,
                 )
     return result
-

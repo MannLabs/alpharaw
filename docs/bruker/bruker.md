@@ -1,4 +1,4 @@
-# Handling Bruker TimsTOF raw data 
+# Handling Bruker TimsTOF raw data
 
 This document describes how AlphaRaw handles Bruker TimsTOF raw data using an implementation that was originally part of [AlphaTims](https://github.com/MannLabs/alphatims).
 

@@ -2,14 +2,13 @@ import typing
 
 import pandas as pd
 
+from alpharaw.bruker.timstof import TimsTOF
 from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
-from alpharaw.bruker.timstof import TimsTOF
-
-
 # IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
+
 
 # TODO: rename, this name is confusing now that AlphaTims functionality has been moved to here.
 def convert_to_alphatims(

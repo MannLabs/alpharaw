@@ -4,11 +4,10 @@ import pandas as pd
 import alpharaw
 
 from ..bruker.timstof import TimsTOF
-
 from ..ms_data_base import MSData_Base
 
-
 # IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
+
 
 # TODO: remove this class, it's not used anywhere (on the whole GitHub).
 class AlphaTimsReader(MSData_Base):

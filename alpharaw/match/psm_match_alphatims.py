@@ -8,8 +8,8 @@ import tqdm
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
-from .psm_match import PepSpecMatch
 from ..bruker.timstof import TimsTOF
+from .psm_match import PepSpecMatch
 
 # IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
 

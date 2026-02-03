@@ -5,6 +5,7 @@ from numba import njit
 from alpharaw.feature.centroids import connect_centroids
 from alpharaw.utils.pjit import threadpool
 
+
 @threadpool(include_progress_callback=False)
 @njit
 def path_finder(

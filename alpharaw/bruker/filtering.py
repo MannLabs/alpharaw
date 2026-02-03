@@ -33,11 +33,7 @@ def valid_quad_mz_values(
         True if some part of the quad overlaps with some part of some slice.
         False if there is no overlap in the range.
     """
-    slice_index = np.searchsorted(
-        quad_slices[:, 0].ravel(),
-        high_mz_value,
-        "right"
-    )
+    slice_index = np.searchsorted(quad_slices[:, 0].ravel(), high_mz_value, "right")
     if slice_index == 0:
         return False
     if low_mz_value <= quad_slices[slice_index - 1, 1]:
@@ -46,10 +42,7 @@ def valid_quad_mz_values(
 
 
 @njit
-def valid_precursor_index(
-    precursor_index: int,
-    precursor_slices: np.ndarray
-) -> bool:
+def valid_precursor_index(precursor_index: int, precursor_slices: np.ndarray) -> bool:
     """Check if a precursor index is included in the slices.
 
     Parameters
@@ -68,9 +61,7 @@ def valid_precursor_index(
         False otherwise.
     """
     slice_index = np.searchsorted(
-        precursor_slices[:, 0].ravel(),
-        precursor_index,
-        side="right"
+        precursor_slices[:, 0].ravel(), precursor_index, side="right"
     )
     if slice_index == 0:
         return False
@@ -153,25 +144,19 @@ def filter_indices(
     new_quad_index = -1
     quad_end = -1
     is_valid_quad_index = True
-    starts = push_indptr[:-1].reshape(
-        frame_max_index,
-        scan_max_index
-    )
-    ends = push_indptr[1:].reshape(
-        frame_max_index,
-        scan_max_index
-    )
+    starts = push_indptr[:-1].reshape(frame_max_index, scan_max_index)
+    ends = push_indptr[1:].reshape(frame_max_index, scan_max_index)
     for frame_start, frame_stop, frame_step in frame_slices:
         for frame_start_slice, frame_end_slice in zip(
             starts[slice(frame_start, frame_stop, frame_step)],
-            ends[slice(frame_start, frame_stop, frame_step)]
+            ends[slice(frame_start, frame_stop, frame_step)],
         ):
             for scan_start, scan_stop, scan_step in scan_slices:
                 for sparse_start, sparse_end in zip(
                     frame_start_slice[slice(scan_start, scan_stop, scan_step)],
-                    frame_end_slice[slice(scan_start, scan_stop, scan_step)]
+                    frame_end_slice[slice(scan_start, scan_stop, scan_step)],
                 ):
-                    if (sparse_start == sparse_end):
+                    if sparse_start == sparse_end:
                         continue
                     while quad_end < sparse_end:
                         new_quad_index += 1
@@ -181,10 +166,8 @@ def filter_indices(
                         if not valid_quad_mz_values(
                             quad_mz_values[quad_index, 0],
                             quad_mz_values[quad_index, 1],
-                            quad_slices
-                        ):
-                            is_valid_quad_index = False
-                        elif not valid_precursor_index(
+                            quad_slices,
+                        ) or not valid_precursor_index(
                             precursor_indices[quad_index],
                             precursor_slices,
                         ):
@@ -195,24 +178,14 @@ def filter_indices(
                         continue
                     idx = sparse_start
                     for tof_start, tof_stop, tof_step in tof_slices:
-                        idx += np.searchsorted(
-                            tof_indices[idx: sparse_end],
-                            tof_start
-                        )
+                        idx += np.searchsorted(tof_indices[idx:sparse_end], tof_start)
                         tof_value = tof_indices[idx]
                         while (tof_value < tof_stop) and (idx < sparse_end):
-                            if tof_value in range(
-                                tof_start,
-                                tof_stop,
-                                tof_step
-                            ):
+                            if tof_value in range(tof_start, tof_stop, tof_step):
                                 intensity = intensities[idx]
-                                for (
-                                    low_intensity,
-                                    high_intensity
-                                ) in intensity_slices:
-                                    if (low_intensity <= intensity):
-                                        if (intensity <= high_intensity):
+                                for low_intensity, high_intensity in intensity_slices:
+                                    if low_intensity <= intensity:
+                                        if intensity <= high_intensity:
                                             result.append(idx)
                                             break
                             idx += 1
@@ -252,8 +225,5 @@ def add_intensity_to_bin(
         intensity_bins[parsed_indices[0][query_index]] += intensity
     elif len(parsed_indices) == 2:
         intensity_bins[
-            parsed_indices[0][query_index],
-            parsed_indices[1][query_index]
+            parsed_indices[0][query_index], parsed_indices[1][query_index]
         ] += intensity
-
-

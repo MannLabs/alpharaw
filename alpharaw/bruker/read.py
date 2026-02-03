@@ -1,7 +1,7 @@
 """Reading Bruker .d folders: SQL metadata and binary scan data."""
 
-import os
 import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -51,46 +51,33 @@ def read_bruker_sql(
         For diaPASEF, precursors is None.
     """
     import sqlite3
+
     logging.info(f"Reading frame metadata for {bruker_d_folder_name}")
     with sqlite3.connect(
         os.path.join(bruker_d_folder_name, "analysis.tdf")
     ) as sql_database_connection:
         global_meta_data = pd.read_sql_query(
-            "SELECT * from GlobalMetaData",
-            sql_database_connection
+            "SELECT * from GlobalMetaData", sql_database_connection
         )
-        frames = pd.read_sql_query(
-            "SELECT * FROM Frames",
-            sql_database_connection
-        )
+        frames = pd.read_sql_query("SELECT * FROM Frames", sql_database_connection)
         if 9 in frames.MsMsType.values:
             acquisition_mode = "diaPASEF"
             fragment_frames = pd.read_sql_query(
-                "SELECT * FROM DiaFrameMsMsInfo",
-                sql_database_connection
+                "SELECT * FROM DiaFrameMsMsInfo", sql_database_connection
             )
             fragment_frame_groups = pd.read_sql_query(
-                "SELECT * from DiaFrameMsMsWindows",
-                sql_database_connection
+                "SELECT * from DiaFrameMsMsWindows", sql_database_connection
             )
-            fragment_frames = fragment_frames.merge(
-                fragment_frame_groups,
-                how="left"
-            )
-            fragment_frames.rename(
-                columns={"WindowGroup": "Precursor"},
-                inplace=True
-            )
+            fragment_frames = fragment_frames.merge(fragment_frame_groups, how="left")
+            fragment_frames.rename(columns={"WindowGroup": "Precursor"}, inplace=True)
             precursors = None
         elif 8 in frames.MsMsType.values:
             acquisition_mode = "ddaPASEF"
             fragment_frames = pd.read_sql_query(
-                "SELECT * from PasefFrameMsMsInfo",
-                sql_database_connection
+                "SELECT * from PasefFrameMsMsInfo", sql_database_connection
             )
             precursors = pd.read_sql_query(
-                "SELECT * from Precursors",
-                sql_database_connection
+                "SELECT * from Precursors", sql_database_connection
             )
         else:
             acquisition_mode = "noPASEF"
@@ -108,10 +95,7 @@ def read_bruker_sql(
             # raise ValueError("Scan mode is not ddaPASEF or diaPASEF")
         calibration_available = BRUKER_DLL_FILE_NAME != ""
         try:
-            pd.read_sql_query(
-                "SELECT * from CalibrationInfo",
-                sql_database_connection
-            )
+            pd.read_sql_query("SELECT * from CalibrationInfo", sql_database_connection)
         except pd.io.sql.DatabaseError:
             calibration_available = False
         if add_zeroth_frame:
@@ -120,7 +104,7 @@ def read_bruker_sql(
                     pd.DataFrame(frames.iloc[0]).T,
                     frames,
                 ],
-                ignore_index=True
+                ignore_index=True,
             )
             frames.Id[0] = 0
             frames.Time[0] = 0
@@ -130,19 +114,15 @@ def read_bruker_sql(
             frames.MsMsType[0] = 0
         polarity_col = frames["Polarity"].copy()
         frames = pd.DataFrame(
-            {
-                col: pd.to_numeric(
-                    frames[col]
-                ) for col in frames if col != "Polarity"
-            }
+            {col: pd.to_numeric(frames[col]) for col in frames if col != "Polarity"}
         )
         if not drop_polarity:
             if convert_polarity_to_int:
-                frames['Polarity'] = polarity_col.apply(
+                frames["Polarity"] = polarity_col.apply(
                     lambda x: 1 if x == "+" else -1
                 ).astype(np.int8)
             else:
-                frames['Polarity'] = polarity_col
+                frames["Polarity"] = polarity_col
         return (
             acquisition_mode,
             global_meta_data,
@@ -219,27 +199,19 @@ def process_frame(
             infile.seek(offset)
             bin_size = int.from_bytes(infile.read(4), "little")
             scan_count = int.from_bytes(infile.read(4), "little")
-            max_peak_count = min(
-                max_peaks_per_scan,
-                frame_end - frame_start
-            )
+            max_peak_count = min(max_peaks_per_scan, frame_end - frame_start)
             if compression_type == 1:
                 import lzf
+
                 compression_offset = 8 + (scan_count + 1) * 4
-                scan_offsets = np.frombuffer(
-                    infile.read((scan_count + 1) * 4),
-                    dtype=np.int32
-                ) - compression_offset
+                scan_offsets = (
+                    np.frombuffer(infile.read((scan_count + 1) * 4), dtype=np.int32)
+                    - compression_offset
+                )
                 compressed_data = infile.read(bin_size - compression_offset)
                 scan_indices_ = np.zeros(scan_count, dtype=np.int64)
-                tof_indices_ = np.empty(
-                    frame_end - frame_start,
-                    dtype=np.uint32
-                )
-                intensities_ = np.empty(
-                    frame_end - frame_start,
-                    dtype=np.uint16
-                )
+                tof_indices_ = np.empty(frame_end - frame_start, dtype=np.uint32)
+                intensities_ = np.empty(frame_end - frame_start, dtype=np.uint16)
                 scan_start = 0
                 for scan_index in range(scan_count):
                     start = scan_offsets[scan_index]
@@ -247,8 +219,7 @@ def process_frame(
                     if start == end:
                         continue
                     decompressed_bytes = lzf.decompress(
-                        compressed_data[start: end],
-                        max_peak_count * 4 * 2
+                        compressed_data[start:end], max_peak_count * 4 * 2
                     )
                     scan_start += parse_decompressed_bruker_binary_type1(
                         decompressed_bytes,
@@ -260,20 +231,20 @@ def process_frame(
                     )
             elif compression_type == 2:
                 import pyzstd
+
                 compressed_data = infile.read(bin_size - 8)
                 decompressed_bytes = pyzstd.decompress(compressed_data)
-                (
-                    scan_indices_,
-                    tof_indices_,
-                    intensities_
-                ) = parse_decompressed_bruker_binary_type2(decompressed_bytes)
+                (scan_indices_, tof_indices_, intensities_) = (
+                    parse_decompressed_bruker_binary_type2(decompressed_bytes)
+                )
             else:
                 raise ValueError("TimsCompressionType is not 1 or 2.")
             scan_start = frame_id * max_scan_count
             scan_end = scan_start + scan_count
-            scan_indptr[scan_start: scan_end] = scan_indices_
-            tof_indices[frame_start: frame_end] = tof_indices_
-            intensities[frame_start: frame_end] = intensities_
+            scan_indptr[scan_start:scan_end] = scan_indices_
+            tof_indices[frame_start:frame_end] = tof_indices_
+            intensities[frame_start:frame_end] = intensities_
+
 
 @njit(nogil=True)
 def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
@@ -294,7 +265,7 @@ def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
     buffer = np.frombuffer(temp.reshape(4, -1).T.flatten(), dtype=np.uint32)
     scan_count = buffer[0]
     scan_indices = buffer[:scan_count].copy() // 2
-    intensities = buffer[scan_count + 1::2]
+    intensities = buffer[scan_count + 1 :: 2]
     last_scan = len(intensities) - np.sum(scan_indices[1:])
     scan_indices[:-1] = scan_indices[1:]
     scan_indices[-1] = last_scan
@@ -307,6 +278,7 @@ def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
             tof_indices[index] = current_sum
             index += 1
     return scan_indices, tof_indices - 1, intensities
+
 
 def read_bruker_binary(
     frames: np.ndarray,
@@ -360,10 +332,7 @@ def read_bruker_binary(
         f"{frame_indptr[-1]:,} detector events for {bruker_d_folder_name}"
     )
     if compression_type == 1:
-        process_frame_func = threadpool(
-            process_frame,
-            thread_count=1
-        )
+        process_frame_func = threadpool(process_frame, thread_count=1)
     else:
         process_frame_func = threadpool(process_frame)
     process_frame_func(
@@ -383,12 +352,9 @@ def read_bruker_binary(
     return scan_indptr, tof_indices, intensities
 
 
-
 @njit(nogil=True)
 def indptr_lookup(
-    targets: np.ndarray,
-    queries: np.ndarray,
-    momentum_amplifier: int = 2
+    targets: np.ndarray, queries: np.ndarray, momentum_amplifier: int = 2
 ):
     """Find the indices of queries in targets.
 

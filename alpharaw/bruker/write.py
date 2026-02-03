@@ -20,9 +20,7 @@ def save_as_mgf(
     mz_values,
 ):
     with open(full_file_name, "w") as infile:
-        for index in progress_callback(
-            range(1, precursor_max_index)
-        ):
+        for index in progress_callback(range(1, precursor_max_index)):
             start = spectrum_indptr[index]
             end = spectrum_indptr[index + 1]
             title = (
@@ -37,8 +35,8 @@ def save_as_mgf(
             infile.write(f"CHARGE={charges[index - 1]}\n")
             infile.write(f"RTINSECONDS={rtinseconds[index - 1]:.2f}\n")
             for mz, intensity in zip(
-                mz_values[spectrum_tof_indices[start: end]],
-                spectrum_intensity_values[start: end],
+                mz_values[spectrum_tof_indices[start:end]],
+                spectrum_intensity_values[start:end],
             ):
                 infile.write(f"{mz:.6f} {intensity}\n")
             infile.write("END IONS\n")
@@ -59,9 +57,7 @@ def save_as_spectra(
 ):
     with h5py.File(full_file_name, "w") as infile:
         infile["indptr"] = spectrum_indptr[1:]
-        infile["fragment_mzs"] = mz_values[
-            spectrum_tof_indices
-        ]
+        infile["fragment_mzs"] = mz_values[spectrum_tof_indices]
         infile["fragment_intensities"] = spectrum_intensity_values
         infile["precursor_rt"] = rtinseconds
         infile["precursor_charge"] = charges

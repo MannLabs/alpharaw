@@ -5,11 +5,10 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
 from plotly.subplots import make_subplots
 
-from .plot_utils import plot_line_tims_fast
 from ..bruker.timstof import TimsTOF
+from .plot_utils import plot_line_tims_fast
 
 warnings.warn(
     "This module will be deprecated or changed in the future releases",

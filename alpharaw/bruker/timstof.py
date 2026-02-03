@@ -5,34 +5,28 @@ for Bruker data accession and storage.
 Note: this code has been moved from the AlphaTims package and does not comply to the MSData_Base contract.
 """
 
-import os
 import logging
+import os
+
+import h5py
 import numpy as np
 import pandas as pd
-import h5py
 
 import alpharaw
-
-from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf_group
-
-from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
-
-from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
-
-from alpharaw.bruker.read import indptr_lookup
-
-from alpharaw.bruker.filtering import filter_indices, add_intensity_to_bin
-
-from alpharaw.bruker.spectrum import set_precursor, centroid_spectra
-
-from alpharaw.bruker.spectrum import trim_spectra, filter_spectra_by_abundant_peaks
-
+from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME, open_bruker_d_folder
+from alpharaw.bruker.filtering import add_intensity_to_bin, filter_indices
+from alpharaw.bruker.hdf import create_dict_from_hdf_group, create_hdf_group_from_dict
+from alpharaw.bruker.read import indptr_lookup, read_bruker_binary, read_bruker_sql
+from alpharaw.bruker.spectrum import (
+    centroid_spectra,
+    filter_spectra_by_abundant_peaks,
+    set_precursor,
+    trim_spectra,
+)
 from alpharaw.bruker.write import save_as_mgf, save_as_spectra
 
-from alpharaw.bruker.dll import open_bruker_d_folder
 
-
-class TimsTOF(object):
+class TimsTOF:
     """A class that stores Bruker TimsTOF data in memory for fast access.
 
     Data can be read directly from a Bruker .d folder.
@@ -194,7 +188,7 @@ class TimsTOF(object):
     def sample_name(self):
         """: str : The sample name of this TimsTOF object."""
         file_name = os.path.basename(self.bruker_d_folder_name)
-        return '.'.join(file_name.split('.')[:-1])
+        return ".".join(file_name.split(".")[:-1])
 
     @property
     def directory(self):
@@ -473,7 +467,7 @@ class TimsTOF(object):
             This is ignored if the polarity is dropped.
             Default is True.
         """
-        #Log a warning if there was not a valid DLL filename
+        # Log a warning if there was not a valid DLL filename
         if BRUKER_DLL_FILE_NAME == "":
             logging.warning(
                 "WARNING: "
@@ -498,9 +492,7 @@ class TimsTOF(object):
                 )
                 self.bruker_hdf_file_name = bruker_hdf_file_name
             else:
-                self.bruker_d_folder_name = os.path.abspath(
-                    bruker_d_folder_name
-                )
+                self.bruker_d_folder_name = os.path.abspath(bruker_d_folder_name)
                 self._import_data_from_d_folder(
                     bruker_d_folder_name,
                     mz_estimation_from_frame,
@@ -516,9 +508,7 @@ class TimsTOF(object):
             )
             self.bruker_hdf_file_name = bruker_d_folder_name
         else:
-            raise NotImplementedError(
-                "WARNING: file extension not understood"
-            )
+            raise NotImplementedError("WARNING: file extension not understood")
         if not hasattr(self, "version"):
             self._version = alpharaw.__version__
 
@@ -530,9 +520,7 @@ class TimsTOF(object):
                 f"alpharaw is {alpharaw.__version__}."
             )
         self.slice_as_dataframe = slice_as_dataframe
-        self.use_calibrated_mz_values_as_default(
-            use_calibrated_mz_values_as_default
-        )
+        self.use_calibrated_mz_values_as_default(use_calibrated_mz_values_as_default)
         # Precompile
         self[0, "raw"]
         logging.info(f"Successfully imported data from {bruker_d_folder_name}")
@@ -550,7 +538,7 @@ class TimsTOF(object):
         mobility_estimation_from_frame: int,
         drop_polarity: bool = True,
         convert_polarity_to_int: bool = True,
-        mmap_detector_events: bool = True
+        mmap_detector_events: bool = True,
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
         self._version = alpharaw.__version__
@@ -569,9 +557,7 @@ class TimsTOF(object):
             convert_polarity_to_int,
         )
         # TODO: print status of calibration_available
-        self._meta_data = dict(
-            zip(global_meta_data.Key, global_meta_data.Value)
-        )
+        self._meta_data = dict(zip(global_meta_data.Key, global_meta_data.Value))
         (
             self._push_indptr,
             self._tof_indices,
@@ -588,43 +574,37 @@ class TimsTOF(object):
         self._scan_max_index = int(self.frames.NumScans.max()) + 1
         self._tof_max_index = int(self.meta_data["DigitizerNumSamples"]) + 1
         self._rt_values = self.frames.Time.values.astype(np.float64)
-        self._mobility_min_value = float(
-            self.meta_data["OneOverK0AcqRangeLower"]
-        )
-        self._mobility_max_value = float(
-            self.meta_data["OneOverK0AcqRangeUpper"]
-        )
+        self._mobility_min_value = float(self.meta_data["OneOverK0AcqRangeLower"])
+        self._mobility_max_value = float(self.meta_data["OneOverK0AcqRangeUpper"])
         self._accumulation_times = self.frames.AccumulationTime.values.astype(
             np.float64
         )
         self._max_accumulation_time = np.max(self._accumulation_times)
-        self._intensity_corrections = self._max_accumulation_time / self._accumulation_times
+        self._intensity_corrections = (
+            self._max_accumulation_time / self._accumulation_times
+        )
         if (mobility_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with open_bruker_d_folder(
-                bruker_d_folder_name
-            ) as (bruker_dll, bruker_d_folder_handle):
-                logging.info(
-                    f"Fetching mobility values from {bruker_d_folder_name}"
-                )
+
+            with open_bruker_d_folder(bruker_d_folder_name) as (
+                bruker_dll,
+                bruker_d_folder_handle,
+            ):
+                logging.info(f"Fetching mobility values from {bruker_d_folder_name}")
                 indices = np.arange(self.scan_max_index).astype(np.float64)
                 self._mobility_values = np.empty_like(indices)
                 bruker_dll.tims_scannum_to_oneoverk0(
                     bruker_d_folder_handle,
                     mobility_estimation_from_frame,
-                    indices.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
+                    indices.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                     self.mobility_values.ctypes.data_as(
                         ctypes.POINTER(ctypes.c_double)
                     ),
-                    self.scan_max_index
+                    self.scan_max_index,
                 )
         else:
-            if (mobility_estimation_from_frame != 0):
-                logging.info(
-                    "Bruker DLL not available, estimating mobility values"
-                )
+            if mobility_estimation_from_frame != 0:
+                logging.info("Bruker DLL not available, estimating mobility values")
             self._mobility_values = self.mobility_max_value - (
                 self.mobility_max_value - self.mobility_min_value
             ) / self.scan_max_index * np.arange(self.scan_max_index)
@@ -639,38 +619,30 @@ class TimsTOF(object):
             mz_min_value -= 5
             mz_max_value += 5
         tof_intercept = np.sqrt(mz_min_value)
-        tof_slope = (
-            np.sqrt(mz_max_value) - tof_intercept
-        ) / self.tof_max_index
+        tof_slope = (np.sqrt(mz_max_value) - tof_intercept) / self.tof_max_index
         if (mz_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with open_bruker_d_folder(
-                bruker_d_folder_name
-            ) as (bruker_dll, bruker_d_folder_handle):
-                logging.info(
-                    f"Fetching mz values from {bruker_d_folder_name}"
-                )
+
+            with open_bruker_d_folder(bruker_d_folder_name) as (
+                bruker_dll,
+                bruker_d_folder_handle,
+            ):
+                logging.info(f"Fetching mz values from {bruker_d_folder_name}")
                 indices = np.arange(self.tof_max_index).astype(np.float64)
                 self._mz_values = np.empty_like(indices)
                 bruker_dll.tims_index_to_mz(
                     bruker_d_folder_handle,
                     mz_estimation_from_frame,
-                    indices.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
-                    self._mz_values.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
-                    self.tof_max_index
+                    indices.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                    self._mz_values.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                    self.tof_max_index,
                 )
         else:
-            if (mz_estimation_from_frame != 0):
-                logging.info(
-                    "Bruker DLL not available, estimating mz values"
-                )
+            if mz_estimation_from_frame != 0:
+                logging.info("Bruker DLL not available, estimating mz values")
             self._mz_values = (
                 tof_intercept + tof_slope * np.arange(self.tof_max_index)
-            )**2
+            ) ** 2
         self._parse_quad_indptr()
         self._intensity_min_value = int(np.min(self.intensity_values))
         self._intensity_max_value = int(np.max(self.intensity_values))
@@ -721,6 +693,7 @@ class TimsTOF(object):
             The full file name or a bytes stream containing the HDF file.
         """
         import io
+
         if directory is None:
             directory = self.directory
         if file_name is None:
@@ -732,13 +705,8 @@ class TimsTOF(object):
         if return_as_bytes_io:
             full_file_name = io.BytesIO()
         else:
-            full_file_name = os.path.join(
-                directory,
-                file_name
-            )
-        logging.info(
-            f"Writing TimsTOF data to {full_file_name}."
-        )
+            full_file_name = os.path.join(directory, file_name)
+        logging.info(f"Writing TimsTOF data to {full_file_name}.")
         self._compressed = compress
         with h5py.File(full_file_name, hdf_mode) as hdf_root:
             # hdf_root.swmr_mode = True
@@ -751,9 +719,7 @@ class TimsTOF(object):
         if return_as_bytes_io:
             full_file_name.seek(0)
         else:
-            logging.info(
-                f"Successfully wrote TimsTOF data to {full_file_name}."
-            )
+            logging.info(f"Successfully wrote TimsTOF data to {full_file_name}.")
         return full_file_name
 
     def _import_data_from_hdf_file(
@@ -891,11 +857,9 @@ class TimsTOF(object):
                     raw_indices,
                 )
             else:
-                push_indices = np.searchsorted(
-                    self.push_indptr,
-                    raw_indices,
-                    "right"
-                ) - 1
+                push_indices = (
+                    np.searchsorted(self.push_indptr, raw_indices, "right") - 1
+                )
         if (
             any(
                 [
@@ -905,34 +869,22 @@ class TimsTOF(object):
                     return_corrected_intensity_values,
                 ]
             )
-        ) and (
-            frame_indices is None
-        ):
+        ) and (frame_indices is None):
             frame_indices = push_indices // self.scan_max_index
-        if (return_scan_indices or return_mobility_values) and (
-            scan_indices is None
-        ):
+        if (return_scan_indices or return_mobility_values) and (scan_indices is None):
             scan_indices = push_indices % self.scan_max_index
         if any(
-            [
-                return_quad_indices,
-                return_quad_mz_values,
-                return_precursor_indices
-            ]
-        ) and (
-            quad_indices is None
-        ):
+            [return_quad_indices, return_quad_mz_values, return_precursor_indices]
+        ) and (quad_indices is None):
             if raw_indices_sorted:
                 quad_indices = indptr_lookup(
                     self.quad_indptr,
                     raw_indices,
                 )
             else:
-                quad_indices = np.searchsorted(
-                    self.quad_indptr,
-                    raw_indices,
-                    "right"
-                ) - 1
+                quad_indices = (
+                    np.searchsorted(self.quad_indptr, raw_indices, "right") - 1
+                )
         if (return_tof_indices or return_mz_values) and (tof_indices is None):
             tof_indices = self.tof_indices[raw_indices]
         if return_raw_indices:
@@ -953,9 +905,9 @@ class TimsTOF(object):
             result["rt_values"] = self.rt_values[frame_indices]
         if return_rt_values_min:
             if "rt_values" in result:
-                result['rt_values_min'] = result["rt_values"] / 60
+                result["rt_values_min"] = result["rt_values"] / 60
             else:
-                result['rt_values_min'] = self.rt_values[frame_indices] / 60
+                result["rt_values_min"] = self.rt_values[frame_indices] / 60
         if return_mobility_values:
             result["mobility_values"] = self.mobility_values[scan_indices]
         if return_quad_mz_values:
@@ -970,7 +922,8 @@ class TimsTOF(object):
             result["intensity_values"] = self.intensity_values[raw_indices]
         if return_corrected_intensity_values:
             result["corrected_intensity_values"] = (
-                self.intensity_values[raw_indices] * self.intensity_corrections[frame_indices]
+                self.intensity_values[raw_indices]
+                * self.intensity_corrections[frame_indices]
             ).astype(np.uint32)
         return result
 
@@ -1033,7 +986,7 @@ class TimsTOF(object):
             return self.scan_max_index - np.searchsorted(
                 self.mobility_values[::-1],
                 values,
-                "left" if side == "right" else "right"
+                "left" if side == "right" else "right",
             )
         elif return_type == "tof_indices":
             return np.searchsorted(self.mz_values, values, side)
@@ -1044,9 +997,7 @@ class TimsTOF(object):
                         "Can not convert values to precursor_indices"
                     )
             except ValueError:
-                raise PrecursorFloatError(
-                    "Can not convert values to precursor_indices"
-                )
+                raise PrecursorFloatError("Can not convert values to precursor_indices")
             if values == -np.inf:
                 return 0
             elif values == np.inf:
@@ -1082,7 +1033,7 @@ class TimsTOF(object):
             quad_mz_values=self.quad_mz_values,
             quad_indptr=self.quad_indptr,
             tof_indices=self.tof_indices,
-            intensities=self.intensity_values
+            intensities=self.intensity_values,
         )
         if as_dataframe:
             return self.as_dataframe(raw_indices)
@@ -1167,9 +1118,7 @@ class TimsTOF(object):
         estimated_count *= tof_count / self.tof_max_index
         fragment_multiplier = 0.5 * min(
             precursor_count / (self.precursor_max_index),
-            quad_count / (
-                self.quad_mz_max_value - self.quad_mz_min_value
-            )
+            quad_count / (self.quad_mz_max_value - self.quad_mz_min_value),
         )
         if fragment_multiplier < 0:
             fragment_multiplier = 0
@@ -1217,12 +1166,8 @@ class TimsTOF(object):
         add_intensity_to_bin(
             range(indices.size),
             intensities,
-            tuple(
-                [
-                    parsed_indices[parse_dict[ax]] for ax in axis
-                ]
-            ),
-            binned_intensities
+            tuple([parsed_indices[parse_dict[ax]] for ax in axis]),
+            binned_intensities,
         )
         return binned_intensities
 
@@ -1306,7 +1251,7 @@ class TimsTOF(object):
             A dataframe with all requested columns.
         """
         return pd.DataFrame(
-           self.convert_from_indices(
+            self.convert_from_indices(
                 indices,
                 return_raw_indices=raw_indices,
                 return_frame_indices=frame_indices,
@@ -1334,7 +1279,7 @@ class TimsTOF(object):
         isolation_mzs = self.fragment_frames.IsolationMz.values
         isolation_widths = self.fragment_frames.IsolationWidth.values
         precursors = self.fragment_frames.Precursor.values
-        if (precursors[0] is None):
+        if precursors[0] is None:
             if self.zeroth_frame:
                 frame_groups = self.frames.MsMsType.values[1:]
             else:
@@ -1362,14 +1307,14 @@ class TimsTOF(object):
             scan_end,
             isolation_mz,
             isolation_width,
-            precursor
+            precursor,
         ) in zip(
             frame_ids - 1,
             scan_begins,
             scan_ends,
             isolation_mzs,
             isolation_widths / 2,
-            precursors
+            precursors,
         ):
             low = frame_id * scan_max_index + scan_begin
             # TODO: CHECK?
@@ -1397,20 +1342,20 @@ class TimsTOF(object):
         self._quad_indptr = self.push_indptr[self._raw_quad_indptr]
         self._quad_max_mz_value = np.max(self.quad_mz_values[:, 1])
         self._quad_min_mz_value = np.min(
-            self.quad_mz_values[
-                self.quad_mz_values[:, 0] >= 0,
-                0
-            ]
+            self.quad_mz_values[self.quad_mz_values[:, 0] >= 0, 0]
         )
         self._precursor_max_index = int(np.max(self.precursor_indices)) + 1
         if self._acquisition_mode == "diaPASEF":
             offset = int(self.zeroth_frame)
-            cycle_index = np.searchsorted(
-                self.raw_quad_indptr,
-                (self.scan_max_index) * (self.precursor_max_index + offset),
-                "r"
-            ) + 1
-            repeats = np.diff(self.raw_quad_indptr[: cycle_index])
+            cycle_index = (
+                np.searchsorted(
+                    self.raw_quad_indptr,
+                    (self.scan_max_index) * (self.precursor_max_index + offset),
+                    "r",
+                )
+                + 1
+            )
+            repeats = np.diff(self.raw_quad_indptr[:cycle_index])
             if self.zeroth_frame:
                 repeats[0] -= self.scan_max_index
             cycle_length = self.scan_max_index * self.precursor_max_index
@@ -1419,16 +1364,13 @@ class TimsTOF(object):
                 repeats[-1] -= repeat_length - cycle_length
             self._dia_mz_cycle = np.empty((cycle_length, 2))
             self._dia_mz_cycle[:, 0] = np.repeat(
-                self.quad_mz_values[: cycle_index - 1, 0],
-                repeats
+                self.quad_mz_values[: cycle_index - 1, 0], repeats
             )
             self._dia_mz_cycle[:, 1] = np.repeat(
-                self.quad_mz_values[: cycle_index - 1, 1],
-                repeats
+                self.quad_mz_values[: cycle_index - 1, 1], repeats
             )
             self._dia_precursor_cycle = np.repeat(
-                self.precursor_indices[: cycle_index - 1],
-                repeats
+                self.precursor_indices[: cycle_index - 1], repeats
             )
         else:
             self._dia_mz_cycle = np.empty((0, 2))
@@ -1463,13 +1405,11 @@ class TimsTOF(object):
             spectrum_intensity_values array.
         """
         precursor_order = np.argsort(self.precursor_indices)
-        precursor_offsets = np.empty(
-            self.precursor_max_index + 1,
-            dtype=np.int64
-        )
+        precursor_offsets = np.empty(self.precursor_max_index + 1, dtype=np.int64)
         precursor_offsets[0] = 0
-        precursor_offsets[1:-1] = np.flatnonzero(
-            np.diff(self.precursor_indices[precursor_order]) > 0) + 1
+        precursor_offsets[1:-1] = (
+            np.flatnonzero(np.diff(self.precursor_indices[precursor_order]) > 0) + 1
+        )
         precursor_offsets[-1] = len(precursor_order)
         offset = precursor_offsets[1]
         offsets = precursor_order[offset:]
@@ -1478,19 +1418,13 @@ class TimsTOF(object):
         counts[1:] = np.cumsum(
             self.quad_indptr[offsets + 1] - self.quad_indptr[offsets]
         )
-        spectrum_indptr = np.empty(
-            self.precursor_max_index + 1,
-            dtype=np.int64
-        )
-        spectrum_indptr[1:] = counts[
-            precursor_offsets[1:] - precursor_offsets[1]
-        ]
+        spectrum_indptr = np.empty(self.precursor_max_index + 1, dtype=np.int64)
+        spectrum_indptr[1:] = counts[precursor_offsets[1:] - precursor_offsets[1]]
         spectrum_indptr[0] = 0
         spectrum_counts = np.zeros_like(spectrum_indptr)
         spectrum_tof_indices = np.empty(spectrum_indptr[-1], dtype=np.uint32)
         spectrum_intensity_values = np.empty(
-            len(spectrum_tof_indices),
-            dtype=np.float64
+            len(spectrum_tof_indices), dtype=np.float64
         )
         set_precursor(
             range(1, self.precursor_max_index),
@@ -1526,12 +1460,10 @@ class TimsTOF(object):
         new_spectrum_indptr[1:] = np.cumsum(spectrum_counts[:-1])
         new_spectrum_indptr[0] = 0
         trimmed_spectrum_tof_indices = np.empty(
-            new_spectrum_indptr[-1],
-            dtype=np.uint32
+            new_spectrum_indptr[-1], dtype=np.uint32
         )
         trimmed_spectrum_intensity_values = np.empty(
-            len(trimmed_spectrum_tof_indices),
-            dtype=np.float64
+            len(trimmed_spectrum_tof_indices), dtype=np.float64
         )
         spectrum_intensity_values
         trim_spectra(
@@ -1546,7 +1478,7 @@ class TimsTOF(object):
         return (
             new_spectrum_indptr,
             trimmed_spectrum_tof_indices,
-            trimmed_spectrum_intensity_values
+            trimmed_spectrum_intensity_values,
         )
 
     def save_as_spectra(
@@ -1556,7 +1488,7 @@ class TimsTOF(object):
         overwrite: bool = False,
         centroiding_window: int = 5,
         keep_n_most_abundant_peaks: int = -1,
-        mgf: bool = True
+        mgf: bool = True,
     ):
         """Save profile spectra from this TimsTOF object as an spectrum file.
 
@@ -1584,10 +1516,7 @@ class TimsTOF(object):
         str
             The full file name of the spectrum file.
         """
-        full_file_name = os.path.join(
-            directory,
-            file_name
-        )
+        full_file_name = os.path.join(directory, file_name)
         if self.acquisition_mode != "ddaPASEF":
             logging.info(
                 f"File {self.bruker_d_folder_name} is not "
@@ -1596,9 +1525,7 @@ class TimsTOF(object):
             return full_file_name
         if os.path.exists(full_file_name):
             if not overwrite:
-                logging.info(
-                    f"File {full_file_name} already exists, nothing to do."
-                )
+                logging.info(f"File {full_file_name} already exists, nothing to do.")
                 return full_file_name
         logging.info(f"Indexing spectra of {self.bruker_d_folder_name}...")
         (
@@ -1699,10 +1626,10 @@ class TimsTOF(object):
                 self.tof_indices[
                     self[
                         :,
-                        calibrant1_lower_mobility: calibrant1_upper_mobility,
+                        calibrant1_lower_mobility:calibrant1_upper_mobility,
                         calibrant1[2],
-                        calibrant1_lower_mz: calibrant1_upper_mz,
-                        "raw"
+                        calibrant1_lower_mz:calibrant1_upper_mz,
+                        "raw",
                     ]
                 ]
             )
@@ -1716,32 +1643,29 @@ class TimsTOF(object):
                 self.tof_indices[
                     self[
                         :,
-                        calibrant2_lower_mobility: calibrant2_upper_mobility,
+                        calibrant2_lower_mobility:calibrant2_upper_mobility,
                         calibrant2[2],
-                        calibrant2_lower_mz: calibrant2_upper_mz,
-                        "raw"
+                        calibrant2_lower_mz:calibrant2_upper_mz,
+                        "raw",
                     ]
                 ]
             )
         )
-        tof_slope = (
-            np.sqrt(calibrant2[0]) - np.sqrt(calibrant1[0])
-        ) / (calibrant2_tof - calibrant1_tof)
+        tof_slope = (np.sqrt(calibrant2[0]) - np.sqrt(calibrant1[0])) / (
+            calibrant2_tof - calibrant1_tof
+        )
         tof_intercept = np.sqrt(calibrant1[0]) - tof_slope * calibrant1_tof
         self._calibrated_mz_values = (
             tof_intercept + tof_slope * np.arange(self.tof_max_index)
-        )**2
-        ppms = 10**6 * (
-            self._mz_values - self._calibrated_mz_values
-        ) / self._mz_values
+        ) ** 2
+        ppms = 10**6 * (self._mz_values - self._calibrated_mz_values) / self._mz_values
         logging.info(
             "Global calibration of mz values yielded differences between "
             f"{np.min(ppms):.2f} and {np.max(ppms):.2f} ppm."
         )
 
     def use_calibrated_mz_values_as_default(
-        self,
-        use_calibrated_mz_values: int
+        self, use_calibrated_mz_values: int
     ) -> None:
         """Override the default mz_values with the global calibrated_mz_values.
 
@@ -1764,18 +1688,17 @@ class TimsTOF(object):
                 self.calculate_global_calibrated_mz_values(
                     calibrant1=(922.009798, 1.1895, ms_level),
                     calibrant2=(1221.990637, 1.3820, ms_level),
-                    mz_tolerance=1
+                    mz_tolerance=1,
                 )
         self._use_calibrated_mz_values_as_default = use_calibrated_mz_values
 
     def set_cycle(self) -> None:
-        """Set the quad cycle for diaPASEF data.
-        """
+        """Set the quad cycle for diaPASEF data."""
         ms1_diffs = np.diff(
-            np.flatnonzero(self.frames.MsMsType[int(self.zeroth_frame):]==0)
+            np.flatnonzero(self.frames.MsMsType[int(self.zeroth_frame) :] == 0)
         )
         subcycle_length_count = np.bincount(ms1_diffs)
-        if np.all(subcycle_length_count[:-1]!=0):
+        if np.all(subcycle_length_count[:-1] != 0):
             raise ValueError("No consistent subcycle length")
         subcycle_length = len(subcycle_length_count) - 1
         max_precursor = len(self.fragment_frames.Precursor.unique())
@@ -1803,18 +1726,12 @@ class TimsTOF(object):
             high_mz = row.IsolationMz + row.IsolationWidth / 2
             cycle[
                 frame,
-                scan_begin: scan_end,
+                scan_begin:scan_end,
             ] = (low_mz, high_mz)
             precursor_frames[frame] = False
 
         cycle[precursor_frames] = (-1, -1)
-        cycle = cycle.reshape(
-            (
-                subcycle_count,
-                subcycle_length,
-                *cycle.shape[1:]
-            )
-        )
+        cycle = cycle.reshape((subcycle_count, subcycle_length, *cycle.shape[1:]))
         self._cycle = cycle
 
 
@@ -1879,33 +1796,20 @@ def parse_keys(data: TimsTOF, keys) -> dict:
         keys = new_keys
     for i, dimension in enumerate(dimensions):
         try:
-            dimension_slices[
-                dimension
-            ] = convert_slice_key_to_int_array(
-                data,
-                keys[i] if (i < len(keys)) else slice(None),
-                dimension
+            dimension_slices[dimension] = convert_slice_key_to_int_array(
+                data, keys[i] if (i < len(keys)) else slice(None), dimension
             )
         except PrecursorFloatError:
-            dimension_slices[
-                "precursor_indices"
-            ] = convert_slice_key_to_int_array(
-                data,
-                slice(None),
-                "precursor_indices"
+            dimension_slices["precursor_indices"] = convert_slice_key_to_int_array(
+                data, slice(None), "precursor_indices"
             )
-            dimension_slices[
-                "quad_values"
-            ] = convert_slice_key_to_float_array(keys[i])
-    dimension_slices[
-        "intensity_values"
-    ] = convert_slice_key_to_float_array(
+            dimension_slices["quad_values"] = convert_slice_key_to_float_array(keys[i])
+    dimension_slices["intensity_values"] = convert_slice_key_to_float_array(
         keys[-1] if (len(keys) > len(dimensions)) else slice(None)
     )
     if "quad_values" not in dimension_slices:
         dimension_slices["quad_values"] = np.array(
-            [[-np.inf, np.inf]],
-            dtype=np.float64
+            [[-np.inf, np.inf]], dtype=np.float64
         )
     return dimension_slices
 
@@ -1994,8 +1898,7 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
         if isinstance(key, slice):
             if dimension == "scan_indices":
                 if isinstance(key.start, (np.inexact, float)) or isinstance(
-                    key.stop,
-                    (np.inexact, float)
+                    key.stop, (np.inexact, float)
                 ):
                     key = slice(key.stop, key.start, key.step)
             start = key.start
@@ -2007,10 +1910,7 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
                         start = -np.inf
                 if not isinstance(start, (np.inexact, float)):
                     raise ValueError
-                start = data.convert_to_indices(
-                    start,
-                    return_type=dimension
-                )
+                start = data.convert_to_indices(start, return_type=dimension)
             stop = key.stop
             if not isinstance(stop, (np.integer, int)):
                 if stop is None:
@@ -2064,5 +1964,5 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
 
 class PrecursorFloatError(TypeError):
     """Used to indicate that a precursor value is not an int but a float."""
-    pass
 
+    pass
