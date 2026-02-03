@@ -203,7 +203,7 @@ the API is also present in the [nbs folder](nbs).
 
 ### Bruker data
 
-See [bruker.md](docs/bruker.md) for instructions on how to read Bruker data with AlphaRaw. 
+See [bruker.md](docs/bruker/bruker.md) for instructions on how to read Bruker data with AlphaRaw. 
 The [AlphaTims](https://github.com/mannlabs/alphatims) package provides additional tutorials and visualizations.
 
 
