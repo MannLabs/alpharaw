@@ -245,6 +245,55 @@ def process_frame(
             tof_indices[frame_start:frame_end] = tof_indices_
             intensities[frame_start:frame_end] = intensities_
 
+@njit(nogil=True)
+def parse_decompressed_bruker_binary_type1(
+    decompressed_bytes: bytes,
+    scan_indices_: np.ndarray,
+    tof_indices_: np.ndarray,
+    intensities_: np.ndarray,
+    scan_start: int,
+    scan_index: int,
+) -> int:
+    """Parse a Bruker binary scan buffer into tofs and intensities.
+
+    Parameters
+    ----------
+    decompressed_bytes : bytes
+        A Bruker scan binary buffer that is already decompressed with lzf.
+    scan_indices_ : np.ndarray
+        The scan_indices_ buffer array.
+    tof_indices_ : np.ndarray
+        The tof_indices_ buffer array.
+    intensities_ : np.ndarray
+        The intensities_ buffer array.
+    scan_start : int
+        The offset where to start new tof_indices and intensity_values.
+    scan_index : int
+        The scan index.
+
+    Returns
+    -------
+    : int
+        The number of peaks in this scan.
+    """
+    buffer = np.frombuffer(decompressed_bytes, dtype=np.int32)
+    tof_index = 0
+    previous_was_intensity = True
+    current_index = scan_start
+    for value in buffer:
+        if value >= 0:
+            if previous_was_intensity:
+                tof_index += 1
+            tof_indices_[current_index] = tof_index
+            intensities_[current_index] = value
+            previous_was_intensity = True
+            current_index += 1
+        else:
+            tof_index -= value
+            previous_was_intensity = False
+    scan_size = current_index - scan_start
+    scan_indices_[scan_index] = scan_size
+    return scan_size
 
 @njit(nogil=True)
 def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
