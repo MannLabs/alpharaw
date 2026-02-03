@@ -22,11 +22,11 @@ from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
 
 from alpharaw.bruker.read import indptr_lookup
 
-from alpharaw.bruker.slice import filter_indices, add_intensity_to_bin
+from alpharaw.bruker.filtering import filter_indices, add_intensity_to_bin
 
-from alpharaw.bruker.slice import set_precursor, centroid_spectra
+from alpharaw.bruker.spectrum import set_precursor, centroid_spectra
 
-from alpharaw.bruker.slice import trim_spectra, filter_spectra_by_abundant_peaks
+from alpharaw.bruker.spectrum import trim_spectra, filter_spectra_by_abundant_peaks
 
 from alpharaw.bruker.write import save_as_mgf, save_as_spectra
 
