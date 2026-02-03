@@ -38,6 +38,11 @@ with an [Apache License](LICENSE.txt). External Python packages
 (available in the [requirements](requirements) folder) have their own
 licenses, which can be consulted on their respective websites.
 
+
+Since AlphaRaw uses Bruker libraries (available in the [alpharaw/ext/bruker](alphatims/ext/bruker) folder) additional 
+[third-party licenses](LICENSE-THIRD-PARTY.txt) are applicable in case you are using them. 
+
+
 ------------------------------------------------------------------------
 
 ## Installation
@@ -212,7 +217,10 @@ In case of issues, check out the following:
 
 ## Citations
 
-There are currently no plans to draft a manuscript.
+If you are using AlphaRaw to access Bruker data, please cite the original source of the corresponding code:
+> **AlphaTims: Indexing Trapped Ion Mobility Spectrometry–TOF Data for Fast and Easy Accession and Visualization**
+> Sander Willems, Eugenia Voytik, Patricia Skowronek, Maximilian T. Strauss, Matthias Mann,
+> Molecular & Cellular Proteomics,  Volume 20, 2021, 100149, https://doi.org/10.1016/j.mcpro.2021.100149.
 
 ------------------------------------------------------------------------
 
