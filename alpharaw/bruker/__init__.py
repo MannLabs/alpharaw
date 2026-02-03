@@ -5,6 +5,7 @@ Bruker TimsTOF LC-IMS-MS/MS data from .d folders or HDF5 files.
 """
 
 from alpharaw.bruker.timstof import (
+    parse_keys,
     TimsTOF,
     convert_slice_key_to_float_array,
     convert_slice_key_to_int_array,
@@ -17,6 +18,7 @@ __all__ = [
     "convert_slice_key_to_float_array",
     "convert_slice_key_to_int_array",
     "filter_indices",
+    "parse_keys",
     "save_as_mgf",
     "save_as_spectra",
 ]
