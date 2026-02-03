@@ -7,6 +7,7 @@ select = [
 # TODO excluding explicity is not great but it is a workaround for now
 exclude = [
 "alpharaw/__init__.py",
+"alpharaw/bruker/**.py",
 "alpharaw/wrappers/alphatims_wrapper.py",
 "alpharaw/wrappers/alphapept_wrapper.py",
 "alpharaw/raw_access/pysciexwifffilereader.py",

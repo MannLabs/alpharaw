@@ -1,13 +1,17 @@
 import typing
 
 import pandas as pd
-from alphatims.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
+from alpharaw.alpharaw.bruker.timstof import TimsTOF
 
+
+# IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
+
+# TODO: rename, this name is confusing now that AlphaTims functionality has been moved to here.
 def convert_to_alphatims(
     spec_df: pd.DataFrame,
     peak_df: pd.DataFrame,
@@ -15,7 +19,7 @@ def convert_to_alphatims(
 ) -> typing.Tuple[MSData_Base, TimsTOF]:
     """
     Convert any spectrum dataframe or sliced spectrum dataframe
-    and its peak dataframe into AlphaTims' TimsTOF object (AlphaTimsWrapper).
+    and its peak dataframe into a TimsTOF object (AlphaTimsWrapper).
 
     Args:
         spec_df (pd.DataFrame):
@@ -27,7 +31,7 @@ def convert_to_alphatims(
 
     Returns:
         MSData_Base: AlphaRaw object
-        TimsTOF: AlphaTims' TimsTOF object (AlphaTimsWrapper).
+        TimsTOF: TimsTOF object (AlphaTimsWrapper).
     """
     spec_df, peak_df = remove_unused_peaks(spec_df, peak_df)
     ms_data = MSData_Base()

@@ -5,12 +5,11 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from alphatims.bruker import (
-    TimsTOF,
-)
+
 from plotly.subplots import make_subplots
 
 from .plot_utils import plot_line_tims_fast
+from ..bruker.timstof import TimsTOF
 
 warnings.warn(
     "This module will be deprecated or changed in the future releases",
@@ -175,7 +174,7 @@ class XIC_Trace_Tims:
         """Add traces for the query_masses.
 
         Args:
-            tims_data (TimsTOF): AlphaTims TimsTOF object.
+            tims_data (TimsTOF): TimsTOF object.
             query_masses (np.ndarray): Query masses.
             ion_names (typing.List[str]): Ion names for query_masses.
             marker_colors (typing.List): Colors for each query mass.
@@ -295,7 +294,7 @@ def get_plotting_slices(
     """
     Get plotting slices for target queries in TimsTOF data.
     Args:
-        tims_data (TimsTOF): AlphaTims TimsTOF object.
+        tims_data (TimsTOF): TimsTOF object.
         rt_sec (float): Query RT in seconds.
         rt_sec_win (float, optional): Query RT window in seconds. Defaults to 30.0.
         im (float, optional): Query ion mobility, 0 means no mobility dimension. Defaults to 0..

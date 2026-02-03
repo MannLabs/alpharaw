@@ -4,12 +4,12 @@ _SPECIAL_MS_EXTS: list = [
     ".ms_data.hdf",  # alphapept
     ".raw.hdf",  # alpharaw
     ".raw.hdf5",  # alpharaw
-    ".tims.hdf",  # alphatims (from alpharaw)
-    ".tims.hdf5",  # alphatims (from alpharaw)
-    ".d.hdf",  # alphatims (from alpharaw)
-    ".d.hdf5",  # alphatims (from alpharaw)
-    ".atms.hdf",  # alphatims (from alpharaw)
-    ".atms.hdf5",  # alphatims (from alpharaw)
+    ".tims.hdf",  # alpharaw (used to come from alphatims)
+    ".tims.hdf5",  # alpharaw (used to come from alphatims)
+    ".d.hdf",  # alpharaw (used to come from alphatims)
+    ".d.hdf5",  # alpharaw (used to come from alphatims)
+    ".atms.hdf",  # alpharaw (used to come from alphatims)
+    ".atms.hdf5",  # alpharaw (used to come from alphatims)
     "_hcdft.mgf",  # p
 ]
 

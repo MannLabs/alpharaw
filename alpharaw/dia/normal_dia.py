@@ -2,11 +2,16 @@ import typing
 from collections import defaultdict
 
 import numpy as np
-from alphatims.bruker import TimsTOF
+
 
 from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
 from alpharaw.utils.timstof import convert_to_alphatims
+
+from alpharaw.bruker.timstof import TimsTOF
+
+
+# IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
 
 
 class NormalDIAGrouper:
@@ -42,7 +47,7 @@ class NormalDIAGrouper:
 
         Returns:
             MSData_Base: Compressed MS data, if `return_alpharaw_data==True`
-            TimsTOF: Alphatims object for the window, if `return_alphatims_data==True`
+            TimsTOF: AlphaTims object for the window, if `return_alphatims_data==True`
         """
 
         spec_df = self.dia_group_dfs.get_group(dia_group)

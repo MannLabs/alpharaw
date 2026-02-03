@@ -2,7 +2,7 @@
 It primarily implements the TimsTOF class, that acts as an in-memory container
 for Bruker data accession and storage.
 
-Note: this code has been moved from the alphatims package and does not comply to the MSData_Base contract.
+Note: this code has been moved from the AlphaTims package and does not comply to the MSData_Base contract.
 """
 
 import os
@@ -208,7 +208,7 @@ class TimsTOF(object):
 
     @property
     def version(self):
-        """: str : AlphaTims version used to create this TimsTOF object."""
+        """: str : AlphaRaw version used to create this TimsTOF object."""
         return self._version
 
     @property
@@ -527,7 +527,7 @@ class TimsTOF(object):
                 "WARNING: "
                 f"alpharaw version {self.version} was used to initialize "
                 f"{bruker_d_folder_name}, while the current version of "
-                f"AlphaTims is {alpharaw.__version__}."
+                f"alpharaw is {alpharaw.__version__}."
             )
         self.slice_as_dataframe = slice_as_dataframe
         self.use_calibrated_mz_values_as_default(
@@ -553,7 +553,7 @@ class TimsTOF(object):
         mmap_detector_events: bool = True
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
-        self._version = "1.0.10" # TODO alphatims.__version__
+        self._version = alpharaw.__version__
         self._zeroth_frame = True
         (
             self._acquisition_mode,
@@ -568,6 +568,7 @@ class TimsTOF(object):
             drop_polarity,
             convert_polarity_to_int,
         )
+        # TODO: print status of calibration_available
         self._meta_data = dict(
             zip(global_meta_data.Key, global_meta_data.Value)
         )
@@ -705,7 +706,7 @@ class TimsTOF(object):
             If True, compression is used.
             This roughly halves files sizes (on-disk),
             at the cost of taking 3-6 longer accession times.
-            See also alphatims.utils.create_hdf_group_from_dict.
+            See also `create_hdf_group_from_dict()`.
             If False, no compression is used
             Default is False.
         return_as_bytes_io
@@ -1825,13 +1826,13 @@ def parse_keys(data: TimsTOF, keys) -> dict:
 
     Parameters
     ----------
-    data : alphatims.bruker.TimsTOF
+    data : TimsTOF
         The TimsTOF objext for which to get slices.
     keys : tuple
         A tuple of at most 5 elemens, containing
         slices, ints, floats, Nones, and/or iterables.
-        See `alphatims.bruker.convert_slice_key_to_int_array` and
-        `alphatims.bruker.convert_slice_key_to_float_array` for more details.
+        See `convert_slice_key_to_int_array()` and
+        `convert_slice_key_to_float_array()` for more details.
 
     Returns
     -------
@@ -1964,7 +1965,7 @@ def convert_slice_key_to_int_array(data: TimsTOF, key, dimension: str):
 
     Parameters
     ----------
-    data : alphatims.bruker.TimsTOF
+    data : TimsTOF
         The TimsTOF objext for which to get slices.
     key : slice, int, float, None, iterable
         The key that needs to be converted.

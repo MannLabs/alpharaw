@@ -3,7 +3,8 @@ import typing
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from alphatims.bruker import TimsTOF
+
+from alpharaw.alpharaw.bruker.timstof import TimsTOF
 
 
 def plot_scatter(
@@ -52,7 +53,7 @@ def plot_scatter(
     )
 
 
-alphatims_labels = {
+_timstof_labels = {
     "rt": "rt_values",
     "im": "mobility_values",
 }
@@ -70,12 +71,12 @@ def plot_line_tims(
     rt_unit: str = "minute",
 ) -> go.Figure:
     """
-    Plot an XIC line on alphatims `TimsTOF` data
+    Plot an XIC line on `TimsTOF` data
 
     Parameters
     ----------
     tims_data : TimsTOF
-        The alphatims `TimsTOF` object
+        The `TimsTOF` object
     tims_raw_indices : np.ndarray
         Raw indices on `TimsTOF` object
     tims_view_indices : np.array
@@ -96,7 +97,7 @@ def plot_line_tims(
     go.Figure
         Line plot
     """
-    x_dimension = alphatims_labels[view_dim]
+    x_dimension = _timstof_labels[view_dim]
 
     intensities = tims_data.bin_intensities(tims_raw_indices, [x_dimension])
     if view_dim == "rt":
@@ -131,12 +132,12 @@ def plot_line_tims_fast(
     add_peak_area=True,
 ) -> go.Figure:
     """
-    Plot an XIC line on alphatims `TimsTOF` data
+    Plot an XIC line on `TimsTOF` data
 
     Parameters
     ----------
     tims_data : TimsTOF
-        The alphatims `TimsTOF` object
+        The `TimsTOF` object
     tims_raw_indices : np.ndarray
         Raw indices on `TimsTOF` object
     tims_view_indices : np.array
@@ -161,7 +162,7 @@ def plot_line_tims_fast(
     go.Figure
         _description_
     """
-    x_dimension = alphatims_labels[view_dim]
+    x_dimension = _timstof_labels[view_dim]
 
     intensities = tims_data.bin_intensities(tims_raw_indices, [x_dimension])
     if view_dim == "rt":

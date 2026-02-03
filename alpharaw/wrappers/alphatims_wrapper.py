@@ -1,11 +1,16 @@
-import alphatims
 import numpy as np
 import pandas as pd
-from alphatims.bruker import TimsTOF
+
+import alpharaw
+
+from ..bruker.timstof import TimsTOF
 
 from ..ms_data_base import MSData_Base
 
 
+# IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
+
+# TODO: remove this class, it's not used anywhere (on the whole GitHub).
 class AlphaTimsReader(MSData_Base):
     """
     TimsTOF data are too large, do not use this class
@@ -43,15 +48,14 @@ class AlphaTimsReader(MSData_Base):
 
 
 class AlphaTimsWrapper(TimsTOF):
-    """Create a AlphaTims object containing
+    """Create a AlphaTimsWrapper object containing
     all data in-memory (or memory mapping).
 
     Attribute
     ---------
     slice_as_dataframe
-        Attribute from AlphaTims.
-        If True, AlphaTims slicing returns a pd.DataFrame by default.
-        If False, AlphaTims slicing provides a np.int64[:] with raw indices.
+        If True, slicing returns a pd.DataFrame by default.
+        If False, slicing provides a np.int64[:] with raw indices.
         The value can be modified on-the-fly.
     """
 
@@ -87,7 +91,7 @@ class AlphaTimsWrapper(TimsTOF):
         msdata: MSData_Base,
         dda: bool,
     ):
-        self._version = alphatims.__version__
+        self._version = alpharaw.__version__
         mz_values = msdata.peak_df.mz.values
         self._intensity_values = msdata.peak_df.intensity.values
 

@@ -65,7 +65,7 @@ def threadpool(
         The function to decorate.
     thread_count : int, None
         The number of threads to use.
-        This is always parsed with alphatims.utils.set_threads.
+        This is always parsed with `set_threads()`.
         Not possible as positional arguments,
         it always needs to be an explicit keyword argument.
         Default is None.
@@ -178,7 +178,7 @@ def pjit(  # noqa: ANN201, D417, C901
     _func : callable, None
         The function to decorate. Default is None.
     thread_count : int, None
-        The number of threads to use. This is always parsed with alphatims.utils.set_threads.
+        The number of threads to use. This is always parsed with `set_threads()`.
         Default is None.
     include_progress_callback : bool
         If True, the default progress callback will be used as callback. (See "progress_callback" function and

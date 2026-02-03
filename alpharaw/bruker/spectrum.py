@@ -23,7 +23,7 @@ def set_precursor(
 ) -> None:
     """Sum the intensities of all pushes belonging to a single precursor.
 
-    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    IMPORTANT NOTE: This function is decorated with `pjit`.
     The first argument is thus expected to be provided as an iterable
     containing ints instead of a single int.
 
@@ -101,7 +101,7 @@ def centroid_spectra(
 
     IMPORTANT NOTE: This function will overwrite all input arrays.
 
-    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    IMPORTANT NOTE: This function is decorated with `pjit`.
     The first argument is thus expected to be provided as an iterable
     containing ints instead of a single int.
 
@@ -179,7 +179,7 @@ def filter_spectra_by_abundant_peaks(
 
     IMPORTANT NOTE: This function will overwrite all input arrays.
 
-    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    IMPORTANT NOTE: This function is decorated with `pjit`.
     The first argument is thus expected to be provided as an iterable
     containing ints instead of a single int.
 
@@ -227,7 +227,7 @@ def trim_spectra(
 ) -> None:
     """Trim remaining bytes after merging of multiple pushes.
 
-    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    IMPORTANT NOTE: This function is decorated with `pjit`.
     The first argument is thus expected to be provided as an iterable
     containing ints instead of a single int.
 

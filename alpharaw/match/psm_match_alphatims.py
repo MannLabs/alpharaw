@@ -1,15 +1,17 @@
-# TODO to be remove as already implemented in alphaDIA.
+# TODO to be remove as already implemented in alphaDIA. But: PepSpecMatch_AlphaTims is used by alphaviz
 from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
 import tqdm
-from alphatims.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 
 from .psm_match import PepSpecMatch
+from ..bruker.timstof import TimsTOF
+
+# IMPORTANT NOTE: all references to "alphatims" in this module are legacy names from the times when the TimsTOF class was still part of AlphaTims.
 
 alphatims_hdf_types = [
     "alphatims",
@@ -47,7 +49,7 @@ def load_ms_data_tims(
     -------
     tuple
         MSData_Base: alpharaw MS Data (Reader) object
-        TimsTOF: AlphaTims object
+        TimsTOF: TimsTOF object
     """
     if isinstance(ms_file, TimsTOF):
         return None, ms_file
@@ -118,7 +120,7 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
         if im == 0 or self.tims_data.scan_max_index == 1:
             im_slice = slice(None)
         elif self.find_k_nearest_ms2_by_im and self.tims_data.scan_max_index > 1:
-            # AlphaTims without AlphaRaw for .d files
+            # [legacy comment] AlphaTims without AlphaRaw for .d files
             im_slice = self.tims_data.scan_max_index - np.searchsorted(
                 self.tims_data.mobility_values[::-1], im
             )
@@ -322,6 +324,6 @@ class PepSpecMatch_AlphaTims(PepSpecMatch):
 
         """
         raise NotImplementedError(
-            "Not necessary for matching multiple raw files using AlphaTims, "
+            "Not necessary for matching multiple raw files using AlphaRaw, "
             "loop through `match_ms2_one_raw()`"
         )

@@ -321,7 +321,7 @@ def read_bruker_binary(
     ----------
     frames : pd.DataFrame
         The frames from the "analysis.tdf" SQL database of a Bruker .d folder.
-        These can be acquired with e.g. alphatims.bruker.read_bruker_sql.
+        These can be acquired with e.g. `read_bruker_sql()`.
     bruker_d_folder_name : str
         The full path to a Bruker .d folder.
     compression_type : int

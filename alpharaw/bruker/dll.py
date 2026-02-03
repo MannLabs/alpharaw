@@ -39,7 +39,7 @@ def init_bruker_dll(bruker_dll_file_name: str = BRUKER_DLL_FILE_NAME):
     ----------
     bruker_dll_file_name : str
         The absolute path to the timsdata.dll.
-        Default is alphatims.utils.BRUKER_DLL_FILE_NAME.
+        Default is BRUKER_DLL_FILE_NAME.
 
     Returns
     -------
@@ -101,7 +101,7 @@ def open_bruker_d_folder(
     bruker_dll_file_name : str, ctypes.cdll
         The path to Bruker' timsdata.dll library.
         Alternatively, the library itself can be passed as argument.
-        Default is alphatims.utils.BRUKER_DLL_FILE_NAME,
+        Default is BRUKER_DLL_FILE_NAME,
         which in itself is dependent on the OS.
 
     Returns

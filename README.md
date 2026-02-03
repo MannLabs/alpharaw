@@ -39,7 +39,7 @@ with an [Apache License](LICENSE.txt). External Python packages
 licenses, which can be consulted on their respective websites.
 
 
-Since AlphaRaw uses Bruker libraries (available in the [alpharaw/ext/bruker](alphatims/ext/bruker) folder) additional 
+Since AlphaRaw uses Bruker libraries (available in the [alpharaw/ext/bruker](alpharaw/ext/bruker) folder) additional 
 [third-party licenses](LICENSE-THIRD-PARTY.txt) are applicable in case you are using them. 
 
 

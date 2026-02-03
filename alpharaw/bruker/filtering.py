@@ -230,7 +230,7 @@ def add_intensity_to_bin(
 ) -> None:
     """Add the intensity of a query to the appropriate bin.
 
-    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    IMPORTANT NOTE: This function is decorated with `pjit`.
     The first argument is thus expected to be provided as an iterable
     containing ints instead of a single int.
 
