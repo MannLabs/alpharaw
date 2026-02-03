@@ -39,7 +39,7 @@ with an [Apache License](LICENSE.txt). External Python packages
 licenses, which can be consulted on their respective websites.
 
 
-Since AlphaRaw uses Bruker libraries (available in the [alpharaw/ext/bruker](alpharaw/ext/bruker) folder) additional 
+Since AlphaRaw uses Bruker libraries for reading Bruker data (available in the [alpharaw/ext/bruker](alpharaw/ext/bruker) folder) additional 
 [third-party licenses](LICENSE-THIRD-PARTY.txt) are applicable in case you are using them. 
 
 
@@ -200,6 +200,12 @@ notebook with the command `import alpharaw`.
 
 A brief [Jupyter notebook tutorial](nbs/tutorial.ipynb) on how to use
 the API is also present in the [nbs folder](nbs).
+
+### Bruker data
+
+See [bruker.md](docs/bruker.md) for instructions on how to read Bruker data with AlphaRaw. 
+The [AlphaTims](https://github.com/mannlabs/alphatims) package provides additional tutorials and visualizations.
+
 
 ------------------------------------------------------------------------
 
