@@ -8,7 +8,7 @@ import logging
 from alpharaw.utils.pjit import MAX_THREADS
 
 BASE_PATH = os.path.dirname(__file__)
-EXT_PATH = os.path.join(BASE_PATH, "ext")
+EXT_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "ext", "bruker"))
 
 if sys.platform[:5] == "win32":
     BRUKER_DLL_FILE_NAME = os.path.join(
