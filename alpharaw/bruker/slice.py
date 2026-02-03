@@ -414,3 +414,99 @@ def centroid_spectra(
     )
     spectrum_counts[index] = len(maxima)
 
+
+
+@pjit
+def filter_spectra_by_abundant_peaks(
+    index: int,
+    spectrum_indptr: np.ndarray,
+    spectrum_counts: np.ndarray,
+    spectrum_tof_indices: np.ndarray,
+    spectrum_intensity_values: np.ndarray,
+    keep_n_most_abundant_peaks: int,
+):
+    """Filter a spectrum to retain only the most abundant peaks.
+
+    IMPORTANT NOTE: This function will overwrite all input arrays.
+
+    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    The first argument is thus expected to be provided as an iterable
+    containing ints instead of a single int.
+
+    Parameters
+    ----------
+    index : int
+        The push index whose intensity_values and tof_indices will be
+        centroided.
+    spectrum_indptr : np.int64[:]
+        An index pointer array defining the (untrimmed) spectrum boundaries.
+    spectrum_counts : np. int64[:]
+        The original array defining how many distinct tof indices each
+        spectrum has.
+    spectrum_tof_indices : np.uint32[:]
+        The original array containing tof indices.
+    spectrum_intensity_values : np.float64[:]
+        The original array containing intensity values.
+    keep_n_most_abundant_peaks : int
+        Keep only this many abundant peaks.
+    """
+    start = spectrum_indptr[index]
+    end = start + spectrum_counts[index]
+    if end - start <= keep_n_most_abundant_peaks:
+        return
+    mzs = spectrum_tof_indices[start: end]
+    ints = spectrum_intensity_values[start: end]
+    selected_indices = np.sort(
+        np.argsort(ints)[-keep_n_most_abundant_peaks:]
+    )
+    count = len(selected_indices)
+    spectrum_tof_indices[start: start + count] = mzs[selected_indices]
+    spectrum_intensity_values[start: start + count] = ints[selected_indices]
+    spectrum_counts[index] = count
+
+
+@pjit
+def trim_spectra(
+    index: int,
+    spectrum_tof_indices: np.ndarray,
+    spectrum_intensity_values: np.ndarray,
+    spectrum_indptr: np.ndarray,
+    trimmed_spectrum_tof_indices: np.ndarray,
+    trimmed_spectrum_intensity_values: np.ndarray,
+    new_spectrum_indptr: np.ndarray,
+) -> None:
+    """Trim remaining bytes after merging of multiple pushes.
+
+    IMPORTANT NOTE: This function is decorated with alphatims.utils.pjit.
+    The first argument is thus expected to be provided as an iterable
+    containing ints instead of a single int.
+
+    Parameters
+    ----------
+    index : int
+        The push index whose intensity_values and tof_indices will be trimmed.
+    spectrum_tof_indices : np.uint32[:]
+        The original array containing tof indices.
+    spectrum_intensity_values : np.float64[:]
+        The original array containing intensity values.
+    spectrum_indptr : np.int64[:]
+        An index pointer array defining the original spectrum boundaries.
+    trimmed_spectrum_tof_indices : np.uint32[:]
+        A buffer array to store new tof indices.
+    trimmed_spectrum_intensity_values : np.float64[:]
+        A buffer array to store new intensity values.
+    new_spectrum_indptr : np.int64[:]
+        An index pointer array defining the trimmed spectrum boundaries.
+    """
+    start = spectrum_indptr[index]
+    new_start = new_spectrum_indptr[index]
+    new_end = new_spectrum_indptr[index + 1]
+    trimmed_spectrum_tof_indices[new_start: new_end] = spectrum_tof_indices[
+        start: start + new_end - new_start
+    ]
+    trimmed_spectrum_intensity_values[
+        new_start: new_end
+    ] = spectrum_intensity_values[
+        start: start + new_end - new_start
+    ]
+

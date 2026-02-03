@@ -28,6 +28,8 @@ from alpharaw.bruker.slice import filter_indices, add_intensity_to_bin
 
 from alpharaw.bruker.slice import set_precursor, centroid_spectra
 
+from alpharaw.bruker.slice import trim_spectra, filter_spectra_by_abundant_peaks
+
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.
