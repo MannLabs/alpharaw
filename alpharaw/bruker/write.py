@@ -1,3 +1,5 @@
+"""Export functions for MGF and HDF5 spectra formats."""
+
 import h5py
 
 from alpharaw.utils.pjit import progress_callback

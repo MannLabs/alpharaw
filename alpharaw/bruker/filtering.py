@@ -1,3 +1,5 @@
+"""JIT-compiled filtering functions for multi-dimensional TimsTOF data slicing."""
+
 import numpy as np
 
 from alpharaw.utils.pjit import njit, pjit

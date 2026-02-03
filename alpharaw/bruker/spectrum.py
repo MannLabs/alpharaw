@@ -1,3 +1,5 @@
+"""JIT-compiled spectrum processing: aggregation, centroiding, and filtering."""
+
 import numpy as np
 
 from alpharaw.utils.pjit import njit, pjit

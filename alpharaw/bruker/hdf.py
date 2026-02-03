@@ -1,3 +1,4 @@
+"""HDF5 serialization utilities for TimsTOF data persistence."""
 
 import numpy as np
 
