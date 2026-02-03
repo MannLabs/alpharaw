@@ -4,6 +4,9 @@ import logging
 import numpy as np
 import pandas as pd
 
+from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
+from alpharaw.utils.pjit import njit, threadpool
+
 
 def read_bruker_sql(
     bruker_d_folder_name: str,
@@ -270,7 +273,7 @@ def process_frame(
             tof_indices[frame_start: frame_end] = tof_indices_
             intensities[frame_start: frame_end] = intensities_
 
-@alphatims.utils.njit(nogil=True)
+@njit(nogil=True)
 def parse_decompressed_bruker_binary_type2(decompressed_bytes: bytes) -> tuple:
     """Parse a Bruker binary frame buffer into scans, tofs and intensities.
 
@@ -341,8 +344,10 @@ def read_bruker_binary(
     scan_count = max_scan_count * frames.shape[0]
     scan_indptr = np.zeros(scan_count + 1, dtype=np.int64)
     if mmap_detector_events:
-        intensities = tm.empty(int(frame_indptr[-1]), dtype=np.uint16)
-        tof_indices = tm.empty(int(frame_indptr[-1]), dtype=np.uint32)
+        raise NotImplementedError("")
+        # TODO: re-enable mmapping in alphatims
+        # intensities = tm.empty(int(frame_indptr[-1]), dtype=np.uint16)
+        # tof_indices = tm.empty(int(frame_indptr[-1]), dtype=np.uint32)
     else:
         intensities = np.empty(int(frame_indptr[-1]), dtype=np.uint16)
         tof_indices = np.empty(int(frame_indptr[-1]), dtype=np.uint32)
@@ -353,12 +358,12 @@ def read_bruker_binary(
         f"{frame_indptr[-1]:,} detector events for {bruker_d_folder_name}"
     )
     if compression_type == 1:
-        process_frame_func = alphatims.utils.threadpool(
+        process_frame_func = threadpool(
             process_frame,
             thread_count=1
         )
     else:
-        process_frame_func = alphatims.utils.threadpool(process_frame)
+        process_frame_func = threadpool(process_frame)
     process_frame_func(
         range(1, len(frames)),
         tdf_bin_file_name,

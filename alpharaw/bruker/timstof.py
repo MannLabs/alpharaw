@@ -20,6 +20,8 @@ from alpharaw.bruker.hdf import create_hdf_group_from_dict, create_dict_from_hdf
 
 from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME
 
+from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
+
 
 class TimsTOF(object):
     """A class that stores Bruker TimsTOF data in memory for fast access.
