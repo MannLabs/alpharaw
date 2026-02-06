@@ -4,8 +4,8 @@ from typing import Tuple, Union
 import numpy as np
 import pandas as pd
 import tqdm
-from alphatims.bruker import TimsTOF
 
+from alpharaw.bruker import TimsTOF
 from alpharaw.ms_data_base import MSData_Base, ms_reader_provider
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper
 

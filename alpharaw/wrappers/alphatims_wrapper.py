@@ -1,7 +1,8 @@
-import alphatims
 import numpy as np
 import pandas as pd
-from alphatims.bruker import TimsTOF
+
+import alpharaw
+from alpharaw.bruker import TimsTOF
 
 from ..ms_data_base import MSData_Base
 
@@ -87,7 +88,7 @@ class AlphaTimsWrapper(TimsTOF):
         msdata: MSData_Base,
         dda: bool,
     ):
-        self._version = alphatims.__version__
+        self._version = alpharaw.__version__
         mz_values = msdata.peak_df.mz.values
         self._intensity_values = msdata.peak_df.intensity.values
 

@@ -1,8 +1,8 @@
 import typing
 
 import pandas as pd
-from alphatims.bruker import TimsTOF
 
+from alpharaw.bruker import TimsTOF
 from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
 from alpharaw.wrappers.alphatims_wrapper import AlphaTimsWrapper

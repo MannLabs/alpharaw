@@ -8,10 +8,12 @@ h5py==3.11.0
 numba==0.59.1
 pandas==2.2.2
 numpy==1.26.4
+tqdm==4.66.4
+pyzstd==0.16.0
+lzf==0.2.0
 pyteomics==4.7.2
 lxml==5.2.2
 owlready2==0.48
 #sqlalchemy
 
 alphabase>=1.5.0  # test: tolerate_version
-alphatims>=0.0.1  # test: tolerate_version

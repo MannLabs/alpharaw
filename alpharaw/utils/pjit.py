@@ -10,10 +10,11 @@ from collections.abc import Iterable
 from typing import Callable
 
 _MAX_THREADS = multiprocessing.cpu_count()
+MAX_THREADS = _MAX_THREADS
 _PROGRESS_CALLBACK = True
 
 
-def set_threads(threads: int, *, set_global: bool = True) -> int:
+def set_threads(threads: int, *, set_global: bool = True) -> int:  # noqa: FBT001, FBT002
     """Parse and set the (global) number of threads.
 
     Parameters
@@ -41,8 +42,9 @@ def set_threads(threads: int, *, set_global: bool = True) -> int:
         while threads <= 0:
             threads += max_cpu_count
     if set_global:
-        global _MAX_THREADS  # noqa: PLW0603
+        global _MAX_THREADS, MAX_THREADS  # noqa: PLW0603
         _MAX_THREADS = threads
+        MAX_THREADS = threads
     return threads
 
 
@@ -374,3 +376,32 @@ def set_progress_callback(progress_callback) -> None:  # noqa: ANN001
     """
     global _PROGRESS_CALLBACK  # noqa: PLW0603
     _PROGRESS_CALLBACK = progress_callback
+
+
+# Public alias for _progress_callback
+progress_callback = _progress_callback
+
+
+def njit(_func=None, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN201
+    """A wrapper for the numba.njit decorator.
+
+    This can be overriden with kwargs.
+
+    Parameters
+    ----------
+    _func : callable, None
+        The function to decorate.
+    *args
+        See numba.njit decorator.
+    **kwargs
+        See numba.njit decorator.
+
+    Returns
+    -------
+    : function
+        A numba.njit decorated function.
+
+    """
+    import numba
+
+    return numba.njit(_func, *args, **kwargs)

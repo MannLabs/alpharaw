@@ -2,7 +2,7 @@ import typing
 from collections import defaultdict
 
 import numpy as np
-from alphatims.bruker import TimsTOF
+from alpharaw.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base
 from alpharaw.utils.df_processing import remove_unused_peaks
