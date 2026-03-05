@@ -223,7 +223,6 @@ class TimsTOFBase(object):
         *,
         mz_estimation_from_frame: int = 1,
         mobility_estimation_from_frame: int = 1,
-        use_hdf_if_available: bool = False,
         drop_polarity: bool = True,
         convert_polarity_to_int: bool = True,
     ):
@@ -251,9 +250,6 @@ class TimsTOFBase(object):
             IMPORTANT NOTE: MacOS defaults to 0, as no Bruker library
             is available.
             Default is 1.
-        use_hdf_if_available : bool
-            If an HDF file is available, use this instead of the .d folder.
-            Default is False.
         drop_polarity : bool
             The polarity column of the frames table contains "+" or "-" and
             is not numerical.
@@ -280,48 +276,42 @@ class TimsTOFBase(object):
             )
             logging.info("")
 
-        if bruker_d_folder_name.endswith("/"):
-            bruker_d_folder_name = bruker_d_folder_name[:-1]
-        logging.info(f"Importing data from {bruker_d_folder_name}")
-        if bruker_d_folder_name.endswith(".d"):
-            bruker_hdf_file_name = f"{bruker_d_folder_name[:-2]}.hdf"
-            hdf_file_exists = os.path.exists(bruker_hdf_file_name)
-            if use_hdf_if_available and hdf_file_exists:
-                self._import_data_from_hdf_file(
-                    bruker_hdf_file_name
-                )
-                self.bruker_hdf_file_name = bruker_hdf_file_name
-            else:
-                self.bruker_d_folder_name = os.path.abspath(
-                    bruker_d_folder_name
-                )
-                self._import_data_from_d_folder(
-                    bruker_d_folder_name,
-                    mz_estimation_from_frame,
-                    mobility_estimation_from_frame,
-                    drop_polarity,
-                    convert_polarity_to_int,
-                )
-        elif bruker_d_folder_name.endswith(".hdf"):
-            self._import_data_from_hdf_file(
-                bruker_d_folder_name
-            )
-            self.bruker_hdf_file_name = bruker_d_folder_name
-        else:
-            raise NotImplementedError(
-                "WARNING: file extension not understood"
-            )
-        if not hasattr(self, "version"):
-            self._version = "N.A."
-        if self.version != alphatims.__version__:
-            logging.info(
-                "WARNING: "
-                f"AlphaTims version {self.version} was used to initialize "
-                f"{bruker_d_folder_name}, while the current version of "
-                f"AlphaTims is {alphatims.__version__}."
-            )
+        self._load_data(bruker_d_folder_name,
+                        mz_estimation_from_frame,
+                        mobility_estimation_from_frame,
+                        drop_polarity,
+                        convert_polarity_to_int)
 
         logging.info(f"Successfully imported data from {bruker_d_folder_name}")
+
+    def _load_data(self,
+                   bruker_d_folder_name: str,
+                   mz_estimation_from_frame: int,
+                   mobility_estimation_from_frame: int,
+                   drop_polarity: bool,
+                   convert_polarity_to_int: bool) -> None:
+        """Load data from disk."""
+
+        if bruker_d_folder_name.endswith("/"):
+            bruker_d_folder_name = bruker_d_folder_name[:-1]
+
+        logging.info(f"Importing data from {bruker_d_folder_name}")
+        if bruker_d_folder_name.endswith(".d"):
+
+            self.bruker_d_folder_name = os.path.abspath(
+                bruker_d_folder_name
+            )
+            self._import_data_from_d_folder(
+                bruker_d_folder_name,
+                mz_estimation_from_frame,
+                mobility_estimation_from_frame,
+                drop_polarity,
+                convert_polarity_to_int,
+            )
+        else:
+            raise NotImplementedError(
+                "WARNING: file extension not understood. This class only supports import from .d folders. Use TimsTOF class from alphatims to enable import from .hdf files."
+            )
 
     def __len__(self):
         return len(self.intensity_values)
