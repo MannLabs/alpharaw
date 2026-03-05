@@ -2,7 +2,7 @@ from typing import Callable, Union
 
 import numpy as np
 import pandas as pd
-from alphatims.utils import threadpool
+from alpharaw.utils.pjit import threadpool
 from numba import njit
 from numba.typed import Dict, List
 

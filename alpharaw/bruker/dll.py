@@ -2,25 +2,16 @@ import os
 import sys
 import contextlib
 import logging
-# external
-import numpy as np
-import pandas as pd
-import h5py
-# local
-import alphatims
-import alphatims.utils
-import alphatims.tempmmap as tm
+
+from alpharaw.utils.pjit import MAX_THREADS
+
+BASE_PATH = os.path.dirname(__file__)
+EXT_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "ext", "bruker"))
 
 if sys.platform[:5] == "win32":
-    BRUKER_DLL_FILE_NAME = os.path.join(
-        alphatims.utils.EXT_PATH,
-        "timsdata.dll"
-    )
+    BRUKER_DLL_FILE_NAME = os.path.join(EXT_PATH, "timsdata.dll")
 elif sys.platform[:5] == "linux":
-    BRUKER_DLL_FILE_NAME = os.path.join(
-        alphatims.utils.EXT_PATH,
-        "timsdata.so"
-    )
+    BRUKER_DLL_FILE_NAME = os.path.join(EXT_PATH, "timsdata.so")
 else:
     BRUKER_DLL_FILE_NAME = ""
 
@@ -40,7 +31,7 @@ def init_bruker_dll(bruker_dll_file_name: str = BRUKER_DLL_FILE_NAME):
     ----------
     bruker_dll_file_name : str
         The absolute path to the timsdata.dll.
-        Default is alphatims.utils.BRUKER_DLL_FILE_NAME.
+        Default is BRUKER_DLL_FILE_NAME.
 
     Returns
     -------
@@ -82,7 +73,7 @@ def init_bruker_dll(bruker_dll_file_name: str = BRUKER_DLL_FILE_NAME):
     bruker_dll.tims_scannum_to_oneoverk0.restype = ctypes.c_uint32
     bruker_dll.tims_set_num_threads.argtypes = [ctypes.c_uint64]
     bruker_dll.tims_set_num_threads.restype = None
-    bruker_dll.tims_set_num_threads(alphatims.utils.MAX_THREADS)
+    bruker_dll.tims_set_num_threads(MAX_THREADS)
     # multiple threads is equally fast as just 1 for io?
     # bruker_dll.tims_set_num_threads(1)
     return bruker_dll
@@ -102,7 +93,7 @@ def open_bruker_d_folder(
     bruker_dll_file_name : str, ctypes.cdll
         The path to Bruker' timsdata.dll library.
         Alternatively, the library itself can be passed as argument.
-        Default is alphatims.utils.BRUKER_DLL_FILE_NAME,
+        Default is BRUKER_DLL_FILE_NAME,
         which in itself is dependent on the OS.
 
     Returns

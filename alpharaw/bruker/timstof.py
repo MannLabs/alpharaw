@@ -5,11 +5,11 @@ for Bruker data storage.
 
 import os
 import logging
+
+import alpharaw
 import numpy as np
 from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME, open_bruker_d_folder
 from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
-
-import alpharaw as alphatims  # TODO just for satisfying __Version__ for now
 
 
 class TimsTOFBase(object):
@@ -328,7 +328,7 @@ class TimsTOFBase(object):
         convert_polarity_to_int: bool = True,
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
-        self._version = alphatims.__version__
+        self._version = alpharaw.__version__
         self._zeroth_frame = True
         (
             self._acquisition_mode,

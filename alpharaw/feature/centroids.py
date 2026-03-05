@@ -1,5 +1,5 @@
 import numpy as np
-from alphatims.utils import threadpool
+from alpharaw.utils.pjit import threadpool
 from numba import njit
 
 
