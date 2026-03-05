@@ -36,10 +36,6 @@ class TimsTOFBase(object):
         """: str : The directory of this TimsTOF object."""
         return os.path.dirname(self.bruker_d_folder_name)
 
-    @property
-    def is_compressed(self):
-        """: bool : HDF array is compressed or not."""
-        return self._compressed
 
     @property
     def version(self):
@@ -74,15 +70,7 @@ class TimsTOFBase(object):
     @property
     def mz_values(self):
         """: np.ndarray : np.float64[:] : The mz values."""
-        if self._use_calibrated_mz_values_as_default:
-            return self._calibrated_mz_values
-        else:
-            return self._mz_values
-
-    @property
-    def calibrated_mz_values(self):
-        """: np.ndarray : np.float64[:] : The global calibrated mz values."""
-        return self._calibrated_mz_values
+        return self._mz_values
 
     @property
     def quad_mz_values(self):
@@ -123,16 +111,6 @@ class TimsTOFBase(object):
     def mz_max_value(self):
         """: float : The maximum mz value."""
         return self.mz_values[-1]
-
-    @property
-    def calibrated_mz_min_value(self):
-        """: float : The minimum calibrated mz value."""
-        return self.calibrated_mz_values[0]
-
-    @property
-    def calibrated_mz_max_value(self):
-        """: float : The maximum calibrated mz value."""
-        return self.calibrated_mz_values[-1]
 
     @property
     def rt_max_value(self):
@@ -668,3 +646,18 @@ class TimsTOFBase(object):
             )
         )
         self._cycle = cycle
+
+
+    def use_calibrated_mz_values_as_default(
+        self,
+        use_calibrated_mz_values: int
+    ) -> None:
+        """Override the default mz_values with the global calibrated_mz_values."""
+        raise NotImplementedError("Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable use_calibrated_mz_values_as_default.")
+
+    def _import_data_from_hdf_file(
+        self,
+        bruker_d_folder_name: str,
+        mmap_detector_events: bool = False,
+    ):
+        raise NotImplementedError("Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable import_data_from_hdf_file.")
