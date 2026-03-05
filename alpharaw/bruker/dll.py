@@ -1,3 +1,5 @@
+"""Bruker timsdata DLL/SO interface for native library access."""
+
 import os
 import sys
 import contextlib

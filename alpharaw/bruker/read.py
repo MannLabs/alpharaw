@@ -1,3 +1,4 @@
+"""Reading Bruker .d folders: SQL metadata and binary scan data."""
 import os
 import logging
 import numpy as np

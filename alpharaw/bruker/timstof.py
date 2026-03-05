@@ -1,6 +1,9 @@
 """This module provides functions to handle Bruker data.
 It primarily implements the TimsTOF class, that acts as an in-memory container
 for Bruker data storage.
+
+Note: this code has been moved from the AlphaTims package and does not comply to the MSData_Base contract.
+For the full functionality in terms of fast data access, please use the TimsTOF class from the AlphaTims package, which inherits from this TimsTOFBase class.
 """
 
 import os

@@ -199,6 +199,10 @@ notebook with the command `import alpharaw`.
 A brief [Jupyter notebook tutorial](nbs/tutorial.ipynb) on how to use
 the API is also present in the [nbs folder](nbs).
 
+### Bruker data
+
+The [AlphaTims](https://github.com/mannlabs/alphatims) package provides additional functionality, tutorials and visualizations when it comes to reading Bruker data.
+
 ------------------------------------------------------------------------
 
 ## Troubleshooting
@@ -216,6 +220,11 @@ In case of issues, check out the following:
 ## Citations
 
 There are currently no plans to draft a manuscript.
+
+If you are using AlphaRaw to access Bruker data, please cite the original source of the corresponding code:
+> **AlphaTims: Indexing Trapped Ion Mobility Spectrometry–TOF Data for Fast and Easy Accession and Visualization**
+> Sander Willems, Eugenia Voytik, Patricia Skowronek, Maximilian T. Strauss, Matthias Mann,
+> Molecular & Cellular Proteomics,  Volume 20, 2021, 100149, https://doi.org/10.1016/j.mcpro.2021.100149.
 
 ------------------------------------------------------------------------
 
