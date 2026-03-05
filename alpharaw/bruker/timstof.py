@@ -224,7 +224,6 @@ class TimsTOFBase(object):
         mz_estimation_from_frame: int = 1,
         mobility_estimation_from_frame: int = 1,
         use_hdf_if_available: bool = False,
-        mmap_detector_events: bool = False,
         drop_polarity: bool = True,
         convert_polarity_to_int: bool = True,
     ):
@@ -255,10 +254,6 @@ class TimsTOFBase(object):
         use_hdf_if_available : bool
             If an HDF file is available, use this instead of the .d folder.
             Default is False.
-        mmap_detector_events : bool
-            Do not save the intensity_values and tof_indices in memory,
-            but use an mmap instead.
-            Default is False
         drop_polarity : bool
             The polarity column of the frames table contains "+" or "-" and
             is not numerical.
@@ -293,8 +288,7 @@ class TimsTOFBase(object):
             hdf_file_exists = os.path.exists(bruker_hdf_file_name)
             if use_hdf_if_available and hdf_file_exists:
                 self._import_data_from_hdf_file(
-                    bruker_hdf_file_name,
-                    mmap_detector_events,
+                    bruker_hdf_file_name
                 )
                 self.bruker_hdf_file_name = bruker_hdf_file_name
             else:
@@ -307,12 +301,10 @@ class TimsTOFBase(object):
                     mobility_estimation_from_frame,
                     drop_polarity,
                     convert_polarity_to_int,
-                    mmap_detector_events,
                 )
         elif bruker_d_folder_name.endswith(".hdf"):
             self._import_data_from_hdf_file(
-                bruker_d_folder_name,
-                mmap_detector_events,
+                bruker_d_folder_name
             )
             self.bruker_hdf_file_name = bruker_d_folder_name
         else:
@@ -344,7 +336,6 @@ class TimsTOFBase(object):
         mobility_estimation_from_frame: int,
         drop_polarity: bool = True,
         convert_polarity_to_int: bool = True,
-        mmap_detector_events: bool = True
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
         self._version = alphatims.__version__
@@ -640,6 +631,5 @@ class TimsTOFBase(object):
     def _import_data_from_hdf_file(
         self,
         bruker_d_folder_name: str,
-        mmap_detector_events: bool = False,
     ):
         raise NotImplementedError("Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable import_data_from_hdf_file.")
