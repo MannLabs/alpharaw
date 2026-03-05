@@ -374,3 +374,28 @@ def set_progress_callback(progress_callback) -> None:  # noqa: ANN001
     """
     global _PROGRESS_CALLBACK  # noqa: PLW0603
     _PROGRESS_CALLBACK = progress_callback
+
+
+def njit(_func: Callable | None = None, *args, **kwargs) -> Callable:
+    """A wrapper for the numba.njit decorator.
+
+    This can be overriden with kwargs.
+
+    Parameters
+    ----------
+    _func : callable, None
+        The function to decorate.
+    *args
+        See numba.njit decorator.
+    **kwargs
+        See numba.njit decorator.
+
+    Returns
+    -------
+    : function
+        A numba.njit decorated function.
+
+    """
+    import numba
+
+    return numba.njit(_func, *args, **kwargs)
