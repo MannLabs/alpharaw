@@ -223,10 +223,8 @@ class TimsTOFBase(object):
         *,
         mz_estimation_from_frame: int = 1,
         mobility_estimation_from_frame: int = 1,
-        slice_as_dataframe: bool = True,
-        use_calibrated_mz_values_as_default: int = 0,
-        use_hdf_if_available: bool = True,
-        mmap_detector_events: bool = True,
+        use_hdf_if_available: bool = False,
+        mmap_detector_events: bool = False,
         drop_polarity: bool = True,
         convert_polarity_to_int: bool = True,
     ):
@@ -254,24 +252,13 @@ class TimsTOFBase(object):
             IMPORTANT NOTE: MacOS defaults to 0, as no Bruker library
             is available.
             Default is 1.
-        slice_as_dataframe : bool
-            If True, slicing returns a pd.DataFrame by default.
-            If False, slicing provides a np.int64[:] with raw indices.
-            This value can also be modified after creation.
-            Default is True.
-        use_calibrated_mz_values : int
-            If not 0, the mz_values are overwritten with global
-            calibrated_mz_values.
-            If 1, calibration at the MS1 level is performed.
-            If 2, calibration at the MS2 level is performed.
-            Default is 0.
         use_hdf_if_available : bool
             If an HDF file is available, use this instead of the .d folder.
-            Default is True.
+            Default is False.
         mmap_detector_events : bool
             Do not save the intensity_values and tof_indices in memory,
             but use an mmap instead.
-            Default is True
+            Default is False
         drop_polarity : bool
             The polarity column of the frames table contains "+" or "-" and
             is not numerical.
@@ -341,12 +328,7 @@ class TimsTOFBase(object):
                 f"{bruker_d_folder_name}, while the current version of "
                 f"AlphaTims is {alphatims.__version__}."
             )
-        self.slice_as_dataframe = slice_as_dataframe
-        self.use_calibrated_mz_values_as_default(
-            use_calibrated_mz_values_as_default
-        )
-        # Precompile
-        self[0, "raw"]
+
         logging.info(f"Successfully imported data from {bruker_d_folder_name}")
 
     def __len__(self):
