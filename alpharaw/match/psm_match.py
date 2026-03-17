@@ -19,9 +19,5 @@ def load_ms_data(*args, **kwargs):
     raise DeprecationWarning(f"load_ms_data {_DEPRECATION_MSG}")
 
 
-def get_best_matched_intens(*args, **kwargs):
-    raise DeprecationWarning(f"get_best_matched_intens {_DEPRECATION_MSG}")
-
-
 def get_ion_count_scores(*args, **kwargs):
     raise DeprecationWarning(f"get_ion_count_scores {_DEPRECATION_MSG}")

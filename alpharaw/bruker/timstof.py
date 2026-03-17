@@ -332,7 +332,7 @@ class TimsTOFBase:
         convert_polarity_to_int: bool = True,
     ):
         logging.info(f"Using .d import for {bruker_d_folder_name}")
-        self._version = alpharaw.__version__
+        self._version = None
         self._zeroth_frame = True
         (
             self._acquisition_mode,
