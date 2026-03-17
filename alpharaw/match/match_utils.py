@@ -82,6 +82,7 @@ def match_batch_spec(
     return matched_mzs, matched_intens
 
 
+# TODO move to peptdeep?
 @numba.njit
 def match_closest_peaks(
     spec_mzs: np.ndarray,
@@ -133,6 +134,7 @@ def match_closest_peaks(
     return ret_indices.reshape(query_mzs.shape)
 
 
+# TODO move to peptdeep?
 @numba.njit
 def match_highest_peaks(
     spec_mzs: np.ndarray,
