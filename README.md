@@ -129,6 +129,14 @@ install any branch (e.g. `@my_branch`) with any extras
 pip install "git+https://github.com/MannLabs/alpharaw.git@my_branch#egg=alpharaw[stable,development]"
 ```
 
+#### Optional extras
+
+For mzML writing with OWL-based CV term resolution, install the `owl` (or `owl-stable`) extra:
+
+``` bash
+pip install "alpharaw[owl]"
+```
+
 #### Developer installation
 
 AlphaRaw can also be installed in editable (i.e. developer) mode with a
