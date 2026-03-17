@@ -12,7 +12,6 @@ from typing import Callable
 
 import numpy as np
 
-import alpharaw
 from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME, open_bruker_d_folder
 from alpharaw.bruker.read import read_bruker_binary, read_bruker_sql
 
@@ -363,7 +362,7 @@ class TimsTOFBase:
             int(self._meta_data["TimsCompressionType"]),
             int(self._meta_data["MaxNumPeaksPerScan"]),
             self._mmap_detector_events,
-            self._get_empty_array_constructor_function()
+            self._get_empty_array_constructor_function(),
         )
         logging.info(f"Indexing {bruker_d_folder_name}...")
         self._use_calibrated_mz_values_as_default = False

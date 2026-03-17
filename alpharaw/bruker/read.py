@@ -140,7 +140,7 @@ def read_bruker_binary(
     compression_type: int,
     max_peaks_per_scan: int,
     mmap_detector_events: bool = None,
-    empty_array_constructor_function: Callable = np.empty
+    empty_array_constructor_function: Callable = np.empty,
 ) -> tuple:
     """Read all data from an "analysis.tdf_bin" of a Bruker .d folder.
 
@@ -177,8 +177,12 @@ def read_bruker_binary(
     scan_count = max_scan_count * frames.shape[0]
     scan_indptr = np.zeros(scan_count + 1, dtype=np.int64)
     if mmap_detector_events:
-        intensities = empty_array_constructor_function(int(frame_indptr[-1]), dtype=np.uint16)
-        tof_indices = empty_array_constructor_function(int(frame_indptr[-1]), dtype=np.uint32)
+        intensities = empty_array_constructor_function(
+            int(frame_indptr[-1]), dtype=np.uint16
+        )
+        tof_indices = empty_array_constructor_function(
+            int(frame_indptr[-1]), dtype=np.uint32
+        )
     else:
         intensities = np.empty(int(frame_indptr[-1]), dtype=np.uint16)
         tof_indices = np.empty(int(frame_indptr[-1]), dtype=np.uint32)
@@ -279,11 +283,11 @@ def process_frame(
             if compression_type == 1:
                 try:
                     import lzf
-                except (ImportError, ModuleNotFoundError):
+                except (ImportError, ModuleNotFoundError) as e:
                     raise ImportError(
                         "The lzf package is required to read Bruker binary files with compression type 1. "
                         "Please install it with `pip install python-lzf`."
-                    )
+                    ) from e
 
                 compression_offset = 8 + (scan_count + 1) * 4
                 scan_offsets = (
