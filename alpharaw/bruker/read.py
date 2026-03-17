@@ -273,7 +273,13 @@ def process_frame(
             scan_count = int.from_bytes(infile.read(4), "little")
             max_peak_count = min(max_peaks_per_scan, frame_end - frame_start)
             if compression_type == 1:
-                import lzf
+                try:
+                    import lzf
+                except (ImportError, ModuleNotFoundError):
+                    raise ImportError(
+                        "The lzf package is required to read Bruker binary files with compression type 1. "
+                        "Please install it with `pip install python-lzf`."
+                    )
 
                 compression_offset = 8 + (scan_count + 1) * 4
                 scan_offsets = (
