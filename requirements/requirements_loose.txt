@@ -14,4 +14,3 @@ owlready2
 pyzstd
 
 alphabase>=1.5.0 # test: tolerate_version
-

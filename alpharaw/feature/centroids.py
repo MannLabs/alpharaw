@@ -1,6 +1,7 @@
 import numpy as np
-from alpharaw.utils.pjit import threadpool
 from numba import njit
+
+from alpharaw.utils.pjit import threadpool
 
 
 @threadpool

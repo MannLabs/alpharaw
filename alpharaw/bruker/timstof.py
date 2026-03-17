@@ -6,16 +6,17 @@ Note: this code has been moved from the AlphaTims package and does not comply to
 For the full functionality in terms of fast data access, please use the TimsTOF class from the AlphaTims package, which inherits from this TimsTOFBase class.
 """
 
-import os
 import logging
+import os
+
+import numpy as np
 
 import alpharaw
-import numpy as np
 from alpharaw.bruker.dll import BRUKER_DLL_FILE_NAME, open_bruker_d_folder
-from alpharaw.bruker.read import read_bruker_sql, read_bruker_binary
+from alpharaw.bruker.read import read_bruker_binary, read_bruker_sql
 
 
-class TimsTOFBase(object):
+class TimsTOFBase:
     """A class that reads Bruker TimsTOF data.
 
     Data can be read directly from a Bruker .d folder.
@@ -32,13 +33,12 @@ class TimsTOFBase(object):
     def sample_name(self):
         """: str : The sample name of this TimsTOF object."""
         file_name = os.path.basename(self.bruker_d_folder_name)
-        return '.'.join(file_name.split('.')[:-1])
+        return ".".join(file_name.split(".")[:-1])
 
     @property
     def directory(self):
         """: str : The directory of this TimsTOF object."""
         return os.path.dirname(self.bruker_d_folder_name)
-
 
     @property
     def version(self):
@@ -267,7 +267,7 @@ class TimsTOFBase(object):
             This is ignored if the polarity is dropped.
             Default is True.
         """
-        #Log a warning if there was not a valid DLL filename
+        # Log a warning if there was not a valid DLL filename
         if BRUKER_DLL_FILE_NAME == "":
             logging.warning(
                 "WARNING: "
@@ -279,20 +279,24 @@ class TimsTOFBase(object):
             )
             logging.info("")
 
-        self._load_data(bruker_d_folder_name,
-                        mz_estimation_from_frame,
-                        mobility_estimation_from_frame,
-                        drop_polarity,
-                        convert_polarity_to_int)
+        self._load_data(
+            bruker_d_folder_name,
+            mz_estimation_from_frame,
+            mobility_estimation_from_frame,
+            drop_polarity,
+            convert_polarity_to_int,
+        )
 
         logging.info(f"Successfully imported data from {bruker_d_folder_name}")
 
-    def _load_data(self,
-                   bruker_d_folder_name: str,
-                   mz_estimation_from_frame: int,
-                   mobility_estimation_from_frame: int,
-                   drop_polarity: bool,
-                   convert_polarity_to_int: bool) -> None:
+    def _load_data(
+        self,
+        bruker_d_folder_name: str,
+        mz_estimation_from_frame: int,
+        mobility_estimation_from_frame: int,
+        drop_polarity: bool,
+        convert_polarity_to_int: bool,
+    ) -> None:
         """Load data from disk."""
 
         if bruker_d_folder_name.endswith("/"):
@@ -300,10 +304,7 @@ class TimsTOFBase(object):
 
         logging.info(f"Importing data from {bruker_d_folder_name}")
         if bruker_d_folder_name.endswith(".d"):
-
-            self.bruker_d_folder_name = os.path.abspath(
-                bruker_d_folder_name
-            )
+            self.bruker_d_folder_name = os.path.abspath(bruker_d_folder_name)
             self._import_data_from_d_folder(
                 bruker_d_folder_name,
                 mz_estimation_from_frame,
@@ -346,9 +347,7 @@ class TimsTOFBase(object):
             drop_polarity,
             convert_polarity_to_int,
         )
-        self._meta_data = dict(
-            zip(global_meta_data.Key, global_meta_data.Value)
-        )
+        self._meta_data = dict(zip(global_meta_data.Key, global_meta_data.Value))
         (
             self._push_indptr,
             self._tof_indices,
@@ -365,43 +364,37 @@ class TimsTOFBase(object):
         self._scan_max_index = int(self.frames.NumScans.max()) + 1
         self._tof_max_index = int(self.meta_data["DigitizerNumSamples"]) + 1
         self._rt_values = self.frames.Time.values.astype(np.float64)
-        self._mobility_min_value = float(
-            self.meta_data["OneOverK0AcqRangeLower"]
-        )
-        self._mobility_max_value = float(
-            self.meta_data["OneOverK0AcqRangeUpper"]
-        )
+        self._mobility_min_value = float(self.meta_data["OneOverK0AcqRangeLower"])
+        self._mobility_max_value = float(self.meta_data["OneOverK0AcqRangeUpper"])
         self._accumulation_times = self.frames.AccumulationTime.values.astype(
             np.float64
         )
         self._max_accumulation_time = np.max(self._accumulation_times)
-        self._intensity_corrections = self._max_accumulation_time / self._accumulation_times
+        self._intensity_corrections = (
+            self._max_accumulation_time / self._accumulation_times
+        )
         if (mobility_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with open_bruker_d_folder(
-                bruker_d_folder_name
-            ) as (bruker_dll, bruker_d_folder_handle):
-                logging.info(
-                    f"Fetching mobility values from {bruker_d_folder_name}"
-                )
+
+            with open_bruker_d_folder(bruker_d_folder_name) as (
+                bruker_dll,
+                bruker_d_folder_handle,
+            ):
+                logging.info(f"Fetching mobility values from {bruker_d_folder_name}")
                 indices = np.arange(self.scan_max_index).astype(np.float64)
                 self._mobility_values = np.empty_like(indices)
                 bruker_dll.tims_scannum_to_oneoverk0(
                     bruker_d_folder_handle,
                     mobility_estimation_from_frame,
-                    indices.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
+                    indices.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                     self.mobility_values.ctypes.data_as(
                         ctypes.POINTER(ctypes.c_double)
                     ),
-                    self.scan_max_index
+                    self.scan_max_index,
                 )
         else:
-            if (mobility_estimation_from_frame != 0):
-                logging.info(
-                    "Bruker DLL not available, estimating mobility values"
-                )
+            if mobility_estimation_from_frame != 0:
+                logging.info("Bruker DLL not available, estimating mobility values")
             self._mobility_values = self.mobility_max_value - (
                 self.mobility_max_value - self.mobility_min_value
             ) / self.scan_max_index * np.arange(self.scan_max_index)
@@ -416,44 +409,35 @@ class TimsTOFBase(object):
             mz_min_value -= 5
             mz_max_value += 5
         tof_intercept = np.sqrt(mz_min_value)
-        tof_slope = (
-            np.sqrt(mz_max_value) - tof_intercept
-        ) / self.tof_max_index
+        tof_slope = (np.sqrt(mz_max_value) - tof_intercept) / self.tof_max_index
         if (mz_estimation_from_frame != 0) and calibration_available:
             import ctypes
-            with open_bruker_d_folder(
-                bruker_d_folder_name
-            ) as (bruker_dll, bruker_d_folder_handle):
-                logging.info(
-                    f"Fetching mz values from {bruker_d_folder_name}"
-                )
+
+            with open_bruker_d_folder(bruker_d_folder_name) as (
+                bruker_dll,
+                bruker_d_folder_handle,
+            ):
+                logging.info(f"Fetching mz values from {bruker_d_folder_name}")
                 indices = np.arange(self.tof_max_index).astype(np.float64)
                 self._mz_values = np.empty_like(indices)
                 bruker_dll.tims_index_to_mz(
                     bruker_d_folder_handle,
                     mz_estimation_from_frame,
-                    indices.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
-                    self._mz_values.ctypes.data_as(
-                        ctypes.POINTER(ctypes.c_double)
-                    ),
-                    self.tof_max_index
+                    indices.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                    self._mz_values.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                    self.tof_max_index,
                 )
         else:
-            if (mz_estimation_from_frame != 0):
-                logging.info(
-                    "Bruker DLL not available, estimating mz values"
-                )
+            if mz_estimation_from_frame != 0:
+                logging.info("Bruker DLL not available, estimating mz values")
             self._mz_values = (
                 tof_intercept + tof_slope * np.arange(self.tof_max_index)
-            )**2
+            ) ** 2
         self._parse_quad_indptr()
         self._intensity_min_value = int(np.min(self.intensity_values))
         self._intensity_max_value = int(np.max(self.intensity_values))
         if self.acquisition_mode == "diaPASEF":
             self.set_cycle()
-
 
     def _parse_quad_indptr(self) -> None:
         logging.info("Indexing quadrupole dimension")
@@ -463,7 +447,7 @@ class TimsTOFBase(object):
         isolation_mzs = self.fragment_frames.IsolationMz.values
         isolation_widths = self.fragment_frames.IsolationWidth.values
         precursors = self.fragment_frames.Precursor.values
-        if (precursors[0] is None):
+        if precursors[0] is None:
             if self.zeroth_frame:
                 frame_groups = self.frames.MsMsType.values[1:]
             else:
@@ -491,14 +475,14 @@ class TimsTOFBase(object):
             scan_end,
             isolation_mz,
             isolation_width,
-            precursor
+            precursor,
         ) in zip(
             frame_ids - 1,
             scan_begins,
             scan_ends,
             isolation_mzs,
             isolation_widths / 2,
-            precursors
+            precursors,
         ):
             low = frame_id * scan_max_index + scan_begin
             # TODO: CHECK?
@@ -526,20 +510,20 @@ class TimsTOFBase(object):
         self._quad_indptr = self.push_indptr[self._raw_quad_indptr]
         self._quad_max_mz_value = np.max(self.quad_mz_values[:, 1])
         self._quad_min_mz_value = np.min(
-            self.quad_mz_values[
-                self.quad_mz_values[:, 0] >= 0,
-                0
-            ]
+            self.quad_mz_values[self.quad_mz_values[:, 0] >= 0, 0]
         )
         self._precursor_max_index = int(np.max(self.precursor_indices)) + 1
         if self._acquisition_mode == "diaPASEF":
             offset = int(self.zeroth_frame)
-            cycle_index = np.searchsorted(
-                self.raw_quad_indptr,
-                (self.scan_max_index) * (self.precursor_max_index + offset),
-                "r"
-            ) + 1
-            repeats = np.diff(self.raw_quad_indptr[: cycle_index])
+            cycle_index = (
+                np.searchsorted(
+                    self.raw_quad_indptr,
+                    (self.scan_max_index) * (self.precursor_max_index + offset),
+                    "r",
+                )
+                + 1
+            )
+            repeats = np.diff(self.raw_quad_indptr[:cycle_index])
             if self.zeroth_frame:
                 repeats[0] -= self.scan_max_index
             cycle_length = self.scan_max_index * self.precursor_max_index
@@ -548,30 +532,25 @@ class TimsTOFBase(object):
                 repeats[-1] -= repeat_length - cycle_length
             self._dia_mz_cycle = np.empty((cycle_length, 2))
             self._dia_mz_cycle[:, 0] = np.repeat(
-                self.quad_mz_values[: cycle_index - 1, 0],
-                repeats
+                self.quad_mz_values[: cycle_index - 1, 0], repeats
             )
             self._dia_mz_cycle[:, 1] = np.repeat(
-                self.quad_mz_values[: cycle_index - 1, 1],
-                repeats
+                self.quad_mz_values[: cycle_index - 1, 1], repeats
             )
             self._dia_precursor_cycle = np.repeat(
-                self.precursor_indices[: cycle_index - 1],
-                repeats
+                self.precursor_indices[: cycle_index - 1], repeats
             )
         else:
             self._dia_mz_cycle = np.empty((0, 2))
             self._dia_precursor_cycle = np.empty(0, dtype=np.int64)
 
-
     def set_cycle(self) -> None:
-        """Set the quad cycle for diaPASEF data.
-        """
+        """Set the quad cycle for diaPASEF data."""
         ms1_diffs = np.diff(
-            np.flatnonzero(self.frames.MsMsType[int(self.zeroth_frame):]==0)
+            np.flatnonzero(self.frames.MsMsType[int(self.zeroth_frame) :] == 0)
         )
         subcycle_length_count = np.bincount(ms1_diffs)
-        if np.all(subcycle_length_count[:-1]!=0):
+        if np.all(subcycle_length_count[:-1] != 0):
             raise ValueError("No consistent subcycle length")
         subcycle_length = len(subcycle_length_count) - 1
         max_precursor = len(self.fragment_frames.Precursor.unique())
@@ -599,30 +578,26 @@ class TimsTOFBase(object):
             high_mz = row.IsolationMz + row.IsolationWidth / 2
             cycle[
                 frame,
-                scan_begin: scan_end,
+                scan_begin:scan_end,
             ] = (low_mz, high_mz)
             precursor_frames[frame] = False
 
         cycle[precursor_frames] = (-1, -1)
-        cycle = cycle.reshape(
-            (
-                subcycle_count,
-                subcycle_length,
-                *cycle.shape[1:]
-            )
-        )
+        cycle = cycle.reshape((subcycle_count, subcycle_length, *cycle.shape[1:]))
         self._cycle = cycle
 
-
     def use_calibrated_mz_values_as_default(
-        self,
-        use_calibrated_mz_values: int
+        self, use_calibrated_mz_values: int
     ) -> None:
         """Override the default mz_values with the global calibrated_mz_values."""
-        raise NotImplementedError("Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable use_calibrated_mz_values_as_default.")
+        raise NotImplementedError(
+            "Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable use_calibrated_mz_values_as_default."
+        )
 
     def _import_data_from_hdf_file(
         self,
         bruker_d_folder_name: str,
     ):
-        raise NotImplementedError("Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable import_data_from_hdf_file.")
+        raise NotImplementedError(
+            "Not implemented for TimsTOFBase. Use TimsTOF class from alphatims to enable import_data_from_hdf_file."
+        )
