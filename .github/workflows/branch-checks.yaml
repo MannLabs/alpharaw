@@ -23,4 +23,4 @@ jobs:
     with:
       python-version: ${{ matrix.python-version }}
       os: ${{ matrix.os }}
-      install-script: pip_install.sh stable,tests
+      install-script: pip_install.sh stable,owl-stable,tests
