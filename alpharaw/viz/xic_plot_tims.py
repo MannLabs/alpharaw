@@ -1,4 +1,6 @@
-_DEPRECATION_MSG = "has been moved to alphatims and will be removed from alpharaw in a future version."
+_DEPRECATION_MSG = (
+    "has been moved to alphatims and will be removed from alpharaw in a future version."
+)
 
 
 class XIC_Plot_Tims:
