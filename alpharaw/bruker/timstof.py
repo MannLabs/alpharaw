@@ -8,6 +8,7 @@ For the full functionality in terms of fast data access, please use the TimsTOF 
 
 import logging
 import os
+from typing import Callable
 
 import numpy as np
 
@@ -279,6 +280,10 @@ class TimsTOFBase:
             )
             logging.info("")
 
+        # initialize only if not set by subclass
+        if not hasattr(self, "_mmap_detector_events"):
+            self._mmap_detector_events = False
+
         self._load_data(
             bruker_d_folder_name,
             mz_estimation_from_frame,
@@ -357,6 +362,8 @@ class TimsTOFBase:
             bruker_d_folder_name,
             int(self._meta_data["TimsCompressionType"]),
             int(self._meta_data["MaxNumPeaksPerScan"]),
+            self._mmap_detector_events,
+            self._get_empty_array_constructor_function()
         )
         logging.info(f"Indexing {bruker_d_folder_name}...")
         self._use_calibrated_mz_values_as_default = False
@@ -438,6 +445,12 @@ class TimsTOFBase:
         self._intensity_max_value = int(np.max(self.intensity_values))
         if self.acquisition_mode == "diaPASEF":
             self.set_cycle()
+
+    def _get_empty_array_constructor_function(self) -> Callable:
+        """Get the function to create empty arrays for this class.
+
+        This is used to allow subclasses to override the array creation with memory-mapped arrays."""
+        return np.empty
 
     def _parse_quad_indptr(self) -> None:
         logging.info("Indexing quadrupole dimension")

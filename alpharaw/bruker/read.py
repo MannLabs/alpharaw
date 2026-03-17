@@ -2,6 +2,7 @@
 
 import logging
 import os
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -139,6 +140,7 @@ def read_bruker_binary(
     compression_type: int,
     max_peaks_per_scan: int,
     mmap_detector_events: bool = None,
+    empty_array_constructor_function: Callable = np.empty
 ) -> tuple:
     """Read all data from an "analysis.tdf_bin" of a Bruker .d folder.
 
@@ -156,8 +158,12 @@ def read_bruker_binary(
         Should be treieved from the global metadata.
     mmap_detector_events : bool
         Do not save the intensity_values and tof_indices in memory,
-        but use an mmap instead.
+        but use an mmap instead. Set empty_array_constructor_function accordingly.
         Default is True
+    empty_array_constructor_function : Callable
+        The function to use to construct empty arrays for intensities and tof_indices.
+        Used only if mmap_detector_events is True.
+        Default is np.empty, but can be set to a function that creates memory-mapped arrays.
 
     Returns
     -------
@@ -171,10 +177,8 @@ def read_bruker_binary(
     scan_count = max_scan_count * frames.shape[0]
     scan_indptr = np.zeros(scan_count + 1, dtype=np.int64)
     if mmap_detector_events:
-        raise NotImplementedError("")
-        # TODO: re-enable mmapping in alphatims
-        # intensities = tm.empty(int(frame_indptr[-1]), dtype=np.uint16)
-        # tof_indices = tm.empty(int(frame_indptr[-1]), dtype=np.uint32)
+        intensities = empty_array_constructor_function(int(frame_indptr[-1]), dtype=np.uint16)
+        tof_indices = empty_array_constructor_function(int(frame_indptr[-1]), dtype=np.uint32)
     else:
         intensities = np.empty(int(frame_indptr[-1]), dtype=np.uint16)
         tof_indices = np.empty(int(frame_indptr[-1]), dtype=np.uint32)
