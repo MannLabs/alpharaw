@@ -570,7 +570,7 @@ class TimsTOFBase:
             subframe = subframes.iloc[max_index]
             if subframe.equals(subframes.iloc[0]):
                 break
-        for index, row in self.fragment_frames[:max_index].iterrows():
+        for _, row in self.fragment_frames[:max_index].iterrows():
             frame = int(row.Frame - self.zeroth_frame)
             scan_begin = int(row.ScanNumBegin)
             scan_end = int(row.ScanNumEnd)
