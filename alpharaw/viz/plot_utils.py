@@ -49,7 +49,6 @@ def plot_scatter(
     )
 
 
-
 def plot_line_tims(*args, **kwargs) -> go.Figure:
     raise DeprecationWarning(
         "plot_line_tims has been moved to alphaviz and will be removed from alpharaw in a future version."
@@ -60,6 +59,7 @@ def plot_line_tims_fast(*args, **kwargs) -> go.Figure:
     raise DeprecationWarning(
         "plot_line_tims_fast has been moved to alphaviz and will be removed from alpharaw in a future version."
     )
+
 
 def plot_line(
     x_values: np.ndarray,

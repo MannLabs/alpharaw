@@ -2,10 +2,10 @@ import typing
 from collections import defaultdict
 
 import numpy as np
+from alphatims.alphatims_wrapper import convert_to_alphatims, remove_unused_peaks
 from alphatims.bruker import TimsTOF
 
 from alpharaw.ms_data_base import MSData_Base
-from alphatims.alphatims_wrapper import convert_to_alphatims, remove_unused_peaks
 
 
 class NormalDIAGrouper:
