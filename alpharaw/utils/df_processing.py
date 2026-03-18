@@ -2,6 +2,4 @@
 
 
 def remove_unused_peaks(*args, **kwargs):
-    raise DeprecationWarning(
-        "remove_unused_peaks has been moved to peptdeep and will be removed from alpharaw in a future version."
-    )
+    raise ImportError("remove_unused_peaks has been moved to peptdeep.")
