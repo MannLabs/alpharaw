@@ -531,7 +531,7 @@ class TimsTOFBase:
                 np.searchsorted(
                     self.raw_quad_indptr,
                     (self.scan_max_index) * (self.precursor_max_index + offset),
-                    "r",
+                    "right",
                 )
                 + 1
             )
