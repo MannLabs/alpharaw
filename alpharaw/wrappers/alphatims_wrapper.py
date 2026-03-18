@@ -1,4 +1,4 @@
-"""Deprecated wrapper for AlphaTimsReader and AlphaTimsWrapper. These classes have been moved to the peptdeep package."""
+"""Deprecated wrapper for AlphaTimsReader and AlphaTimsWrapper. These classes have been moved to the alphatims package."""
 
 _DEPRECATION_MSG = "has been moved to alphatims."
 
