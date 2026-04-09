@@ -12,7 +12,14 @@ class SciexWiffData(MSData_Base):
     in :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers()`.
     """
 
-    def __init__(self, centroided: bool = False, save_as_hdf: bool = False, **kwargs):
+    def __init__(
+        self,
+        centroided: bool = False,
+        save_as_hdf: bool = False,
+        centroid_method: str = "local_maxima",
+        snr_threshold: float = 1.0,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -22,13 +29,22 @@ class SciexWiffData(MSData_Base):
 
         save_as_hdf : bool, optional
             Automatically save hdf after load raw data, by default False.
+
+        centroid_method : str, optional
+            Centroiding algorithm to use. Options:
+            - "local_maxima": Local maxima detection with valley boundaries
+              and SNR filtering. Adaptive to peak width. (recommended)
+            - "naive": Simple PPM-window grouping (legacy).
+            By default "local_maxima".
+
+        snr_threshold : float, optional
+            Signal-to-noise ratio threshold for the local_maxima method.
+            Peaks below this threshold are filtered out.
+            Set to 0 to disable filtering. By default 1.0.
         """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
-        if self.centroided:
-            self.centroided = False
-            warnings.warn(
-                "Centroiding for Sciex data is not well implemented yet. Disabling it."
-            )
+        self.centroid_method = centroid_method
+        self.snr_threshold = snr_threshold
         self.centroid_ppm = 20.0
         self.ignore_empty_scans = True
         self.keep_k_peaks_per_spec = 2000
@@ -54,6 +70,8 @@ class SciexWiffData(MSData_Base):
             self.sample_id,
             centroid=self.centroided,
             centroid_ppm=self.centroid_ppm,
+            centroid_method=self.centroid_method,
+            snr_threshold=self.snr_threshold,
             ignore_empty_scans=self.ignore_empty_scans,
             keep_k_peaks=self.keep_k_peaks_per_spec,
         )

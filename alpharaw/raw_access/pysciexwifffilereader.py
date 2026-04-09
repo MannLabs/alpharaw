@@ -5,7 +5,7 @@ import warnings
 
 import numpy as np
 
-from alpharaw.utils.centroiding import naive_centroid
+from alpharaw.utils.centroiding import centroid_local_maxima, naive_centroid
 
 try:
     # require pythonnet, pip install pythonnet on Windows
@@ -79,6 +79,8 @@ class WiffFileReader:
         sample_id: int,
         centroid: bool = True,
         centroid_ppm: float = 20.0,
+        centroid_method: str = "naive",
+        snr_threshold: float = 1.0,
         ignore_empty_scans: bool = True,
         keep_k_peaks: int = 2000,
     ):
@@ -122,9 +124,14 @@ class WiffFileReader:
                     massSpectrum.GetActualYValues()
                 ).astype(np.float32)
                 if centroid:
-                    (mz_array, int_array) = naive_centroid(
-                        mz_array, int_array, centroiding_ppm=centroid_ppm
-                    )
+                    if centroid_method == "local_maxima":
+                        (mz_array, int_array) = centroid_local_maxima(
+                            mz_array, int_array, snr_threshold=snr_threshold
+                        )
+                    else:
+                        (mz_array, int_array) = naive_centroid(
+                            mz_array, int_array, centroiding_ppm=centroid_ppm
+                        )
                 if len(mz_array) > keep_k_peaks:
                     idxes = np.argsort(int_array)[-keep_k_peaks:]
                     idxes = np.sort(idxes)
