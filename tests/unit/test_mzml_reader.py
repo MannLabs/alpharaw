@@ -261,6 +261,15 @@ def test_parse_ms2_entry_missing_filter_string_returns_nan_nce():
     assert np.isnan(nce)
 
 
+def test_parse_ms2_entry_malformed_filter_string_returns_nan_nce():
+    entry = make_ms2_entry()
+    entry["scanList"]["scan"][0]["filter string"] = {"not": "a-string"}
+
+    (_, _, _, _, _, nce, _, _, _) = parse_entry(entry)
+
+    assert np.isnan(nce)
+
+
 def test_parse_ms2_entry_missing_charge_state_defaults_to_zero():
     entry = make_ms2_entry(charge_state=2)
     entry["precursorList"]["precursor"][0]["selectedIonList"]["selectedIon"][0].pop(

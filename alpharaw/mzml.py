@@ -146,7 +146,7 @@ class MzMLReader(MSData_Base):
 
 def _parse_nce_from_filter_string(filter_string) -> float:
     """Parse NCE from Thermo-like filter strings."""
-    if not filter_string:
+    if not isinstance(filter_string, str) or not filter_string:
         return np.nan
 
     try:
@@ -157,7 +157,7 @@ def _parse_nce_from_filter_string(filter_string) -> float:
             return float(filter_string.split("@cid")[1].split(" ")[0])
 
         return np.nan
-    except (TypeError, ValueError, IndexError):
+    except (ValueError, IndexError):
         return np.nan
 
 
@@ -229,6 +229,21 @@ def _get_peak_array(item_dict: dict, key: str) -> np.ndarray:
     return np.asarray(peak_array)
 
 
+def _get_first_scan_entry(item_dict: dict) -> dict:
+    scan_list = item_dict.get("scanList")
+    if not isinstance(scan_list, dict):
+        raise KeyError("Missing 'scanList' in mzML scan payload.")
+
+    scans = scan_list.get("scan")
+    if not isinstance(scans, list) or not scans:
+        raise KeyError("Missing 'scan' entries in mzML scan payload.")
+
+    scan_entry = scans[0]
+    if not isinstance(scan_entry, dict):
+        raise TypeError("Expected first 'scan' entry to be a dict.")
+    return scan_entry
+
+
 def parse_mzml_entry(item_dict: dict) -> tuple:
     """
     Parse mzml entries from pyteomics extracted items.
@@ -243,7 +258,8 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
     tuple
         items in tuple format.
     """
-    rt = float(item_dict.get("scanList").get("scan")[0].get("scan start time"))
+    scan_entry = _get_first_scan_entry(item_dict)
+    rt = float(scan_entry.get("scan start time"))
     masses = _get_peak_array(item_dict, "m/z array")
     intensities = _get_peak_array(item_dict, "intensity array")
     ms_level = item_dict.get("ms level")
@@ -282,7 +298,7 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
                 isolation_upper_mz = prec_mz + DEFAULT_ISOLATION_OFFSET
                 isolation_lower_mz = prec_mz - DEFAULT_ISOLATION_OFFSET
 
-        filter_string = item_dict.get("scanList").get("scan")[0].get("filter string")
+        filter_string = scan_entry.get("filter string")
         nce = _parse_nce_from_filter_string(filter_string)
     return (
         rt,
