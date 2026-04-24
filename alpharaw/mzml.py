@@ -147,6 +147,21 @@ def _parse_nce_from_filter_string(filter_string) -> float:
         return np.nan
 
 
+def _parse_charge_state(selected_ion: dict | None) -> int:
+    if selected_ion is None:
+        return 0
+
+    charge_state = selected_ion.get("charge state")
+
+    if charge_state is None:
+        return 0
+
+    try:
+        return int(charge_state)
+    except (TypeError, ValueError):
+        return 0
+
+
 def parse_mzml_entry(item_dict: dict) -> tuple:
     """
     Parse mzml entries from pyteomics extracted items.
@@ -171,34 +186,15 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
     charge = 0
     nce = 0.0
     if ms_level == 2:
-        try:
-            charge = int(
-                item_dict.get("precursorList")
-                .get("precursor")[0]
-                .get("selectedIonList")
-                .get("selectedIon")[0]
-                .get("charge state")
-            )
-        except TypeError:
-            charge = 0
-        try:
-            charge = int(
-                item_dict.get("precursorList")
-                .get("precursor")[0]
-                .get("selectedIonList")
-                .get("selectedIon")[0]
-                .get("charge state")
-            )
-        except TypeError:
-            charge = 0
-
-        prec_mz = (
+        selected_ion = (
             item_dict.get("precursorList")
             .get("precursor")[0]
             .get("selectedIonList")
             .get("selectedIon")[0]
-            .get("selected ion m/z")
         )
+        charge = _parse_charge_state(selected_ion)
+
+        prec_mz = selected_ion.get("selected ion m/z")
         try:
             iso_window = (
                 item_dict.get("precursorList")
