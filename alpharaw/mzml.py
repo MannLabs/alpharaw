@@ -8,6 +8,10 @@ from .ms_data_base import (
     ms_reader_provider,
 )
 
+SAFE_PRECURSOR_MZ = -1.0
+SAFE_ISOLATION_MZ = -1.0
+DEFAULT_ISOLATION_OFFSET = 1.5
+
 
 class MzMLReader(MSData_Base):
     """
@@ -162,6 +166,52 @@ def _parse_charge_state(selected_ion: dict | None) -> int:
         return 0
 
 
+def _get_first_precursor(item_dict: dict) -> dict | None:
+    precursor_list = item_dict.get("precursorList")
+    if not isinstance(precursor_list, dict):
+        return None
+
+    precursors = precursor_list.get("precursor")
+    if not isinstance(precursors, list) or not precursors:
+        return None
+
+    precursor = precursors[0]
+    if not isinstance(precursor, dict):
+        return None
+
+    return precursor
+
+
+def _get_first_selected_ion(precursor: dict | None) -> dict | None:
+    if precursor is None:
+        return None
+
+    selected_ion_list = precursor.get("selectedIonList")
+    if not isinstance(selected_ion_list, dict):
+        return None
+
+    selected_ions = selected_ion_list.get("selectedIon")
+    if not isinstance(selected_ions, list) or not selected_ions:
+        return None
+
+    selected_ion = selected_ions[0]
+    if not isinstance(selected_ion, dict):
+        return None
+
+    return selected_ion
+
+
+def _get_isolation_window(precursor: dict | None) -> dict | None:
+    if precursor is None:
+        return None
+
+    isolation_window = precursor.get("isolationWindow")
+    if not isinstance(isolation_window, dict):
+        return None
+
+    return isolation_window
+
+
 def parse_mzml_entry(item_dict: dict) -> tuple:
     """
     Parse mzml entries from pyteomics extracted items.
@@ -180,34 +230,40 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
     masses = item_dict.get("m/z array")
     intensities = item_dict.get("intensity array")
     ms_level = item_dict.get("ms level")
-    prec_mz = -1.0
-    isolation_lower_mz = -1.0
-    isolation_upper_mz = -1.0
+    prec_mz = SAFE_PRECURSOR_MZ
+    isolation_lower_mz = SAFE_ISOLATION_MZ
+    isolation_upper_mz = SAFE_ISOLATION_MZ
     charge = 0
     nce = 0.0
     if ms_level == 2:
-        selected_ion = (
-            item_dict.get("precursorList")
-            .get("precursor")[0]
-            .get("selectedIonList")
-            .get("selectedIon")[0]
-        )
+        precursor = _get_first_precursor(item_dict)
+        selected_ion = _get_first_selected_ion(precursor)
         charge = _parse_charge_state(selected_ion)
 
-        prec_mz = selected_ion.get("selected ion m/z")
+        precursor_mz_value = (
+            None if selected_ion is None else selected_ion.get("selected ion m/z")
+        )
         try:
-            iso_window = (
-                item_dict.get("precursorList")
-                .get("precursor")[0]
-                .get("isolationWindow")
+            prec_mz = float(precursor_mz_value)
+        except (TypeError, ValueError):
+            prec_mz = SAFE_PRECURSOR_MZ
+
+        if prec_mz != SAFE_PRECURSOR_MZ:
+            iso_window = _get_isolation_window(precursor)
+            iso_lower = None if iso_window is None else iso_window.get(
+                "isolation window lower offset"
             )
-            iso_lower = float(iso_window.get("isolation window lower offset"))
-            iso_upper = float(iso_window.get("isolation window upper offset"))
-            isolation_upper_mz = prec_mz + iso_upper
-            isolation_lower_mz = prec_mz - iso_lower
-        except TypeError:
-            isolation_upper_mz = prec_mz + 1.5
-            isolation_lower_mz = prec_mz - 1.5
+            iso_upper = None if iso_window is None else iso_window.get(
+                "isolation window upper offset"
+            )
+            try:
+                iso_lower = float(iso_lower)
+                iso_upper = float(iso_upper)
+                isolation_upper_mz = prec_mz + iso_upper
+                isolation_lower_mz = prec_mz - iso_lower
+            except (TypeError, ValueError):
+                isolation_upper_mz = prec_mz + DEFAULT_ISOLATION_OFFSET
+                isolation_lower_mz = prec_mz - DEFAULT_ISOLATION_OFFSET
 
         filter_string = item_dict.get("scanList").get("scan")[0].get("filter string")
         nce = _parse_nce_from_filter_string(filter_string)

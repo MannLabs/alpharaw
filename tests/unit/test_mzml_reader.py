@@ -245,3 +245,64 @@ def test_parse_ms2_entry_invalid_charge_state_defaults_to_zero():
     (_, _, _, _, _, _, precursor_charge, _, _) = parse_entry(entry)
 
     assert precursor_charge == 0
+
+
+def test_parse_ms2_entry_missing_precursor_list_uses_safe_defaults():
+    entry = make_ms2_entry()
+    entry.pop("precursorList")
+
+    (
+        _,
+        precursor_mz,
+        isolation_lower_mz,
+        isolation_upper_mz,
+        _,
+        _,
+        precursor_charge,
+        _,
+        _,
+    ) = parse_entry(entry)
+
+    assert precursor_mz == -1.0
+    assert precursor_charge == 0
+    assert isolation_lower_mz == -1.0
+    assert isolation_upper_mz == -1.0
+
+
+def test_parse_ms2_entry_missing_selected_ion_uses_safe_defaults():
+    entry = make_ms2_entry()
+    entry["precursorList"]["precursor"][0]["selectedIonList"].pop("selectedIon")
+
+    (
+        _,
+        precursor_mz,
+        isolation_lower_mz,
+        isolation_upper_mz,
+        _,
+        _,
+        precursor_charge,
+        _,
+        _,
+    ) = parse_entry(entry)
+
+    assert precursor_mz == -1.0
+    assert precursor_charge == 0
+    assert isolation_lower_mz == -1.0
+    assert isolation_upper_mz == -1.0
+
+
+def test_parse_ms2_entry_missing_selected_ion_mz_uses_safe_defaults():
+    entry = make_ms2_entry()
+    entry["precursorList"]["precursor"][0]["selectedIonList"]["selectedIon"][0].pop(
+        "selected ion m/z"
+    )
+
+    (_, precursor_mz, isolation_lower_mz, isolation_upper_mz, _, _, _, _, _) = parse_entry(
+        entry
+    )
+
+    assert precursor_mz == -1.0
+    assert isolation_lower_mz == -1.0
+    assert isolation_upper_mz == -1.0
+    assert isolation_lower_mz != -2.5
+    assert isolation_upper_mz != 0.5
