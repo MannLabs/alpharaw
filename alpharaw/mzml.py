@@ -116,10 +116,20 @@ class MzMLReader(MSData_Base):
         peak_indices = np.empty(len(spec_indices) + 1, np.int64)
         peak_indices[0] = 0
         peak_indices[1:] = np.cumsum(_peak_indices)
+        peak_mz = (
+            np.concatenate(mzs_list)
+            if mzs_list
+            else np.empty(0, dtype=PEAK_MZ_DTYPE)
+        )
+        peak_intensity = (
+            np.concatenate(intens_list)
+            if intens_list
+            else np.empty(0, dtype=PEAK_INTENSITY_DTYPE)
+        )
         ret_dict = {
             "peak_indices": peak_indices,
-            "peak_mz": np.concatenate(mzs_list),
-            "peak_intensity": np.concatenate(intens_list),
+            "peak_mz": peak_mz,
+            "peak_intensity": peak_intensity,
             "rt": np.array(rt_list),
             "precursor_mz": np.array(prec_mz_list),
             "precursor_charge": np.array(charge_list, dtype=np.int8),

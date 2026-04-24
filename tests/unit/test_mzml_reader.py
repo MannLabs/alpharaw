@@ -1,6 +1,7 @@
 import numpy as np
 
 from alpharaw.mzml import MzMLReader, parse_mzml_entry
+from alpharaw.ms_data_base import PEAK_INTENSITY_DTYPE, PEAK_MZ_DTYPE
 
 
 def make_selected_ion(selected_ion_mz: float = 400.0, charge_state: int = 2) -> dict:
@@ -334,3 +335,20 @@ def test_parse_empty_scan_payload():
     assert parsed["peak_indices"][-1] == 0
     assert parsed["peak_mz"].size == 0
     assert parsed["peak_intensity"].size == 0
+
+
+def test_import_empty_reader_returns_empty_arrays():
+    parsed = MzMLReader()._import(FakeMzMLReader([]))
+
+    np.testing.assert_array_equal(parsed["peak_indices"], np.array([0], dtype=np.int64))
+    assert parsed["peak_mz"].size == 0
+    assert parsed["peak_mz"].dtype == np.dtype(PEAK_MZ_DTYPE)
+    assert parsed["peak_intensity"].size == 0
+    assert parsed["peak_intensity"].dtype == np.dtype(PEAK_INTENSITY_DTYPE)
+    assert parsed["rt"].size == 0
+    assert parsed["precursor_mz"].size == 0
+    assert parsed["precursor_charge"].size == 0
+    assert parsed["isolation_lower_mz"].size == 0
+    assert parsed["isolation_upper_mz"].size == 0
+    assert parsed["ms_level"].size == 0
+    assert parsed["nce"].size == 0
