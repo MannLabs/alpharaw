@@ -212,6 +212,13 @@ def _get_isolation_window(precursor: dict | None) -> dict | None:
     return isolation_window
 
 
+def _get_peak_array(item_dict: dict, key: str) -> np.ndarray:
+    peak_array = item_dict.get(key)
+    if peak_array is None:
+        raise KeyError(f"Missing '{key}' in mzML scan payload.")
+    return np.asarray(peak_array)
+
+
 def parse_mzml_entry(item_dict: dict) -> tuple:
     """
     Parse mzml entries from pyteomics extracted items.
@@ -227,8 +234,8 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
         items in tuple format.
     """
     rt = float(item_dict.get("scanList").get("scan")[0].get("scan start time"))
-    masses = item_dict.get("m/z array")
-    intensities = item_dict.get("intensity array")
+    masses = _get_peak_array(item_dict, "m/z array")
+    intensities = _get_peak_array(item_dict, "intensity array")
     ms_level = item_dict.get("ms level")
     prec_mz = SAFE_PRECURSOR_MZ
     isolation_lower_mz = SAFE_ISOLATION_MZ

@@ -1,6 +1,6 @@
 import numpy as np
 
-from alpharaw.mzml import parse_mzml_entry
+from alpharaw.mzml import MzMLReader, parse_mzml_entry
 
 
 def make_selected_ion(selected_ion_mz: float = 400.0, charge_state: int = 2) -> dict:
@@ -306,3 +306,31 @@ def test_parse_ms2_entry_missing_selected_ion_mz_uses_safe_defaults():
     assert isolation_upper_mz == -1.0
     assert isolation_lower_mz != -2.5
     assert isolation_upper_mz != 0.5
+
+
+def test_parse_empty_scan_payload():
+    entry = make_ms1_entry(
+        mz_array=np.array([]),
+        intensity_array=np.array([]),
+    )
+
+    (
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        parsed_mz_array,
+        parsed_intensity_array,
+    ) = parse_entry(entry)
+
+    assert parsed_mz_array.size == 0
+    assert parsed_intensity_array.size == 0
+
+    parsed = MzMLReader()._import(FakeMzMLReader([entry]))
+
+    assert parsed["peak_indices"][-1] == 0
+    assert parsed["peak_mz"].size == 0
+    assert parsed["peak_intensity"].size == 0
