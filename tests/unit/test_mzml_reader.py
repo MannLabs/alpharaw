@@ -198,6 +198,41 @@ def test_parse_ms2_entry_with_complete_precursor_fields():
     np.testing.assert_array_equal(parsed_intensity_array, intensity_array)
 
 
+def test_precursor_mz_uses_selected_ion_mz_when_isolation_target_differs():
+    entry = make_ms2_entry(
+        precursor_mz=501.2,
+        isolation_lower_offset=1.0,
+        isolation_upper_offset=2.0,
+    )
+    entry["precursorList"]["precursor"][0]["isolationWindow"][
+        "isolation window target m/z"
+    ] = 500.0
+
+    (_, precursor_mz, _, _, _, _, _, _, _) = parse_entry(entry)
+
+    # This locks in current behavior: precursor_mz comes from "selected ion m/z".
+    # Switching to isolation target m/z should be an explicit API/behavior decision.
+    assert np.isclose(precursor_mz, 501.2)
+
+
+def test_isolation_bounds_use_selected_ion_mz_when_isolation_target_differs():
+    entry = make_ms2_entry(
+        precursor_mz=501.2,
+        isolation_lower_offset=1.0,
+        isolation_upper_offset=2.0,
+    )
+    entry["precursorList"]["precursor"][0]["isolationWindow"][
+        "isolation window target m/z"
+    ] = 500.0
+
+    (_, _, isolation_lower_mz, isolation_upper_mz, _, _, _, _, _) = parse_entry(entry)
+
+    # This locks in current behavior: offsets are applied around selected-ion m/z.
+    # Switching to isolation target m/z should be an explicit API/behavior decision.
+    assert np.isclose(isolation_lower_mz, 500.2)
+    assert np.isclose(isolation_upper_mz, 503.2)
+
+
 def test_parse_ms2_entry_parses_hcd_nce_from_filter_string():
     entry = make_ms2_entry(
         filter_string="FTMS + p NSI Full ms2 500.0000@hcd27.00 [100.0000-1000.0000]"
