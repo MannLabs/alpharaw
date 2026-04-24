@@ -55,7 +55,7 @@ def make_ms2_entry(
     charge_state: int = 2,
     isolation_lower_offset: float = 1.5,
     isolation_upper_offset: float = 1.5,
-    filter_string: str = "FTMS + c NSI Full ms2 400.00@hcd27.00",
+    filter_string: str | None = "FTMS + c NSI Full ms2 400.00@hcd27.00",
     mz_array: np.ndarray | None = None,
     intensity_array: np.ndarray | None = None,
     include_isolation_window: bool = True,
@@ -89,15 +89,12 @@ def make_ms2_entry(
             upper_offset=isolation_upper_offset,
         )
 
+    scan_entry = {"scan start time": float(rt)}
+    if filter_string is not None:
+        scan_entry["filter string"] = filter_string
+
     return {
-        "scanList": {
-            "scan": [
-                {
-                    "scan start time": float(rt),
-                    "filter string": filter_string,
-                }
-            ]
-        },
+        "scanList": {"scan": [scan_entry]},
         "m/z array": mz_array,
         "intensity array": intensity_array,
         "ms level": 2,
@@ -131,7 +128,7 @@ class FakeMzMLReader:
 
 
 def parse_entry(entry: dict) -> tuple:
-    """Thin helper around parse_mzml_entry for upcoming behavior tests."""
+    """Thin helper around parse_mzml_entry for upcoming behaviour tests."""
     return parse_mzml_entry(entry)
 
 
@@ -195,6 +192,34 @@ def test_parse_ms2_entry_with_complete_precursor_fields():
     assert precursor_charge == 3
     assert isolation_lower_mz == 522.47
     assert isolation_upper_mz == 524.47
-    assert np.isnan(nce)
+    assert nce == 29.0
     np.testing.assert_array_equal(parsed_mz_array, mz_array)
     np.testing.assert_array_equal(parsed_intensity_array, intensity_array)
+
+
+def test_parse_ms2_entry_parses_hcd_nce_from_filter_string():
+    entry = make_ms2_entry(
+        filter_string="FTMS + p NSI Full ms2 500.0000@hcd27.00 [100.0000-1000.0000]"
+    )
+
+    (_, _, _, _, _, nce, _, _, _) = parse_entry(entry)
+
+    assert nce == 27.0
+
+
+def test_parse_ms2_entry_parses_cid_nce_from_filter_string():
+    entry = make_ms2_entry(
+        filter_string="FTMS + p NSI Full ms2 500.0000@cid35.00 [100.0000-1000.0000]"
+    )
+
+    result = parse_mzml_entry(entry)
+
+    assert result[5] == 35.0
+
+
+def test_parse_ms2_entry_missing_filter_string_returns_nan_nce():
+    entry = make_ms2_entry(filter_string=None)
+
+    (_, _, _, _, _, nce, _, _, _) = parse_entry(entry)
+
+    assert np.isnan(nce)

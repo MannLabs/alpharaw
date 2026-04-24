@@ -130,6 +130,23 @@ class MzMLReader(MSData_Base):
         return ret_dict
 
 
+def _parse_nce_from_filter_string(filter_string) -> float:
+    """Parse NCE from Thermo-like filter strings."""
+    if not filter_string:
+        return np.nan
+
+    try:
+        if "@hcd" in filter_string:
+            return float(filter_string.split("@hcd")[1].split(" ")[0])
+
+        if "@cid" in filter_string:
+            return float(filter_string.split("@cid")[1].split(" ")[0])
+
+        return np.nan
+    except (TypeError, ValueError, IndexError):
+        return np.nan
+
+
 def parse_mzml_entry(item_dict: dict) -> tuple:
     """
     Parse mzml entries from pyteomics extracted items.
@@ -196,19 +213,8 @@ def parse_mzml_entry(item_dict: dict) -> tuple:
             isolation_upper_mz = prec_mz + 1.5
             isolation_lower_mz = prec_mz - 1.5
 
-        nce = np.nan
-        try:
-            filter_string = (
-                item_dict.get("scanList").get("scan")[0].get["filter string"]
-            )
-            if "@hcd" in filter_string:
-                nce = float(filter_string.split("@hcd")[1].split(" ")[0])
-            elif "@cid" in filter_string:
-                nce = float(filter_string.split("@cid")[1].split(" ")[0])
-            else:
-                nce = np.nan
-        except Exception:
-            nce = np.nan
+        filter_string = item_dict.get("scanList").get("scan")[0].get("filter string")
+        nce = _parse_nce_from_filter_string(filter_string)
     return (
         rt,
         prec_mz,
