@@ -9,7 +9,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from owlready2 import get_ontology
+try:
+    from owlready2 import get_ontology
+
+    HAS_OWLREADY2 = True
+except ImportError:
+    HAS_OWLREADY2 = False
 
 
 class ConstantsClass(type):
@@ -242,6 +247,12 @@ class CVTermProcessor:
             Path to the PSI-MS OWL file
 
         """
+        if not HAS_OWLREADY2:
+            raise ImportError(
+                "owlready2 is required for OWL-based CV term processing. "
+                "Please install it with `pip install owlready2` or install alpharaw with the `owl` extra."
+            )
+
         self.owl_file_path = Path(owl_file_path)
         if not self.owl_file_path.exists():
             msg = f"OWL file not found: {self.owl_file_path}"

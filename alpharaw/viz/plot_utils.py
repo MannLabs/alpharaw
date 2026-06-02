@@ -50,15 +50,11 @@ def plot_scatter(
 
 
 def plot_line_tims(*args, **kwargs) -> go.Figure:
-    raise DeprecationWarning(
-        "plot_line_tims has been moved to alphatims and will be removed from alpharaw in a future version."
-    )
+    raise ImportError("plot_line_tims has been moved to alphatims.")
 
 
 def plot_line_tims_fast(*args, **kwargs) -> go.Figure:
-    raise DeprecationWarning(
-        "plot_line_tims_fast has been moved to alphatims and will be removed from alpharaw in a future version."
-    )
+    raise ImportError("plot_line_tims_fast has been moved to alphatims.")
 
 
 def plot_line(
