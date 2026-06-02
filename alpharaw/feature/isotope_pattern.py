@@ -2,7 +2,6 @@ from typing import Callable, Union
 
 import numpy as np
 import pandas as pd
-from alphatims.utils import threadpool
 from numba import njit
 from numba.typed import Dict, List
 
@@ -13,6 +12,7 @@ from alpharaw.feature.chem import (
     M_PROTON,
     mass_to_dist,
 )
+from alpharaw.utils.pjit import threadpool
 
 
 def find_connected_components(edges, min_size=2):

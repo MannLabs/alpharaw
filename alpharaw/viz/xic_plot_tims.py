@@ -1,5 +1,5 @@
 _DEPRECATION_MSG = (
-    "has been moved to alphaviz and will be removed from alpharaw in a future version."
+    "has been moved to alphatims and will be removed from alpharaw in a future version."
 )
 
 

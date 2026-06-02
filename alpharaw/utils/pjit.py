@@ -9,7 +9,7 @@ import multiprocessing
 from collections.abc import Iterable
 from typing import Callable
 
-_MAX_THREADS = multiprocessing.cpu_count()
+MAX_THREADS = multiprocessing.cpu_count()
 _PROGRESS_CALLBACK = True
 
 
@@ -41,8 +41,8 @@ def set_threads(threads: int, *, set_global: bool = True) -> int:
         while threads <= 0:
             threads += max_cpu_count
     if set_global:
-        global _MAX_THREADS  # noqa: PLW0603
-        _MAX_THREADS = threads
+        global MAX_THREADS  # noqa: PLW0603
+        MAX_THREADS = threads
     return threads
 
 
@@ -52,7 +52,7 @@ def threadpool(
     thread_count: int | None = None,
     include_progress_callback: bool = True,
     return_results: bool = False,
-) -> None:
+) -> Callable:
     """A decorator that parallelizes a function with threads and callback.
 
     The original function should accept a single element as its first argument.
@@ -65,7 +65,7 @@ def threadpool(
         The function to decorate.
     thread_count : int, None
         The number of threads to use.
-        This is always parsed with alphatims.utils.set_threads.
+        This is always parsed with set_threads().
         Not possible as positional arguments,
         it always needs to be an explicit keyword argument.
         Default is None.
@@ -103,7 +103,7 @@ def threadpool(
             except TypeError:
                 return func(iterable, *args, **kwargs)
             if thread_count is None:
-                current_thread_count = _MAX_THREADS
+                current_thread_count = MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
             with multiprocessing.pool.ThreadPool(current_thread_count) as pool:
@@ -178,7 +178,7 @@ def pjit(  # noqa: ANN201, D417, C901
     _func : callable, None
         The function to decorate. Default is None.
     thread_count : int, None
-        The number of threads to use. This is always parsed with alphatims.utils.set_threads.
+        The number of threads to use. This is always parsed with set_threads().
         Default is None.
     include_progress_callback : bool
         If True, the default progress callback will be used as callback. (See "progress_callback" function and
@@ -247,7 +247,7 @@ def pjit(  # noqa: ANN201, D417, C901
             subsequently passed to the original function.
             """
             if thread_count is None:
-                current_thread_count = _MAX_THREADS
+                current_thread_count = MAX_THREADS
             else:
                 current_thread_count = set_threads(thread_count, set_global=False)
 
@@ -374,3 +374,28 @@ def set_progress_callback(progress_callback) -> None:  # noqa: ANN001
     """
     global _PROGRESS_CALLBACK  # noqa: PLW0603
     _PROGRESS_CALLBACK = progress_callback
+
+
+def njit(_func: Callable | None = None, *args, **kwargs) -> Callable:
+    """A wrapper for the numba.njit decorator.
+
+    This can be overriden with kwargs.
+
+    Parameters
+    ----------
+    _func : callable, None
+        The function to decorate.
+    *args
+        See numba.njit decorator.
+    **kwargs
+        See numba.njit decorator.
+
+    Returns
+    -------
+    : function
+        A numba.njit decorated function.
+
+    """
+    import numba
+
+    return numba.njit(_func, *args, **kwargs)

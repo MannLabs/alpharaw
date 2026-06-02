@@ -1,5 +1,6 @@
 recursive-include alpharaw *
 include LICENSE.txt
+include LICENSE-THIRD-PARTY.txt
 include README.md
 
 recursive-exclude logs *
