@@ -191,7 +191,10 @@ class ThermoRawData(MSData_Base):
             with mp.get_context(mode).Pool(processes=self.process_count) as pool:
                 batches = list(
                     tqdm(
-                        pool.imap(_import_batch_partial, zip(batches[:-1], batches[1:])), total=len(batches) - 1
+                        pool.imap(
+                            _import_batch_partial, zip(batches[:-1], batches[1:])
+                        ),
+                        total=len(batches) - 1,
                     )
                 )
 
