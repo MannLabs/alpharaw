@@ -232,7 +232,7 @@ class RawFileReader:
 
         self.source = (
             ThermoFisher.CommonCore.RawFileReader.RawFileReaderAdapter.FileFactory(
-                self.filename
+                os.path.realpath(self.filename)  # resolve symlinks
             )
         )
 
