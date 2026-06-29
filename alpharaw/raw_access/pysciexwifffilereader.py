@@ -59,7 +59,8 @@ class WiffFileReader:
 
         self._wiffDataProvider = AnalystWiffDataProvider()
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
-            filename, self._wiffDataProvider
+            os.path.realpath(filename),  # resolve symlinks
+            self._wiffDataProvider,
         )
         try:
             self.sample_names = self._wiff_file.GetSampleNames()

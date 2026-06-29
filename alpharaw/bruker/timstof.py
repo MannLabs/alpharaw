@@ -308,7 +308,9 @@ class TimsTOFBase:
 
         logging.info(f"Importing data from {bruker_d_folder_name}")
         if bruker_d_folder_name.endswith(".d"):
-            self.bruker_d_folder_name = os.path.abspath(bruker_d_folder_name)
+            self.bruker_d_folder_name = os.path.realpath(
+                bruker_d_folder_name
+            )  # resolve symlinks
             self._import_data_from_d_folder(
                 bruker_d_folder_name,
                 mz_estimation_from_frame,
