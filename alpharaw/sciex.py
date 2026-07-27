@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import warnings
 
 import alpharaw.raw_access.pysciexwifffilereader as pysciexwifffilereader
@@ -12,7 +14,13 @@ class SciexWiffData(MSData_Base):
     in :obj:`alpharaw.ms_data_base.ms_reader_provider` by :func:`register_readers()`.
     """
 
-    def __init__(self, centroided: bool = False, save_as_hdf: bool = False, **kwargs):
+    def __init__(
+        self,
+        centroided: bool = False,
+        save_as_hdf: bool = False,
+        keep_k_peaks_per_spec: int | None = None,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -22,6 +30,12 @@ class SciexWiffData(MSData_Base):
 
         save_as_hdf : bool, optional
             Automatically save hdf after load raw data, by default False.
+
+        keep_k_peaks_per_spec : int, optional
+            Keep only the `k` most intense peaks per spectrum,
+            by default None, which keeps all of them.
+            Only applied to centroided data, see
+            :func:`alpharaw.raw_access.pysciexwifffilereader.WiffFileReader.load_sample`.
         """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)
         if self.centroided:
@@ -31,7 +45,7 @@ class SciexWiffData(MSData_Base):
             )
         self.centroid_ppm = 20.0
         self.ignore_empty_scans = True
-        self.keep_k_peaks_per_spec = 2000
+        self.keep_k_peaks_per_spec = keep_k_peaks_per_spec
         self.sample_id = 0
         self.file_type = "sciex"
 

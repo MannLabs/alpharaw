@@ -1,4 +1,6 @@
 # ruff: noqa: E402  #Module level import not at top of file
+from __future__ import annotations
+
 import logging
 import os
 import warnings
@@ -81,8 +83,37 @@ class WiffFileReader:
         centroid: bool = True,
         centroid_ppm: float = 20.0,
         ignore_empty_scans: bool = True,
-        keep_k_peaks: int = 2000,
+        keep_k_peaks: int | None = None,
     ):
+        """
+        Load the spectra of one sample of the wiff file.
+
+        Parameters
+        ----------
+        sample_id : int
+            Index of the sample in the wiff file.
+
+        centroid : bool, optional
+            If peaks will be centroided after loading, by default True.
+
+        centroid_ppm : float, optional
+            Peak grouping tolerance for centroiding, by default 20.0.
+
+        ignore_empty_scans : bool, optional
+            If empty non-SWATH MS2 scans will be skipped, by default True.
+
+        keep_k_peaks : int, optional
+            Keep only the `k` most intense peaks per spectrum,
+            by default None, which keeps all of them.
+            Only applied to centroided data: an intensity rank cut on profile
+            data strips peak flanks while retaining apexes,
+            distorting the peaks it keeps.
+
+        Returns
+        -------
+        dict
+            Spectrum information dict.
+        """
         if sample_id < 0 or sample_id >= len(self.sample_names):
             raise ValueError("Incorrect sample number.")
         self.wiffSample = self._wiff_file.GetSample(sample_id)
@@ -126,11 +157,11 @@ class WiffFileReader:
                     (mz_array, int_array) = naive_centroid(
                         mz_array, int_array, centroiding_ppm=centroid_ppm
                     )
-                if len(mz_array) > keep_k_peaks:
-                    idxes = np.argsort(int_array)[-keep_k_peaks:]
-                    idxes = np.sort(idxes)
-                    mz_array = mz_array[idxes]
-                    int_array = int_array[idxes]
+                    if keep_k_peaks is not None and len(mz_array) > keep_k_peaks:
+                        idxes = np.argsort(int_array)[-keep_k_peaks:]
+                        idxes = np.sort(idxes)
+                        mz_array = mz_array[idxes]
+                        int_array = int_array[idxes]
 
                 peak_mz_array_list.append(mz_array)
                 peak_intensity_array_list.append(int_array)
