@@ -34,7 +34,7 @@ class SciexWiffData(MSData_Base):
         keep_k_peaks_per_spec : int, optional
             Keep only the `k` most intense peaks per spectrum,
             by default None, which keeps all of them.
-            Only applied to centroided data, see
+            Intended for centroided data, see
             :func:`alpharaw.raw_access.pysciexwifffilereader.WiffFileReader.load_sample`.
         """
         super().__init__(centroided, save_as_hdf=save_as_hdf, **kwargs)

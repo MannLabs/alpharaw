@@ -105,7 +105,7 @@ class WiffFileReader:
         keep_k_peaks : int, optional
             Keep only the `k` most intense peaks per spectrum,
             by default None, which keeps all of them.
-            Only applied to centroided data: an intensity rank cut on profile
+            Intended for centroided data, as an intensity rank cut on profile
             data strips peak flanks while retaining apexes,
             distorting the peaks it keeps.
 
@@ -116,6 +116,12 @@ class WiffFileReader:
         """
         if sample_id < 0 or sample_id >= len(self.sample_names):
             raise ValueError("Incorrect sample number.")
+        if keep_k_peaks is not None and not centroid:
+            warnings.warn(
+                f"Keeping only the {keep_k_peaks} most intense peaks of profile data "
+                "strips peak flanks while retaining apexes, "
+                "which distorts the peaks that are kept."
+            )
         self.wiffSample = self._wiff_file.GetSample(sample_id)
         self.msSample = self.wiffSample.MassSpectrometerSample
 
@@ -157,11 +163,11 @@ class WiffFileReader:
                     (mz_array, int_array) = naive_centroid(
                         mz_array, int_array, centroiding_ppm=centroid_ppm
                     )
-                    if keep_k_peaks is not None and len(mz_array) > keep_k_peaks:
-                        idxes = np.argsort(int_array)[-keep_k_peaks:]
-                        idxes = np.sort(idxes)
-                        mz_array = mz_array[idxes]
-                        int_array = int_array[idxes]
+                if keep_k_peaks is not None and len(mz_array) > keep_k_peaks:
+                    idxes = np.argsort(int_array)[-keep_k_peaks:]
+                    idxes = np.sort(idxes)
+                    mz_array = mz_array[idxes]
+                    int_array = int_array[idxes]
 
                 peak_mz_array_list.append(mz_array)
                 peak_intensity_array_list.append(int_array)
