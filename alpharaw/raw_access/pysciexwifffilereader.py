@@ -118,9 +118,7 @@ class WiffFileReader:
             raise ValueError("Incorrect sample number.")
         if keep_k_peaks is not None and not centroid:
             warnings.warn(
-                f"Keeping only the {keep_k_peaks} most intense peaks of profile data "
-                "strips peak flanks while retaining apexes, "
-                "which distorts the peaks that are kept."
+                f"Keeping only the {keep_k_peaks} most intense peaks of profile data, with centroiding switched off."
             )
         self.wiffSample = self._wiff_file.GetSample(sample_id)
         self.msSample = self.wiffSample.MassSpectrometerSample
