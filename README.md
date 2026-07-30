@@ -38,8 +38,16 @@ with an [Apache License](LICENSE.txt). External Python packages
 (available in the [requirements](requirements) folder) have their own
 licenses, which can be consulted on their respective websites.
 
-Since AlphaRaw uses Bruker libraries for reading Bruker data (available in the [alpharaw/ext/bruker](alpharaw/ext/bruker) folder) additional
-[third-party licenses](LICENSE-THIRD-PARTY.txt) are applicable in case you are using this functionality.
+AlphaRaw bundles proprietary vendor libraries for reading instrument raw data,
+located under [alpharaw/ext](alpharaw/ext). These binaries are **not** covered by
+the Apache License and are governed by their own vendor license terms; the required
+attributions are collected in the [NOTICE](NOTICE) file:
+
+- Thermo Fisher `RawFileReader` ([alpharaw/ext/thermo_fisher](alpharaw/ext/thermo_fisher)), licensed under [THERMO_LICENSE.txt](alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt).
+- Bruker libraries ([alpharaw/ext/bruker](alpharaw/ext/bruker)), see the [third-party licenses](LICENSE-THIRD-PARTY.txt).
+
+These vendor licenses restrict redistribution of the binaries to distribution as
+part of AlphaRaw only.
 
 ------------------------------------------------------------------------
 

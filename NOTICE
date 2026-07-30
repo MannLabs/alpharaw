@@ -1,0 +1,19 @@
+AlphaRaw
+Copyright (c) Mann Labs, Max Planck Institute of Biochemistry
+Licensed under the Apache License, Version 2.0 (see LICENSE.txt).
+
+This product bundles proprietary third-party binaries under alpharaw/ext/.
+These binaries are NOT covered by the Apache License; they are governed by their
+respective vendor license terms (see LICENSE-THIRD-PARTY.txt and the per-vendor
+license files referenced below). They may not be redistributed except as part of
+AlphaRaw.
+
+--------------------------------------------------------------------------------
+Thermo Fisher RawFileReader  (alpharaw/ext/thermo_fisher/)
+--------------------------------------------------------------------------------
+RawFileReader reading tool. Copyright © 2016 by Thermo Fisher Scientific, Inc.
+All rights reserved.
+
+Governed by the SOFTWARE LICENSE AGREEMENT for RawFileReader; see
+alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt. That agreement restricts your end
+users from further redistributing these binaries.
