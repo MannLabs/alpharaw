@@ -50,8 +50,10 @@ docker run --privileged --rm tonistiigi/binfmt --install arm64
 
 ## Notes
 
-- The runtime backend is selected by `clr_utils.py`, overridable with the
-  `ALPHARAW_DOTNET_RUNTIME` environment variable (`coreclr` default, `mono` fallback).
+- The runtime backend is selected by `clr_utils.py`: when `ALPHARAW_DOTNET_RUNTIME`
+  is unset it prefers a .NET Framework runtime (Mono/netfx) and falls back to
+  `coreclr`. These containers set `ALPHARAW_DOTNET_RUNTIME=coreclr` explicitly to
+  force the mono-free path.
 - `libicu` is installed because the reader sets `CultureInfo("en-US")`; .NET's
   invariant-globalization mode would make that call fail.
 - The image builds for the host's architecture by default. Add

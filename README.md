@@ -58,18 +58,22 @@ pythonnet`, installed automatically as a dependency).
 
 The .NET runtime backend is selected by the `ALPHARAW_DOTNET_RUNTIME` environment
 variable. **When it is unset (the default), alpharaw auto-selects a runtime**,
-preferring the mono-free `coreclr` and falling back to `netfx`/`mono` if no .NET
-runtime is present — so existing Mono-only setups keep working without changes.
-Set the variable to force one backend (no fallback):
+preferring a .NET Framework runtime — Mono, or Windows' built-in `netfx` — because
+it supports every reader (including Sciex) and matches the historical default. It
+falls back to the mono-free `coreclr` runtime only when no .NET Framework runtime is
+installed. So existing Mono setups keep working unchanged, and machines without Mono
+still read **Thermo** files via `coreclr`. Set the variable to force one backend (no
+fallback):
 
-- **`coreclr`:** runs on the cross-platform .NET runtime — **no Mono needed**. This
-  is the recommended path for **Thermo** files and works on Linux, macOS (Intel and
-  Apple Silicon) and Windows. It requires a .NET 8 (or newer) runtime; install e.g.
+- **`mono`:** runs .NET Framework DLLs off Windows. Required for **Sciex** `.wiff`
+  files, whose `Clearcore2` DLLs target .NET Framework, and used for Thermo unless
+  you opt into `coreclr`. Install Mono (see below).
+- **`coreclr`:** runs on the cross-platform modern .NET runtime — **no Mono needed**.
+  Reads **Thermo** files only (not Sciex) on Linux, macOS (Intel and Apple Silicon)
+  and Windows. Requires a .NET 8 (or newer) runtime; install e.g.
   `conda install -c conda-forge dotnet-runtime` or from
-  <https://dotnet.microsoft.com/download>.
-- **`mono`:** required for **Sciex** `.wiff` files, whose `Clearcore2` DLLs still
-  target .NET Framework, and used as the Thermo fallback when .NET is unavailable.
-  Install Mono (see below).
+  <https://dotnet.microsoft.com/download>. Set this explicitly for the mono-free
+  Thermo path on a machine that also has Mono.
 
 Because pythonnet's runtime is process-global, a single process reads either Thermo
 (via `coreclr`) or Sciex (via `mono`), not both at once. The runtime is chosen once,

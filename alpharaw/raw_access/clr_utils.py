@@ -7,12 +7,13 @@ import numpy as np
 # Environment variable to force a specific .NET runtime backend ("coreclr",
 # "netfx" or "mono"). When set, only that runtime is tried (no fallback).
 DOTNET_RUNTIME_ENV = "ALPHARAW_DOTNET_RUNTIME"
-# Auto-selection order when the env var is unset: prefer the mono-free "coreclr"
-# runtime (used by the Thermo .NET 8 build), then fall back to a .NET Framework
-# runtime so environments with only Windows .NET Framework or Mono keep working.
+# Auto-selection order when the env var is unset: prefer a .NET Framework runtime
+# (Mono, or Windows' built-in "netfx") because it supports every reader, including
+# Sciex, and matches the historical default. Fall back to the mono-free "coreclr"
+# runtime (Thermo .NET 8 build only) when no .NET Framework runtime is installed.
 # pythonnet's runtime is process-global, so this single choice applies to every
 # .NET-based reader loaded in the process.
-DOTNET_RUNTIME_FALLBACK_ORDER = ["coreclr", "netfx", "mono"]
+DOTNET_RUNTIME_FALLBACK_ORDER = ["mono", "netfx", "coreclr"]
 
 # Name of the .NET runtime actually loaded; None if none could be loaded.
 DOTNET_RUNTIME = None
@@ -21,11 +22,11 @@ DOTNET_RUNTIME = None
 def _load_dotnet_runtime():
     """Load a .NET runtime for pythonnet and return its name.
 
-    Honors an explicit ``ALPHARAW_DOTNET_RUNTIME`` override; otherwise tries
-    coreclr first (no Mono needed) and falls back to a .NET Framework / Mono
-    runtime. Each candidate is created via ``clr_loader`` (which raises when the
-    runtime is unavailable) so ``pythonnet.load`` is called only once, with a
-    runtime that is actually present.
+    Honors an explicit ``ALPHARAW_DOTNET_RUNTIME`` override; otherwise tries a
+    .NET Framework runtime (Mono/netfx) first and falls back to the mono-free
+    coreclr runtime. Each candidate is created via ``clr_loader`` (which raises
+    when the runtime is unavailable) so ``pythonnet.load`` is called only once,
+    with a runtime that is actually present.
     """
     import pythonnet
     from clr_loader import get_coreclr, get_mono, get_netfx
