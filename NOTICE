@@ -17,3 +17,12 @@ All rights reserved.
 Governed by the SOFTWARE LICENSE AGREEMENT for RawFileReader; see
 alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt. That agreement restricts your end
 users from further redistributing these binaries.
+
+--------------------------------------------------------------------------------
+Bruker TDF Software Development Kit / timsdata  (alpharaw/ext/bruker/)
+--------------------------------------------------------------------------------
+This software uses Software software. Copyright © 2019 by Bruker Daltonik GmbH.
+All rights reserved.
+
+Governed by the BRUKER SOFTWARE LICENSE AGREEMENT; see LICENSE-THIRD-PARTY.txt.
+The attribution above is reproduced verbatim from §4.4 of that agreement.
