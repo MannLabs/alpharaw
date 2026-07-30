@@ -1,0 +1,16 @@
+The following files are part of Bruker SDK and may only be redistributed and
+used under the terms of outlined in LICENCE-BRUKER.txt and
+THIRD-PARTY-LICENSE-README.txt
+
+
+These are the files that may be distributed by authors of software
+using TDF SDK 1.0.1.0.
+
+./libtimsdata.so
+./timsdata.dll
+
+The following two files must always accompany a distribution of one of
+the shared libraries:
+
+THIRD-PARTY-LICENSE-README.txt
+LICENCE-BRUKER.txt
