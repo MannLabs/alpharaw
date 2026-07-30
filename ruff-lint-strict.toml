@@ -44,6 +44,7 @@ exclude = [
 "nbs_tests/**",
 "nbs/**",
 "docs/**",
+"docker/**",
 #    "nbs/**/*.ipynb",
 #    "misc/*.py",",
 ]

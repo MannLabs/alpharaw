@@ -13,11 +13,14 @@ on:
 name: Pip installation and tests
 
 jobs:
+  # These jobs run the full suite (Thermo + Sciex) under Mono/.NET Framework, so
+  # macos uses the Intel runner (macos-13) because Mono cannot be installed on the
+  # arm64 macos-latest. The mono-free Thermo path is covered on macos-latest (arm64)
+  # by the separate thermo_monofree_tests.yml workflow.
   stable_installation:
     name: Test stable pip installation on ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-latest is now arm64, which cannot install mono
         os: [ubuntu-latest, macos-13, windows-latest]
         python-version: [3.9]
     uses: ./.github/workflows/_run_tests.yml
@@ -25,12 +28,12 @@ jobs:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
       install-script: pip_install.sh stable,owl-stable,tests
+      dotnet-runtime: mono
 
   loose_installation:
     name: Test loose pip installation on ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-latest is now arm64, which cannot install mono
         os: [ubuntu-latest, macos-13, windows-latest]
         python-version: [3.9]
     uses: ./.github/workflows/_run_tests.yml
@@ -38,3 +41,4 @@ jobs:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
       install-script: pip_install.sh loose,owl,tests
+      dotnet-runtime: mono

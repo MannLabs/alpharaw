@@ -53,13 +53,39 @@ part of AlphaRaw only.
 
 ## Installation
 
-Pythonnet must be installed to access Thermo or Sciex raw data.
+Pythonnet must be installed to access Thermo or Sciex raw data (`pip install
+pythonnet`, installed automatically as a dependency).
 
-### For Windows
+The .NET runtime backend is selected by the `ALPHARAW_DOTNET_RUNTIME` environment
+variable. **When it is unset (the default), alpharaw auto-selects a runtime**,
+preferring the mono-free `coreclr` and falling back to `netfx`/`mono` if no .NET
+runtime is present — so existing Mono-only setups keep working without changes.
+Set the variable to force one backend (no fallback):
+
+- **`coreclr`:** runs on the cross-platform .NET runtime — **no Mono needed**. This
+  is the recommended path for **Thermo** files and works on Linux, macOS (Intel and
+  Apple Silicon) and Windows. It requires a .NET 8 (or newer) runtime; install e.g.
+  `conda install -c conda-forge dotnet-runtime` or from
+  <https://dotnet.microsoft.com/download>.
+- **`mono`:** required for **Sciex** `.wiff` files, whose `Clearcore2` DLLs still
+  target .NET Framework, and used as the Thermo fallback when .NET is unavailable.
+  Install Mono (see below).
+
+Because pythonnet's runtime is process-global, a single process reads either Thermo
+(via `coreclr`) or Sciex (via `mono`), not both at once. The runtime is chosen once,
+during `import alpharaw`, and cannot be changed afterward — so set
+`ALPHARAW_DOTNET_RUNTIME` **before** importing the package.
+
+A Linux container that demonstrates the mono-free Thermo path lives in
+[`docker/`](docker/README.md).
+
+### Installing Mono (only for Sciex, or the `mono` Thermo fallback)
+
+#### For Windows
 
 Pythonnet will be automatically installed via pip.
 
-### For Linux / MacOS with Intel platform
+#### For Linux / MacOS with Intel platform
 
 1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
@@ -69,7 +95,7 @@ Website](https://www.mono-project.com/download/stable/#download-lin).
 NOTE, the installed mono version should be at least 6.10, which
 requires you to add the PPA to your trusted sources!
 
-### For MacOS with silicon platform (M1/M2/M3)
+#### For MacOS with silicon platform (M1/M2/M3)
 Note that some command might required to use `sudo`.
 
 1.  Install [brew](https://brew.sh).

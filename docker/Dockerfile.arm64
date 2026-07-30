@@ -1,0 +1,38 @@
+# Mono-free Thermo reading test pinned to linux/arm64.
+#
+# Same as docker/Dockerfile but forces the arm64 platform so the result is an
+# unambiguous proof that the coreclr path works on ARM (aarch64). On an Apple
+# Silicon host this builds natively; on x86-64 it runs under emulation (requires
+# binfmt/qemu, e.g. `docker run --privileged --rm tonistiigi/binfmt --install arm64`).
+#
+# Build (from the repository root):
+#   docker build --platform linux/arm64 -f docker/Dockerfile.arm64 -t alpharaw-thermo-arm64 .
+# Run:
+#   docker run --rm alpharaw-thermo-arm64
+FROM --platform=linux/arm64 python:3.11-slim-bookworm
+
+# libicu is required for .NET globalization: the reader sets CultureInfo("en-US"),
+# which fails under invariant-globalization mode, so ICU must be present.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl libicu72 \
+    && rm -rf /var/lib/apt/lists/*
+
+# .NET 8 runtime only (deliberately NO Mono). dotnet-install.sh detects aarch64
+# from the container and fetches the linux-arm64 runtime.
+ENV DOTNET_ROOT=/opt/dotnet
+ENV PATH="${DOTNET_ROOT}:${PATH}"
+RUN curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir "${DOTNET_ROOT}" \
+    && rm /tmp/dotnet-install.sh \
+    && dotnet --list-runtimes
+
+WORKDIR /app
+COPY . /app
+
+RUN pip install --no-cache-dir pythonnet==3.0.3 \
+    && pip install --no-cache-dir .
+
+ENV ALPHARAW_DOTNET_RUNTIME=coreclr
+
+# Fail loudly unless we are genuinely on aarch64 and Mono is absent, then read.
+CMD ["/bin/sh", "-c", "arch=$(uname -m); echo \"container arch: $arch\"; [ \"$arch\" = \"aarch64\" ] || (echo 'not arm64' && exit 1); ! command -v mono >/dev/null 2>&1 || (echo 'mono unexpectedly present' && exit 1); python docker/test_thermo_mono_free.py nbs_tests/test_data/iRT.raw"]
