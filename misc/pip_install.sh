@@ -11,20 +11,15 @@ PYTHON_VERSION=${3:-3.9}
 DOTNET_RUNTIME=${4:-mono} # mono | coreclr | netfx; selects the .NET runtime backend
 
 
-case "$DOTNET_RUNTIME" in
-  mono)
-    # .NET Framework DLLs (e.g. Sciex Clearcore2, Thermo netfx build) run on Mono.
-    conda create -n $ENV_NAME python=$PYTHON_VERSION mono -y
-    ;;
-  coreclr)
-    # Cross-platform .NET runtime for the mono-free Thermo (.NET 8) build.
-    conda create -n $ENV_NAME python=$PYTHON_VERSION -c conda-forge dotnet-runtime -y
-    ;;
-  *)
-    # netfx: Windows' built-in .NET Framework needs no extra runtime package.
-    conda create -n $ENV_NAME python=$PYTHON_VERSION -y
-    ;;
-esac
+# Mono is installed here for the "mono" backend (.NET Framework DLLs, e.g. Sciex
+# Clearcore2 and the Thermo netfx build). For "coreclr" the .NET runtime is
+# installed separately (see the CI's "Install .NET runtime" step); "netfx" uses
+# Windows' built-in .NET Framework and needs no extra package.
+if [ "$DOTNET_RUNTIME" = "mono" ]; then
+  conda create -n $ENV_NAME python=$PYTHON_VERSION mono -y
+else
+  conda create -n $ENV_NAME python=$PYTHON_VERSION -y
+fi
 
 if [ "$INSTALL_TYPE" = "loose" ]; then
   INSTALL_STRING=""

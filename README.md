@@ -80,9 +80,6 @@ Because pythonnet's runtime is process-global, a single process reads either The
 during `import alpharaw`, and cannot be changed afterward — so set
 `ALPHARAW_DOTNET_RUNTIME` **before** importing the package.
 
-A Linux container that demonstrates the mono-free Thermo path lives in
-[`docker/`](docker/README.md).
-
 ### Installing Mono (only for Sciex, or the `mono` Thermo fallback)
 
 #### For Windows
