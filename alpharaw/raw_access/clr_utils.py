@@ -62,9 +62,10 @@ try:
 
     from System.Reflection import Assembly
     from System.Runtime.InteropServices import GCHandle, GCHandleType
-except Exception:
-    # allows to use the rest of the code without clr
-    warnings.warn("Dotnet-based dependencies could not be loaded.")
+except Exception as e:
+    # allows to use the rest of the code without clr; surface the underlying error
+    # so runtime-selection failures (e.g. coreclr not found) are diagnosable.
+    warnings.warn(f"Dotnet-based dependencies could not be loaded: {e!r}")
 
 
 def load_dotnet_assembly(dll_path: str):
