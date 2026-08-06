@@ -9,10 +9,9 @@ import numpy as np
 # "netfx" or "mono"). When set, only that runtime is tried (no fallback).
 DOTNET_RUNTIME_ENV = "ALPHARAW_DOTNET_RUNTIME"
 # Auto-selection order when the env var is unset: prefer a .NET Framework runtime
-# (Mono, or Windows' built-in "netfx") because it supports every reader, including
-# Sciex, and matches the historical default. Fall back to the mono-free "coreclr"
-# runtime (Thermo .NET 8 build only) when no .NET Framework runtime is installed.
-# pythonnet's runtime is process-global, so this single choice applies to every
+# (Mono, or Windows' built-in "netfx") because it supports every reader.
+# Fall back to the mono-free "coreclr" runtime (Thermo .NET 8 build only) when no .NET Framework runtime is installed.
+# IMPORTANT: pythonnet's runtime is process-global, so this single choice applies to every
 # .NET-based reader loaded in the process.
 DOTNET_RUNTIME_FALLBACK_ORDER = ["mono", "netfx", "coreclr"]
 
@@ -75,7 +74,7 @@ except Exception as e:
     # allows to use the rest of the code without clr; surface the underlying error
     # so runtime-selection failures (e.g. coreclr not found) are diagnosable.
     warnings.warn(
-        f".NET dependencies could not be loaded. Thermo and Sciex support disabled.\n{e!r}"
+        f".NET dependencies could not be loaded. Thermo (.raw) and Sciex (.wiff) support disabled.\n{e!r}"
     )
 
 
