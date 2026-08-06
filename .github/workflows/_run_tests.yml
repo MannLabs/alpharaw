@@ -16,7 +16,7 @@ on:
       dotnet-runtime:
         required: false
         type: string
-        default: mono
+        default: mono # or coreclr, netfx
 jobs:
   run-tests:
     runs-on: ${{ inputs.os }}
@@ -27,10 +27,6 @@ jobs:
         miniconda-version: "latest"
         auto-update-conda: true
         python-version: ${{ inputs.python-version }}
-    # pythonnet's runtime is process-global, so the whole suite runs under one
-    # backend. For the "mono" job Windows uses its built-in .NET Framework
-    # ("netfx") since Mono is unavailable there; every other case uses the
-    # requested runtime as-is.
     - name: Configure .NET runtime
       shell: bash -l {0}
       run: |
@@ -39,9 +35,7 @@ jobs:
         else
           echo "ALPHARAW_DOTNET_RUNTIME=${{ inputs.dotnet-runtime }}" >> "$GITHUB_ENV"
         fi
-    # The mono-free coreclr backend needs a .NET runtime; Mono is installed by
-    # pip_install.sh, netfx is built into Windows.
-    - name: Install .NET runtime
+    - name: Install .NET runtime (for coreclr only)
       if: ${{ inputs.dotnet-runtime == 'coreclr' }}
       uses: actions/setup-dotnet@v4
       with:

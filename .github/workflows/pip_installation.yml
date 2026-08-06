@@ -13,11 +13,6 @@ on:
 name: Pip installation and tests
 
 jobs:
-  # "mono" jobs run the full suite (Thermo + Sciex) under Mono/.NET Framework, so
-  # macos uses the Intel runner (macos-13) because Mono cannot be installed on the
-  # arm64 macos-latest. "coreclr" jobs run the mono-free Thermo path on the modern
-  # .NET runtime and therefore use macos-latest (arm64); their Sciex cells are
-  # skipped (Sciex requires .NET Framework/Mono).
   stable_installation:
     name: Test stable pip installation (mono) on ${{ matrix.os }}
     strategy:
