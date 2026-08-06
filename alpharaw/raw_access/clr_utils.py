@@ -49,7 +49,8 @@ def _load_dotnet_runtime():
             continue
         pythonnet.load(runtime)
         return name
-    raise RuntimeError(f"No .NET runtime available (tried {order}): {errors}")
+    errors_str = "\n".join(errors)
+    raise RuntimeError(f"No .NET runtime available (tried {order}):\n{errors_str}")
 
 
 try:
@@ -73,7 +74,9 @@ try:
 except Exception as e:
     # allows to use the rest of the code without clr; surface the underlying error
     # so runtime-selection failures (e.g. coreclr not found) are diagnosable.
-    warnings.warn(f"Dotnet-based dependencies could not be loaded: {e!r}")
+    warnings.warn(
+        f".NET dependencies could not be loaded. Thermo and Sciex support disabled.\n{e!r}"
+    )
 
 
 def load_dotnet_assembly(dll_path: str):
