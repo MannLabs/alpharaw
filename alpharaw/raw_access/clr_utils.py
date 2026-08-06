@@ -49,7 +49,7 @@ def _load_dotnet_runtime():
             continue
         pythonnet.load(runtime)
         return name
-    errors_str = "\n".join(errors)
+    errors_str = "\n".join(f"{name}: {err!r}" for name, err in errors.items())
     raise RuntimeError(f"No .NET runtime available (tried {order}):\n{errors_str}")
 
 
