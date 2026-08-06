@@ -1,4 +1,5 @@
 # ruff: noqa: E402  #Module level import not at top of file
+import atexit
 import os
 import warnings
 
@@ -53,6 +54,13 @@ def _load_dotnet_runtime():
 
 try:
     DOTNET_RUNTIME = _load_dotnet_runtime()
+
+    import pythonnet
+
+    # clr_loader's mono backend errors during its atexit unload (its module globals
+    # are already cleared at interpreter shutdown), printing a spurious traceback
+    # after the real work is done; drop that hook.
+    atexit.unregister(pythonnet.unload)
 
     import clr
 

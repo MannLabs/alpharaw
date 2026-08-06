@@ -78,7 +78,9 @@ def _parse(raw_type: str, raw: list, output_dir: str):
 
             hdf_file_path = raw_file + ".hdf"
             if output_dir:
-                hdf_file_path = os.path.join(output_dir, hdf_file_path)
+                hdf_file_path = os.path.join(
+                    output_dir, os.path.basename(raw_file) + ".hdf"
+                )
 
             reader.save_hdf(hdf_file_path)
             print(f"Saved {hdf_file_path}")
