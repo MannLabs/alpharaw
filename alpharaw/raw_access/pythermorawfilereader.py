@@ -50,10 +50,9 @@ try:
 
     HAS_DOTNET = True
 except Exception:
-    # allows to use the rest of the code without clr
-    warnings.warn(
-        "Dotnet-based dependencies could not be loaded. Thermo support is disabled."
-    )
+    # Keep Thermo support disabled silently; RawFileReader.__init__ raises a clear
+    # error if a read is actually attempted. Warning here would fire on every import
+    # (including in each multiprocessing worker).
     HAS_DOTNET = False
 
 
