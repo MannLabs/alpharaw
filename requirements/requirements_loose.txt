@@ -8,7 +8,9 @@ numba
 pandas
 numpy
 #sqlalchemy
-pyteomics
+# pyteomics 5.0 requires the optional `psims` package to parse mzML (PSI formats),
+# and declares it only in its `XML` extra, i.e. plain `pip install pyteomics` breaks mzML reading.
+pyteomics<5 # test: tolerate_version
 lxml
 pyzstd
 
