@@ -47,6 +47,10 @@ except Exception:
     )
     HAS_DOTNET = False
 
+SCAN_FILE_EXTENSION = ".scan"
+# substring of the Clearcore2 exception when the `.wiff.scan` companion is not found
+MISSING_SCAN_FILE_ERROR = "Could not open data stream"
+
 
 class WiffFileReader:
     def __init__(self, filename: str):
@@ -57,9 +61,10 @@ class WiffFileReader:
                 "See the Readme for details."
             )
 
+        self.filename = os.path.realpath(filename)  # resolve symlinks
         self._wiffDataProvider = AnalystWiffDataProvider()
         self._wiff_file = AnalystDataProviderFactory.CreateBatch(
-            os.path.realpath(filename),  # resolve symlinks
+            self.filename,
             self._wiffDataProvider,
         )
         try:
@@ -104,67 +109,78 @@ class WiffFileReader:
             for i in range(self.msSample.ExperimentCount)
         ]
 
-        for j in range(exp_list[0].Details.NumberOfScans):
-            for i in range(self.msSample.ExperimentCount):
-                exp = exp_list[i]
-                massSpectrum = exp.GetMassSpectrum(j)
-                massSpectrumInfo = exp.GetMassSpectrumInfo(j)
-                details = exp.Details
-                ms_level = massSpectrumInfo.MSLevel
-                if (
-                    ms_level > 1
-                    and not details.IsSwath
-                    and massSpectrum.NumDataPoints <= 0
-                    and ignore_empty_scans
-                ):
-                    continue
-                mz_array = DotNetArrayToNPArray(massSpectrum.GetActualXValues())
-                int_array = DotNetArrayToNPArray(
-                    massSpectrum.GetActualYValues()
-                ).astype(np.float32)
-                if centroid:
-                    (mz_array, int_array) = naive_centroid(
-                        mz_array, int_array, centroiding_ppm=centroid_ppm
-                    )
-                if len(mz_array) > keep_k_peaks:
-                    idxes = np.argsort(int_array)[-keep_k_peaks:]
-                    idxes = np.sort(idxes)
-                    mz_array = mz_array[idxes]
-                    int_array = int_array[idxes]
+        try:
+            for j in range(exp_list[0].Details.NumberOfScans):
+                for i in range(self.msSample.ExperimentCount):
+                    exp = exp_list[i]
+                    massSpectrum = exp.GetMassSpectrum(j)
+                    massSpectrumInfo = exp.GetMassSpectrumInfo(j)
+                    details = exp.Details
+                    ms_level = massSpectrumInfo.MSLevel
+                    if (
+                        ms_level > 1
+                        and not details.IsSwath
+                        and massSpectrum.NumDataPoints <= 0
+                        and ignore_empty_scans
+                    ):
+                        continue
+                    mz_array = DotNetArrayToNPArray(massSpectrum.GetActualXValues())
+                    int_array = DotNetArrayToNPArray(
+                        massSpectrum.GetActualYValues()
+                    ).astype(np.float32)
+                    if centroid:
+                        (mz_array, int_array) = naive_centroid(
+                            mz_array, int_array, centroiding_ppm=centroid_ppm
+                        )
+                    if len(mz_array) > keep_k_peaks:
+                        idxes = np.argsort(int_array)[-keep_k_peaks:]
+                        idxes = np.sort(idxes)
+                        mz_array = mz_array[idxes]
+                        int_array = int_array[idxes]
 
-                peak_mz_array_list.append(mz_array)
-                peak_intensity_array_list.append(int_array)
+                    peak_mz_array_list.append(mz_array)
+                    peak_intensity_array_list.append(int_array)
 
-                _peak_indices.append(len(peak_mz_array_list[-1]))
-                rt_list.append(exp.GetRTFromExperimentCycle(j))
-                # ScanMode = massSpectrumInfo.CentroidMode ? WiffFile.ScanMode.Centroid : WiffFile.ScanMode.Profile,
-                # Polarity = (details.Polarity == MSExperimentInfo.PolarityEnum.Positive) ? WiffFile.Polarity.Positive : WiffFile.Polarity.Negative,
-                # low_mz = details.StartMass
-                # high_mz = details.EndMass
-                ms_level_list.append(ms_level)
-                # ScanType = (details.IDAType == MSExperimentInfo.IDAExperimentType.Survey) ? WiffFile.ScanType.MS1 : WiffFile.ScanType.MS2,
+                    _peak_indices.append(len(peak_mz_array_list[-1]))
+                    rt_list.append(exp.GetRTFromExperimentCycle(j))
+                    # ScanMode = massSpectrumInfo.CentroidMode ? WiffFile.ScanMode.Centroid : WiffFile.ScanMode.Profile,
+                    # Polarity = (details.Polarity == MSExperimentInfo.PolarityEnum.Positive) ? WiffFile.Polarity.Positive : WiffFile.Polarity.Negative,
+                    # low_mz = details.StartMass
+                    # high_mz = details.EndMass
+                    ms_level_list.append(ms_level)
+                    # ScanType = (details.IDAType == MSExperimentInfo.IDAExperimentType.Survey) ? WiffFile.ScanType.MS1 : WiffFile.ScanType.MS2,
 
-                center_mz = -1
-                isolation_window = 0
-                if ms_level > 1:
-                    if details.IsSwath and details.MassRangeInfo.Length > 0:
-                        center_mz = DotNetWiffOps.get_center_mz(details)
-                        isolation_window = DotNetWiffOps.get_isolation_window(details)
-                    if isolation_window <= 0:
-                        isolation_window = 3.0
-                    if center_mz <= 0:
-                        center_mz = massSpectrumInfo.ParentMZ
-                    precursor_mz_list.append(center_mz)
-                    precursor_charge_list.append(massSpectrumInfo.ParentChargeState)
-                    ce_list.append(float(massSpectrumInfo.CollisionEnergy))
-                    isolation_lower_mz_list.append(center_mz - isolation_window / 2)
-                    isolation_upper_mz_list.append(center_mz + isolation_window / 2)
-                else:
-                    precursor_mz_list.append(-1.0)
-                    precursor_charge_list.append(0)
-                    ce_list.append(0)
-                    isolation_lower_mz_list.append(-1.0)
-                    isolation_upper_mz_list.append(-1.0)
+                    center_mz = -1
+                    isolation_window = 0
+                    if ms_level > 1:
+                        if details.IsSwath and details.MassRangeInfo.Length > 0:
+                            center_mz = DotNetWiffOps.get_center_mz(details)
+                            isolation_window = DotNetWiffOps.get_isolation_window(
+                                details
+                            )
+                        if isolation_window <= 0:
+                            isolation_window = 3.0
+                        if center_mz <= 0:
+                            center_mz = massSpectrumInfo.ParentMZ
+                        precursor_mz_list.append(center_mz)
+                        precursor_charge_list.append(massSpectrumInfo.ParentChargeState)
+                        ce_list.append(float(massSpectrumInfo.CollisionEnergy))
+                        isolation_lower_mz_list.append(center_mz - isolation_window / 2)
+                        isolation_upper_mz_list.append(center_mz + isolation_window / 2)
+                    else:
+                        precursor_mz_list.append(-1.0)
+                        precursor_charge_list.append(0)
+                        ce_list.append(0)
+                        isolation_lower_mz_list.append(-1.0)
+                        isolation_upper_mz_list.append(-1.0)
+        except System.Exception as e:
+            if MISSING_SCAN_FILE_ERROR not in e.Message:
+                raise
+            scan_file = self.filename + SCAN_FILE_EXTENSION
+            raise FileNotFoundError(
+                f"The peak data of {self.filename} is stored in the companion file "
+                f"{scan_file}, which is missing. Copy it next to the .wiff file."
+            ) from e
 
         peak_indices = np.empty(len(rt_list) + 1, np.int64)
         peak_indices[0] = 0
