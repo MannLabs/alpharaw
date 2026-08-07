@@ -28,3 +28,20 @@ alpharaw/ext/bruker/LICENCE-BRUKER.txt. The licenses of the third-party
 components it links to are listed in
 alpharaw/ext/bruker/THIRD-PARTY-LICENSE-README.txt.
 The attribution above is reproduced verbatim from §4.4 of that agreement.
+
+--------------------------------------------------------------------------------
+SCIEX WIFF Reader Distributable Beta SDK  (alpharaw/ext/sciex/)
+--------------------------------------------------------------------------------
+© 2022 SCIEX. The trademarks mentioned herein are the property of AB SCIEX Pte.
+Ltd. or their respective owners. SCIEX™ is being used under license.
+
+Governed by the SCIEX PTE. LTD. END USER BETA SOFTWARE LICENSE AGREEMENT and
+REDISTRIBUTION LICENSE; see alpharaw/ext/sciex/SCIEX_LICENSE.txt (plain-text
+conversion of alpharaw/ext/sciex/SCIEX_LICENSE.doc). The redistributable
+components are listed in Appendix A of that agreement.
+
+SCIEX granted the Mann Labs written permission to redistribute these components
+as part of the AlphaPept project. The SDK may be used for ACADEMIC PURPOSES ONLY
+and may not be used for commercial purposes. It is untested beta software
+provided on an "as-is" basis; SCIEX makes no warranties of any kind and no
+commitment to repair any defects.
