@@ -63,3 +63,4 @@ def _parse(raw_type: str, raw: list):
                 print(f"{raw_file} does not exist")
                 continue
             reader.import_raw(raw_file)
+            reader.save_hdf(raw_file + ".hdf")
