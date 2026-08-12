@@ -54,26 +54,32 @@ part of AlphaRaw only.
 ## Installation
 
 The .NET runtime backend is auto selected, unless the `ALPHARAW_DOTNET_RUNTIME` environment
-variable is set. The auto selection prefers a .NET Framework runtime — Mono, or Windows' built-in `netfx` — because
-it supports all readers. It falls back to the mono-free `coreclr` runtime only when no .NET Framework runtime is
-installed. Set the variable to force one backend:
+variable is set. The auto selection tries `netfx`, then `mono`, then `coreclr`, and takes the first
+one that is installed: a .NET Framework runtime (Windows' built-in `netfx`, or Mono elsewhere) is
+preferred because it supports all readers, and the mono-free `coreclr` runtime is the fallback.
+Set the variable to force one backend:
 
-- **`mono`:** runs .NET Framework DLLs off Windows. Required for **Sciex** `.wiff`
-  files, whose `Clearcore2` DLLs target .NET Framework, and used for Thermo unless
-  you opt into `coreclr`. Requires a mono installation (see below).
-- **`coreclr`:** runs on the cross-platform modern .NET runtime.
-  Reads **Thermo** files only (not Sciex) on Linux, macOS (Intel and Apple Silicon)
-  and Windows. Requires a .NET 8 (or newer) runtime; install e.g.
-  `conda install -c conda-forge dotnet-runtime` or from
-  <https://dotnet.microsoft.com/download>. Set this explicitly for the mono-free
-  Thermo path on a machine that also has Mono.
+| Reader | `netfx` (Windows only) | `mono` | `coreclr` |
+| --- | --- | --- | --- |
+| **Thermo** (`.raw`) | yes | yes | yes |
+| **Sciex** (`.wiff`) | yes | yes | **no** |
 
-Because pythonnet's runtime is process-global, a single process reads either Thermo
-(via `coreclr`) or Sciex (via `mono`), not both at once. The runtime is chosen once,
-during `import alpharaw`, and cannot be changed afterward — so set
-`ALPHARAW_DOTNET_RUNTIME` **before** importing the package.
+- **`netfx`:** Windows' built-in .NET Framework runtime. No extra installation needed.
+- **`mono`:** runs .NET Framework DLLs off Windows. The only way to read **Sciex** `.wiff`
+  files on Linux/macOS, since their `Clearcore2` DLLs target .NET Framework. Requires a
+  mono installation (see below).
+- **`coreclr`:** the cross-platform modern .NET runtime, available on Linux, macOS
+  (Intel and Apple Silicon) and Windows. Reads **Thermo** files only. Requires a .NET 8
+  (or newer) runtime; install e.g. `conda install -c conda-forge dotnet-runtime` or from
+  <https://dotnet.microsoft.com/download>. Set this explicitly for the mono-free Thermo
+  path on a machine that also has Mono.
 
-### Installing Mono (only for Sciex, or the `mono` Thermo fallback)
+Because pythonnet's runtime is process-global, the runtime is chosen once, during
+`import alpharaw`, and cannot be changed afterward — so set `ALPHARAW_DOTNET_RUNTIME`
+**before** importing the package. A process running on `coreclr` therefore cannot read
+Sciex files at all.
+
+### Installing Mono (only needed off Windows)
 
 
 #### For Linux / MacOS with Intel platform

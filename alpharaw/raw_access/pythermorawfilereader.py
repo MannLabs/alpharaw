@@ -3,7 +3,7 @@ import os
 import warnings
 from collections import defaultdict
 
-# clr_utils selects and loads the .NET runtime (coreclr by default, no Mono). It
+# clr_utils selects and loads the .NET runtime. It
 # MUST be imported before `clr`, which would otherwise auto-load pythonnet's default
 # runtime; keeping it above the `try` block ensures it always runs first.
 from .clr_utils import (

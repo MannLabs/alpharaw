@@ -9,11 +9,11 @@ import numpy as np
 # "netfx" or "mono"). When set, only that runtime is tried (no fallback).
 DOTNET_RUNTIME_ENV = "ALPHARAW_DOTNET_RUNTIME"
 # Auto-selection order when the env var is unset: prefer a .NET Framework runtime
-# (Mono, or Windows' built-in "netfx") because it supports every reader.
+# (Windows' built-in "netfx", then Mono) because it supports every reader.
 # Fall back to the mono-free "coreclr" runtime (Thermo .NET 8 build only) when no .NET Framework runtime is installed.
 # IMPORTANT: pythonnet's runtime is process-global, so this single choice applies to every
 # .NET-based reader loaded in the process.
-DOTNET_RUNTIME_FALLBACK_ORDER = ["mono", "netfx", "coreclr"]
+DOTNET_RUNTIME_FALLBACK_ORDER = ["netfx", "mono", "coreclr"]
 
 # Name of the .NET runtime actually loaded; None if none could be loaded.
 DOTNET_RUNTIME = None
@@ -23,7 +23,7 @@ def _load_dotnet_runtime():
     """Load a .NET runtime for pythonnet and return its name.
 
     Honors an explicit ``ALPHARAW_DOTNET_RUNTIME`` override; otherwise tries a
-    .NET Framework runtime (Mono/netfx) first and falls back to the mono-free
+    .NET Framework runtime (netfx/Mono) first and falls back to the mono-free
     coreclr runtime. Each candidate is created via ``clr_loader`` (which raises
     when the runtime is unavailable) so ``pythonnet.load`` is called only once,
     with a runtime that is actually present.
