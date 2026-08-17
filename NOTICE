@@ -36,9 +36,9 @@ SCIEX WIFF Reader Distributable Beta SDK  (alpharaw/ext/sciex/)
 Ltd. or their respective owners. SCIEX™ is being used under license.
 
 Governed by the SCIEX PTE. LTD. END USER BETA SOFTWARE LICENSE AGREEMENT and
-REDISTRIBUTION LICENSE; see alpharaw/ext/sciex/SCIEX_LICENSE.txt (plain-text
-conversion of alpharaw/ext/sciex/SCIEX_LICENSE.doc). The redistributable
-components are listed in Appendix A of that agreement.
+REDISTRIBUTION LICENSE; see alpharaw/ext/sciex/SCIEX_LICENSE.txt. The
+redistributable components are listed in Appendix A of that agreement. The
+document as originally provided by SCIEX is alpharaw/ext/sciex/SCIEX_LICENSE.doc.
 
 SCIEX granted the Mann Labs written permission to redistribute these components
 as part of the AlphaPept project. The SDK may be used for ACADEMIC PURPOSES ONLY
