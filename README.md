@@ -44,7 +44,7 @@ the Apache License and are governed by their own vendor license terms; the requi
 attributions are collected in the [NOTICE](NOTICE) file:
 
 - Thermo Fisher `RawFileReader` ([alpharaw/ext/thermo_fisher](alpharaw/ext/thermo_fisher)), licensed under [THERMO_LICENSE.txt](alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt).
-- Bruker libraries ([alpharaw/ext/bruker](alpharaw/ext/bruker)), see the [third-party licenses](LICENSE-THIRD-PARTY.txt).
+- Bruker libraries ([alpharaw/ext/bruker](alpharaw/ext/bruker)), licensed under [LICENCE-BRUKER.txt](alpharaw/ext/bruker/LICENCE-BRUKER.txt), with the licenses of the third-party components it links to in [THIRD-PARTY-LICENSE-README.txt](alpharaw/ext/bruker/THIRD-PARTY-LICENSE-README.txt).
 
 These vendor licenses restrict redistribution of the binaries to distribution as
 part of AlphaRaw only.

@@ -13,7 +13,7 @@ EXT_PATH = os.path.abspath(os.path.join(BASE_PATH, "..", "ext", "bruker"))
 if sys.platform[:5] == "win32":
     BRUKER_DLL_FILE_NAME = os.path.join(EXT_PATH, "timsdata.dll")
 elif sys.platform[:5] == "linux":
-    BRUKER_DLL_FILE_NAME = os.path.join(EXT_PATH, "timsdata.so")
+    BRUKER_DLL_FILE_NAME = os.path.join(EXT_PATH, "libtimsdata.so")
 else:
     BRUKER_DLL_FILE_NAME = ""
 

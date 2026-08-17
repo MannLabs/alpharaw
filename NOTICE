@@ -4,9 +4,8 @@ Licensed under the Apache License, Version 2.0 (see LICENSE.txt).
 
 This product bundles proprietary third-party binaries under alpharaw/ext/.
 These binaries are NOT covered by the Apache License; they are governed by their
-respective vendor license terms (see LICENSE-THIRD-PARTY.txt and the per-vendor
-license files referenced below). They may not be redistributed except as part of
-AlphaRaw.
+respective vendor license terms (see the per-vendor license files referenced
+below). They may not be redistributed except as part of AlphaRaw.
 
 --------------------------------------------------------------------------------
 Thermo Fisher RawFileReader  (alpharaw/ext/thermo_fisher/)
@@ -17,3 +16,15 @@ All rights reserved.
 Governed by the SOFTWARE LICENSE AGREEMENT for RawFileReader; see
 alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt. That agreement restricts your end
 users from further redistributing these binaries.
+
+--------------------------------------------------------------------------------
+Bruker TDF Software Development Kit / timsdata  (alpharaw/ext/bruker/)
+--------------------------------------------------------------------------------
+This software uses Software software. Copyright © 2019 by Bruker Daltonik GmbH.
+All rights reserved.
+
+Governed by the BRUKER SOFTWARE LICENSE AGREEMENT; see
+alpharaw/ext/bruker/LICENCE-BRUKER.txt. The licenses of the third-party
+components it links to are listed in
+alpharaw/ext/bruker/THIRD-PARTY-LICENSE-README.txt.
+The attribution above is reproduced verbatim from §4.4 of that agreement.
