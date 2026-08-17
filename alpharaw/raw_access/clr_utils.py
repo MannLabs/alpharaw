@@ -1,20 +1,92 @@
 # ruff: noqa: E402  #Module level import not at top of file
+import atexit
 import os
 import warnings
 
 import numpy as np
 
+# Environment variable to force a specific .NET runtime backend ("coreclr",
+# "netfx" or "mono"). When set, only that runtime is tried (no fallback).
+DOTNET_RUNTIME_ENV = "ALPHARAW_DOTNET_RUNTIME"
+# Auto-selection order when the env var is unset: prefer a .NET Framework runtime
+# (Windows' built-in "netfx", then Mono) because it supports every reader.
+# Fall back to the mono-free "coreclr" runtime (Thermo .NET 8 build only) when no .NET Framework runtime is installed.
+# IMPORTANT: pythonnet's runtime is process-global, so this single choice applies to every
+# .NET-based reader loaded in the process.
+DOTNET_RUNTIME_FALLBACK_ORDER = ["netfx", "mono", "coreclr"]
+
+# Name of the .NET runtime actually loaded; None if none could be loaded.
+DOTNET_RUNTIME = None
+
+
+def _load_dotnet_runtime():
+    """Load a .NET runtime for pythonnet and return its name.
+
+    Honors an explicit ``ALPHARAW_DOTNET_RUNTIME`` override; otherwise tries a
+    .NET Framework runtime (netfx/Mono) first and falls back to the mono-free
+    coreclr runtime. Each candidate is created via ``clr_loader`` (which raises
+    when the runtime is unavailable) so ``pythonnet.load`` is called only once,
+    with a runtime that is actually present.
+    """
+    import pythonnet
+    from clr_loader import get_coreclr, get_mono, get_netfx
+
+    factories = {"coreclr": get_coreclr, "netfx": get_netfx, "mono": get_mono}
+    explicit = os.environ.get(DOTNET_RUNTIME_ENV)
+    order = [explicit.lower()] if explicit else DOTNET_RUNTIME_FALLBACK_ORDER
+
+    errors = {}
+    for name in order:
+        factory = factories.get(name)
+        if factory is None:
+            errors[name] = ValueError(f"unknown runtime '{name}'")
+            continue
+        try:
+            runtime = factory()
+        except Exception as e:
+            errors[name] = e
+            continue
+        pythonnet.load(runtime)
+        return name
+
+    raise RuntimeError(f"No .NET runtime available (tried {order}): {errors}")
+
+
 try:
+    DOTNET_RUNTIME = _load_dotnet_runtime()
+
+    import pythonnet
+
+    # clr_loader's mono backend errors during its atexit unload (its module globals
+    # are already cleared at interpreter shutdown), printing a spurious traceback
+    # after the real work is done; drop that hook.
+    atexit.unregister(pythonnet.unload)
+
     import clr
 
     clr.AddReference("System")
 
     import ctypes
 
+    from System.Reflection import Assembly
     from System.Runtime.InteropServices import GCHandle, GCHandleType
-except Exception:
-    # allows to use the rest of the code without clr
-    warnings.warn("Dotnet-based dependencies could not be loaded.")
+except Exception as e:
+    # allows to use the rest of the code without clr; surface the underlying error
+    # so runtime-selection failures (e.g. coreclr not found) are diagnosable.
+    warnings.warn(
+        f".NET dependencies could not be loaded. Thermo (.raw) and Sciex (.wiff) support disabled.\n{e!r}"
+    )
+
+
+def load_dotnet_assembly(dll_path: str):
+    """Load a .NET assembly from a file path under the active runtime.
+
+    ``Assembly.LoadFile`` resolves correctly under both the coreclr and mono
+    runtimes, whereas ``clr.AddReference`` with a path is rejected by the coreclr
+    assembly resolver.
+    """
+    return Assembly.LoadFile(os.path.abspath(dll_path))
+
 
 # from System.Runtime.InteropServices import Marshal
 # from System import IntPtr, Int64

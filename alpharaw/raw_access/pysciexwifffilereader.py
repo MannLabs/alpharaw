@@ -41,10 +41,9 @@ try:
 
     HAS_DOTNET = True
 except Exception:
-    # allows to use the rest of the code without clr
-    warnings.warn(
-        "Dotnet-based dependencies could not be loaded. Sciex support is disabled."
-    )
+    # Keep Sciex support disabled silently; WiffFileReader.__init__ raises a clear
+    # error if a .wiff read is actually attempted. Warning here would fire on every
+    # import (including in each multiprocessing worker) even for Thermo-only runs.
     HAS_DOTNET = False
 
 
@@ -52,8 +51,8 @@ class WiffFileReader:
     def __init__(self, filename: str):
         if not HAS_DOTNET:
             raise ValueError(
-                "Dotnet-based dependencies are required for reading Sciex files. "
-                "Do you have pythonnet and/or mono installed? "
+                ".NET dependencies could not be loaded but are required for reading Sciex files. "
+                "Do you have mono and pythonnet installed? "
                 "See the Readme for details."
             )
 

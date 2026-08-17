@@ -53,13 +53,36 @@ part of AlphaRaw only.
 
 ## Installation
 
-Pythonnet must be installed to access Thermo or Sciex raw data.
+The .NET runtime backend is auto selected, unless the `ALPHARAW_DOTNET_RUNTIME` environment
+variable is set. The auto selection tries `netfx`, then `mono`, then `coreclr`, and takes the first
+one that is installed: a .NET Framework runtime (Windows' built-in `netfx`, or Mono elsewhere) is
+preferred because it supports all readers, and the mono-free `coreclr` runtime is the fallback.
+Set the variable to force one backend:
 
-### For Windows
+| Reader | `netfx` (Windows only) | `mono` | `coreclr` |
+| --- | --- | --- | --- |
+| **Thermo** (`.raw`) | yes | yes | yes |
+| **Sciex** (`.wiff`) | yes | yes | **no** |
 
-Pythonnet will be automatically installed via pip.
+- **`netfx`:** Windows' built-in .NET Framework runtime. No extra installation needed.
+- **`mono`:** runs .NET Framework DLLs off Windows. The only way to read **Sciex** `.wiff`
+  files on Linux/macOS, since their `Clearcore2` DLLs target .NET Framework. Requires a
+  mono installation (see below).
+- **`coreclr`:** the cross-platform modern .NET runtime, available on Linux, macOS
+  (Intel and Apple Silicon) and Windows. Reads **Thermo** files only. Requires a .NET 8
+  (or newer) runtime; install e.g. `conda install -c conda-forge dotnet-runtime` or from
+  <https://dotnet.microsoft.com/download>. Set this explicitly for the mono-free Thermo
+  path on a machine that also has Mono.
 
-### For Linux / MacOS with Intel platform
+Because pythonnet's runtime is process-global, the runtime is chosen once, during
+`import alpharaw`, and cannot be changed afterward — so set `ALPHARAW_DOTNET_RUNTIME`
+**before** importing the package. A process running on `coreclr` therefore cannot read
+Sciex files at all.
+
+### Installing Mono (only needed off Windows)
+
+
+#### For Linux / MacOS with Intel platform
 
 1.  `conda install mono`.
 2.  Install pythonnet with `pip install pythonnet`.
@@ -69,7 +92,7 @@ Website](https://www.mono-project.com/download/stable/#download-lin).
 NOTE, the installed mono version should be at least 6.10, which
 requires you to add the PPA to your trusted sources!
 
-### For MacOS with silicon platform (M1/M2/M3)
+#### For MacOS with silicon platform (M1/M2/M3)
 Note that some command might required to use `sudo`.
 
 1.  Install [brew](https://brew.sh).

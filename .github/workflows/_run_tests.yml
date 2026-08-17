@@ -13,6 +13,10 @@ on:
       install-script:
         required: true
         type: string
+      dotnet-runtime:
+        required: false
+        type: string
+        default: mono # or coreclr, netfx
 jobs:
   run-tests:
     runs-on: ${{ inputs.os }}
@@ -23,25 +27,27 @@ jobs:
         miniconda-version: "latest"
         auto-update-conda: true
         python-version: ${{ inputs.python-version }}
-    - name: Install mono
+    - name: Configure .NET runtime
       shell: bash -l {0}
       run: |
-        if [ "$RUNNER_OS" != "Windows" ]; then
-          conda install -y mono
+        if [ "${{ inputs.dotnet-runtime }}" = "mono" ] && [ "$RUNNER_OS" = "Windows" ]; then
+          echo "ALPHARAW_DOTNET_RUNTIME=netfx" >> "$GITHUB_ENV"
+        else
+          echo "ALPHARAW_DOTNET_RUNTIME=${{ inputs.dotnet-runtime }}" >> "$GITHUB_ENV"
         fi
+    - name: Install .NET runtime (for coreclr only)
+      if: ${{ inputs.dotnet-runtime == 'coreclr' }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: "8.0.x"
     - name: Conda info
       shell: bash -l {0}
       run: conda info
-    - name: Install mono
-      if: ${{ !contains(inputs.os, 'windows') }}
-      shell: bash -l {0}
-      run: |
-        conda install mono
     - name: Perform pip installation
       shell: bash -l {0}
       run: |
         cd misc
-        . ./${{ inputs.install-script }} alpharaw ${{ inputs.python-version }} ${{ !contains(inputs.os, 'windows') }}
+        . ./${{ inputs.install-script }} alpharaw ${{ inputs.python-version }} "$ALPHARAW_DOTNET_RUNTIME"
     - name: Run tests
       shell: bash -l {0}
       run: |

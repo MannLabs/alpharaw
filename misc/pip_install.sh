@@ -8,10 +8,14 @@ set -e -u
 INSTALL_TYPE=$1 # stable, loose, etc..
 ENV_NAME=${2:-alpharaw}
 PYTHON_VERSION=${3:-3.9}
-INSTALL_MONO=${4:-false}
+DOTNET_RUNTIME=${4:-mono} # mono | coreclr | netfx; selects the .NET runtime backend
 
 
-if [ "$INSTALL_MONO" = "true" ]; then
+# Mono is installed here for the "mono" backend (.NET Framework DLLs, e.g. Sciex
+# Clearcore2 and the Thermo netfx build). For "coreclr" the .NET runtime is
+# installed separately (see the CI's "Install .NET runtime" step); "netfx" uses
+# Windows' built-in .NET Framework and needs no extra package.
+if [ "$DOTNET_RUNTIME" = "mono" ]; then
   conda create -n $ENV_NAME python=$PYTHON_VERSION mono -y
 else
   conda create -n $ENV_NAME python=$PYTHON_VERSION -y

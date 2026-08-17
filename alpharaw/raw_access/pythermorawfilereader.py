@@ -3,16 +3,21 @@ import os
 import warnings
 from collections import defaultdict
 
-# require pythonnet, pip install pythonnet on Windows
-try:
-    import clr
+# clr_utils selects and loads the .NET runtime. It
+# MUST be imported before `clr`, which would otherwise auto-load pythonnet's default
+# runtime; keeping it above the `try` block ensures it always runs first.
+from .clr_utils import (
+    DOTNET_RUNTIME,
+    DotNetArrayToNPArray,
+    ext_dir,
+    load_dotnet_assembly,
+)
 
-    clr.AddReference("System")
-    import System
+try:
+    import clr  # noqa: F401
+    import System  # noqa: F401
     from System.Globalization import CultureInfo
     from System.Threading import Thread
-
-    from .clr_utils import DotNetArrayToNPArray, ext_dir
 
     de_fr = CultureInfo("fr-FR")
     other = CultureInfo("en-US")
@@ -20,11 +25,24 @@ try:
     Thread.CurrentThread.CurrentCulture = other
     Thread.CurrentThread.CurrentUICulture = other
 
-    clr.AddReference(
-        os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.Data.dll")
+    # The coreclr runtime needs the .NET 8 build; mono/netfx needs the .NET
+    # Framework build. Both target the same RawFileReader API.
+    _thermo_dll_dir = "net8" if DOTNET_RUNTIME == "coreclr" else "netfx"
+    load_dotnet_assembly(
+        os.path.join(
+            ext_dir,
+            "thermo_fisher",
+            _thermo_dll_dir,
+            "ThermoFisher.CommonCore.Data.dll",
+        )
     )
-    clr.AddReference(
-        os.path.join(ext_dir, "thermo_fisher/ThermoFisher.CommonCore.RawFileReader.dll")
+    load_dotnet_assembly(
+        os.path.join(
+            ext_dir,
+            "thermo_fisher",
+            _thermo_dll_dir,
+            "ThermoFisher.CommonCore.RawFileReader.dll",
+        )
     )
     import ThermoFisher
     from ThermoFisher.CommonCore.Data.Business import Device
@@ -32,10 +50,9 @@ try:
 
     HAS_DOTNET = True
 except Exception:
-    # allows to use the rest of the code without clr
-    warnings.warn(
-        "Dotnet-based dependencies could not be loaded. Thermo support is disabled."
-    )
+    # Keep Thermo support disabled silently; RawFileReader.__init__ raises a clear
+    # error if a read is actually attempted. Warning here would fire on every import
+    # (including in each multiprocessing worker).
     HAS_DOTNET = False
 
 
@@ -222,8 +239,8 @@ class RawFileReader:
     def __init__(self, filename, **kwargs):
         if not HAS_DOTNET:
             raise ValueError(
-                "Dotnet-based dependencies are required for reading Thermo files. "
-                "Do you have pythonnet and/or mono installed? "
+                ".NET dependencies could not be loaded but are required for reading Thermo files. "
+                "Do you have dotnet or mono, and pythonnet installed? "
                 "See the Readme for details."
             )
 

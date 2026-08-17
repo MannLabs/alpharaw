@@ -36,30 +36,51 @@ def run(ctx, **kwargs):
         click.echo(run.get_help(ctx))
 
 
-@run.command("parse", help="Convert raw files into alpharaw hdf5 (.hdf) format.")
+@run.command(
+    "parse",
+    help="Convert raw files into alpharaw hdf5 format. A .hdf extension will be added to the input file name(s).",
+)
 @click.option(
     "--raw_type",
     type=str,
     default="thermo_raw",
     show_default=True,
-    help="Only `thermo_raw`, `sciex_wiff` is supported currently.",
+    help="`thermo_raw` or `sciex_wiff`",
 )
 @click.option(
     "--raw",
     multiple=True,
     default=[],
     show_default=True,
-    help="Raw files, can be `--raw raw1 --raw raw2 ...`.",
+    help="Raw files, can chained like `--raw raw1 --raw raw2 ...`.",
 )
-def _parse(raw_type: str, raw: list):
+@click.option(
+    "--output_dir",
+    type=str,
+    default="",
+    show_default=True,
+    help="Folder to write the output .hdf files to. Empty writes next to each raw file.",
+)
+def _parse(raw_type: str, raw: list, output_dir: str):
     reader = ms_reader_provider.get_reader(raw_type)
     if reader is None:
         print(
             f"{raw_type} is not supported, this may be due to the failed installion of PythonNet or other packages"
         )
     else:
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
         for raw_file in raw:
             if not os.path.isfile(raw_file):
                 print(f"{raw_file} does not exist")
                 continue
             reader.import_raw(raw_file)
+
+            hdf_file_path = raw_file + ".hdf"
+            if output_dir:
+                hdf_file_path = os.path.join(
+                    output_dir, os.path.basename(raw_file) + ".hdf"
+                )
+
+            reader.save_hdf(hdf_file_path)
+            print(f"Saved {hdf_file_path}")

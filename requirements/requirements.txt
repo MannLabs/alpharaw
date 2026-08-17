@@ -2,7 +2,7 @@
 # Only usage of fixed versions is allowed, and all dependencies listed here must also be
 # included in `requirements_loose.txt` (enforced by a test).
 pywin32>=0.0.1; sys_platform=='win32' # test: tolerate_version
-pythonnet==3.0.3 #; sys_platform=='win32'
+pythonnet==3.0.3 # TODO: make it optional? (.d, .hdf .mzml don't need that)
 
 h5py==3.11.0
 numba==0.59.1
