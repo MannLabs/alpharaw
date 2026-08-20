@@ -26,7 +26,7 @@ Use of the Software
 1.	You may make one copy of the Software in machine-readable form solely for backup or archival purposes.  You must reproduce on any such copy all copyright notices and any other proprietary legends found on the original.  You may not make any other copies of the Software.
 2.	From time to time, SCIEX may change the terms of this Agreement.  SCIEX will notify you of such change.  Your continued use of the Software will indicate your agreement to the change.
 
-Use Restrictions
+Use Restrictions
 1.  You may not use the Software, Documentation, or any associated documentation, in whole or in part, except as expressly permitted in this Agreement.
 2.  You may not sublicense, copy, merge, modify, sell, resell, rent, lease, assign, transfer (except temporarily in the event of a computer malfunction or as expressly permitted under the Section “Use of the Software”), or distribute this license or the Software, or create derivative works based on the Software (except as outlined in the Distribution Rights below), or any part thereof or any interest therein.
 3.  You may not reverse assemble, decompile, modify, create any derivative works, or otherwise attempt, cause, or permit any reverse engineering of the Software or any part thereof.
@@ -96,7 +96,8 @@ This Agreement shall be governed by laws of the Commonwealth of Massachusetts, U
 
 For Research Use Only. Not for use in diagnostic procedures.  The trademarks mentioned herein are the property of AB SCIEX Pte. Ltd. or their respective owners.  SCIEX™ is being used under license.
 © 2022 SCIEX
-APPENDIX A
+
+APPENDIX A
 REDISTRIBUTABLE COMPONENTS OF THE SOFTWARE
 
 Clearcore2.Compression.dll
@@ -131,7 +132,3 @@ Sciex.Data.XYData.dll
 Sciex.FMan.dll
 Sciex.Wiff.dll
 SciexToolKit.dll
-
-Confidential - Company Proprietary
-
-Confidential - Company Proprietary
