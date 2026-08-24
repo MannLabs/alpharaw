@@ -45,6 +45,7 @@ attributions are collected in the [NOTICE](NOTICE) file:
 
 - Thermo Fisher `RawFileReader` ([alpharaw/ext/thermo_fisher](alpharaw/ext/thermo_fisher)), licensed under [THERMO_LICENSE.txt](alpharaw/ext/thermo_fisher/THERMO_LICENSE.txt).
 - Bruker libraries ([alpharaw/ext/bruker](alpharaw/ext/bruker)), licensed under [LICENCE-BRUKER.txt](alpharaw/ext/bruker/LICENCE-BRUKER.txt), with the licenses of the third-party components it links to in [THIRD-PARTY-LICENSE-README.txt](alpharaw/ext/bruker/THIRD-PARTY-LICENSE-README.txt).
+- SCIEX `WIFF Reader Distributable Beta SDK` ([alpharaw/ext/sciex](alpharaw/ext/sciex)), licensed under [SCIEX_LICENSE.txt](alpharaw/ext/sciex/SCIEX_LICENSE.txt); the document as originally provided by SCIEX is [SCIEX_LICENSE.doc](alpharaw/ext/sciex/SCIEX_LICENSE.doc). **This SDK may be used for academic purposes only and may not be used for commercial purposes.**
 
 These vendor licenses restrict redistribution of the binaries to distribution as
 part of AlphaRaw only.
