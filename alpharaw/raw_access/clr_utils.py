@@ -59,8 +59,12 @@ try:
 
     # clr_loader's mono backend errors during its atexit unload (its module globals
     # are already cleared at interpreter shutdown), printing a spurious traceback
-    # after the real work is done; drop that hook.
-    atexit.unregister(pythonnet.unload)
+    # after the real work is done; drop that hook. Only for mono: for netfx,
+    # pythonnet.unload is the only orderly shutdown path, and without it .NET
+    # Framework's ProcessExit handler calls PythonEngine.Shutdown() after
+    # Py_Finalize, crashing with an AccessViolationException.
+    if DOTNET_RUNTIME == "mono":
+        atexit.unregister(pythonnet.unload)
 
     import clr
 
