@@ -410,7 +410,7 @@ class MSData_Base:
         na_value=np.nan,
     ):
         self.spectrum_df.loc[spec_idxes, column_name] = values
-        self.spectrum_df[column_name].fillna(na_value, inplace=True)
+        self.spectrum_df[column_name] = self.spectrum_df[column_name].fillna(na_value)
         self.spectrum_df[column_name] = self.spectrum_df[column_name].astype(dtype)
 
     def add_column_in_df_by_scan_num(
