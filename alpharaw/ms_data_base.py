@@ -228,7 +228,9 @@ class MSData_Base:
 
         self._save_meta_to_hdf(hdf)
 
-    def save_mzml(self, mzml_file_path: str, binary_precision=32, compression=None):
+    def save_mzml(
+        self, mzml_file_path: str, binary_precision=32, compression=None, indexed=True
+    ):
         """
         Save data into mzML file format
 
@@ -242,6 +244,10 @@ class MSData_Base:
             preserves the original data precision while reducing file size.
         compression : str, optional
             Compression method (None, 'zlib'), by default None
+        indexed : bool, optional
+            Write an indexed mzML file (<indexedmzML> wrapper with a byte-offset
+            index of every spectrum), by default True. Required by tools such as
+            DIA-NN; plain-mzML readers accept it as well.
         """
 
         writer = MzMLWriter(
@@ -249,6 +255,7 @@ class MSData_Base:
             mzml_file_path,
             binary_precision=binary_precision,
             compression=compression,
+            indexed=indexed,
         )
         writer.write()
 
