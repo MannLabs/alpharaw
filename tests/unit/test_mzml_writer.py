@@ -1,4 +1,6 @@
+import hashlib
 import os
+import re
 import tempfile
 import xml.etree.ElementTree as ET
 
@@ -119,8 +121,10 @@ def test_basic_mzml_creation(ms_data, temp_dir):
     # Check basic structure of the mzML file
     ns = {"mzml": writer.ns_uri}
 
-    # Check that we have the right root element
-    assert root.tag.endswith("mzML")
+    # Check that we have the right root element. Output is indexed by default,
+    # so the root is <indexedmzML>; endswith() would also accept that, hence the
+    # explicit comparison.
+    assert root.tag == f"{{{writer.ns_uri}}}indexedmzML"
 
     # Check spectrum count
     spectrum_list = root.findall(".//mzml:spectrumList", ns)
@@ -341,17 +345,17 @@ def test_cv_list_structure(ms_data, temp_dir):
         assert cv_id is not None, "CV element must have 'id' attribute"
 
         full_name = cv.get("fullName")
-        assert (
-            full_name is not None
-        ), f"CV element with id='{cv_id}' must have 'fullName' attribute"
-        assert (
-            len(full_name) > 0
-        ), f"CV element with id='{cv_id}' must have non-empty 'fullName'"
+        assert full_name is not None, (
+            f"CV element with id='{cv_id}' must have 'fullName' attribute"
+        )
+        assert len(full_name) > 0, (
+            f"CV element with id='{cv_id}' must have non-empty 'fullName'"
+        )
 
         uri = cv.get("URI")
-        assert (
-            uri is not None
-        ), f"CV element with id='{cv_id}' must have 'URI' attribute"
+        assert uri is not None, (
+            f"CV element with id='{cv_id}' must have 'URI' attribute"
+        )
         assert len(uri) > 0, f"CV element with id='{cv_id}' must have non-empty 'URI'"
         assert uri.startswith("http"), f"CV URI should be a valid URL, got '{uri}'"
 
@@ -447,3 +451,110 @@ def test_software_reference_in_data_processing(ms_data, temp_dir):
 
     # Check that the softwareRef attribute is correct
     assert processing_method.get("softwareRef") == "alpharaw"
+
+
+# ---------------------------------------------------------------------------
+# Indexed mzML
+# ---------------------------------------------------------------------------
+
+OFFSET_PATTERN = re.compile(rb'<offset idRef="([^"]+)">(\d+)</offset>')
+CHECKSUM_PATTERN = re.compile(rb"<fileChecksum>([0-9a-f]+)</fileChecksum>")
+FILE_CHECKSUM_OPEN_TAG = b"<fileChecksum>"
+
+
+def _write(ms_data, temp_dir, name="indexed.mzML", **kwargs):
+    """Write an mzML file and return its path and raw bytes."""
+    output_path = os.path.join(temp_dir, name)
+    MzMLWriter(ms_data, output_path, **kwargs).write()
+    with open(output_path, "rb") as handle:
+        return output_path, handle.read()
+
+
+def _index_entries(raw):
+    """Parse (spectrum id, byte offset) pairs out of a document's own indexList."""
+    tail = raw[raw.rindex(b"<indexList ") :]
+    return [(spec_id, int(offset)) for spec_id, offset in OFFSET_PATTERN.findall(tail)]
+
+
+def test_indexed_output_is_the_default(ms_data, temp_dir):
+    """Documents are wrapped in <indexedmzML> unless indexed=False is requested."""
+    output_path, raw = _write(ms_data, temp_dir)
+
+    root = ET.parse(output_path).getroot()
+    assert root.tag.endswith("indexedmzML")
+    assert b"<indexList " in raw
+    assert b"<indexListOffset>" in raw
+
+
+def test_indexed_false_writes_plain_mzml(ms_data, temp_dir):
+    """indexed=False reproduces the unwrapped document."""
+    output_path, raw = _write(ms_data, temp_dir, name="plain.mzML", indexed=False)
+
+    root = ET.parse(output_path).getroot()
+    assert root.tag.endswith("mzML")
+    assert not root.tag.endswith("indexedmzML")
+    assert b"<indexList " not in raw
+    assert b"<fileChecksum>" not in raw
+
+
+def test_index_offsets_point_at_their_spectra(ms_data, temp_dir):
+    """Each recorded offset is the exact byte position of its own <spectrum> tag."""
+    _, raw = _write(ms_data, temp_dir)
+    entries = _index_entries(raw)
+
+    assert len(entries) == len(ms_data.spectrum_df)
+
+    for spec_id, offset in entries:
+        chunk = raw[offset : offset + 200]
+        assert chunk.startswith(b"<spectrum "), (
+            f"offset {offset} for {spec_id} does not land on a spectrum start tag"
+        )
+        found = re.search(rb'<spectrum [^>]*\bid="([^"]+)"', chunk)
+        assert found is not None
+        assert found.group(1) == spec_id
+
+
+def test_index_list_offset_points_at_index_list(ms_data, temp_dir):
+    """<indexListOffset> lets a reader seek straight to the index."""
+    _, raw = _write(ms_data, temp_dir)
+
+    declared = int(
+        re.search(rb"<indexListOffset>(\d+)</indexListOffset>", raw).group(1)
+    )
+    assert raw[declared:].startswith(b"<indexList ")
+
+
+def test_file_checksum_matches_specification(ms_data, temp_dir):
+    """The SHA-1 covers the document up to and including the opening tag."""
+    _, raw = _write(ms_data, temp_dir)
+
+    stated = CHECKSUM_PATTERN.search(raw).group(1).decode()
+    hashed_through = raw.rindex(FILE_CHECKSUM_OPEN_TAG) + len(FILE_CHECKSUM_OPEN_TAG)
+    expected = hashlib.sha1(raw[:hashed_through]).hexdigest()  # noqa: S324
+
+    assert stated == expected
+
+
+def test_indexed_file_supports_random_access(ms_data, temp_dir):
+    """An independent parser can use the index to seek to a single spectrum."""
+    pyteomics_mzml = pytest.importorskip("pyteomics.mzml")
+
+    output_path, _ = _write(ms_data, temp_dir)
+
+    with pyteomics_mzml.PreIndexedMzML(output_path) as reader:
+        assert list(reader.index["spectrum"]) == ["scan=0", "scan=1", "scan=2"]
+
+        spectrum = reader.get_by_id("scan=1")
+        assert spectrum["ms level"] == 2  # noqa: PLR2004
+        expected_mz, _ = ms_data.get_peaks(1)
+        np.testing.assert_allclose(spectrum["m/z array"], expected_mz, rtol=1e-6)
+
+
+def test_indexed_and_plain_differ_only_by_wrapper(ms_data, temp_dir):
+    """The spectra themselves are unchanged by indexing."""
+    _, indexed_raw = _write(ms_data, temp_dir)
+    _, plain_raw = _write(ms_data, temp_dir, name="plain.mzML", indexed=False)
+
+    start = indexed_raw.index(b"<mzML ")
+    end = indexed_raw.index(b"</mzML>") + len(b"</mzML>")
+    assert indexed_raw[start:end] == plain_raw[plain_raw.index(b"<mzML ") :].rstrip()

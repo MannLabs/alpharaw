@@ -25,6 +25,10 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from alpharaw.ms_data_base import MSData_Base
+from alpharaw.mzml_io.indexing import (
+    INDEXED_MZML_HEADER,
+    append_spectrum_index,
+)
 
 
 class MzMLWriter:
@@ -51,6 +55,8 @@ class MzMLWriter:
         output_path: str,
         binary_precision: int = 32,  # Changed from 64 to 32
         compression: str | None = None,
+        *,
+        indexed: bool = True,
     ) -> None:
         """Initialize the writer with an MSData_Base object.
 
@@ -68,6 +74,10 @@ class MzMLWriter:
             32-bit precision matches the internal float32 data precision.
         compression : Optional[str], optional
             Compression method (None, 'zlib'), by default None
+        indexed : bool, optional
+            Wrap the document in <indexedmzML> with a spectrum byte-offset index,
+            by default True. Indexed mzML is required by several downstream tools
+            (e.g. DIA-NN) and is still readable by plain-mzML parsers.
 
         """
         if binary_precision not in [32, 64]:
@@ -79,6 +89,7 @@ class MzMLWriter:
         self._output_path = output_path
         self._binary_precision = binary_precision
         self._compression = compression
+        self._indexed = indexed
 
         # Initialize CV constants
         self._initialize_cv_constants()
@@ -123,7 +134,20 @@ class MzMLWriter:
         ET.indent(self.root)
 
         tree = ET.ElementTree(self.root)
-        tree.write(self._output_path, encoding="utf-8", xml_declaration=True)
+
+        if not self._indexed:
+            tree.write(self._output_path, encoding="utf-8", xml_declaration=True)
+            return
+
+        # Write the <indexedmzML> header first so that every spectrum lands at its
+        # final byte position; the index can then simply be appended, with no
+        # rewrite and no temporary file.
+        with Path(self._output_path).open("wb") as output_file:
+            output_file.write(INDEXED_MZML_HEADER)
+            tree.write(output_file, encoding="utf-8", xml_declaration=False)
+            output_file.write(b"\n")
+
+        append_spectrum_index(self._output_path)
 
     def _create_mzml_content(self) -> ET.Element:
         """Create the mzML content tree.
