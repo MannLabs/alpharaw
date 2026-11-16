@@ -257,7 +257,11 @@ class RawFileReader:
             raise OSError(
                 f"Thermo raw file '{self.filename}' could not be opened, is the file accessible? Did you set '--raw_type' correctly?"
             )
-        self.source.SelectInstrument(ThermoFisher.CommonCore.Data.Business.Device.MS, 1)
+        if self.source.GetInstrumentCountOfType(Device.MS) == 0:
+            raise OSError(
+                f"Thermo raw file '{self.filename}' contains no mass spectrometer data; was the acquisition aborted?"
+            )
+        self.source.SelectInstrument(Device.MS, 1)
 
         try:
             self.StartTime = self.GetStartTime()
